@@ -12,7 +12,7 @@ begin;
 set search_path = public, extensions;
 create extension if not exists pgtap with schema extensions;
 
-select plan(21);
+select plan(24);
 
 -- ---------------------------------------------------------------------------
 -- Fixtures
