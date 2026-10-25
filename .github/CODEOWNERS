@@ -1,0 +1,7 @@
+# Code owners: new PRs auto-request these reviewers
+/web/        @mahajansarthaksm13
+/database/   @DurgeshGatkal
+/ai/         @Yashvaidya142
+/simulator/  @Yashvaidya142
+/data/       @Yashvaidya142
+/.github/    @Yashvaidya142
