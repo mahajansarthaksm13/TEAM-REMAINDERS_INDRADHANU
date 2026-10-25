@@ -414,3 +414,12 @@ enabled = true
 # formatted with uppercase keywords, indent 2, max width 180, trailing commas,
 # and column/key alignment. Set to "null" to emit raw, unformatted SQL.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":180,\"commaStyle\":\"trailing\"}"
+
+# ---------------------------------------------------------------------------
+# Edge Functions
+# ---------------------------------------------------------------------------
+
+[functions.ingest]
+# A bin cannot log in, so there is no JWT to verify. Identity is the Ed25519
+# signature over the record, checked inside the function itself (D6).
+verify_jwt = false
