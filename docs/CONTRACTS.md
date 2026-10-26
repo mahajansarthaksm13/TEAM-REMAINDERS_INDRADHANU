@@ -56,7 +56,7 @@ Rejection `4xx`: `{"status":"rejected","reason":"<reason_code>"}`
 
 Reason codes: `bad_method`, `bad_format`, `unknown_bin`, `bin_inactive`, `bad_signature`, `time_too_far_future`, `time_too_old`, `duplicate_sequence`, `qr_already_used`, `qr_unknown`, `barcode_cooldown`, `unknown_product`, `weight_out_of_range`.
 
-Ingest rules (from the task sheet): time window up to 5 minutes in the future and up to 7 days old (dev-only backfill flag lifts the old limit); barcode repeat cooldown 30 seconds; a QR code can be redeemed once. DECISION: weight must be within 30% of the product's `unit_weight_g`.
+Ingest rules (from the task sheet): time window up to 5 minutes in the future and up to 7 days old (dev-only backfill flag lifts the old limit); barcode repeat cooldown 30 seconds; a QR code can be redeemed once. DECISION: ingest rejects weight_out_of_range only if weight_g < 1 or > 5000. The AI layer flags weights outside +/-30% of the product `unit_weight_g` as a soft anomaly (WEIGHT_MISMATCH), not a rejection.
 
 ## 7. Tables
 | Table | Key columns |
@@ -102,3 +102,4 @@ DECISION: names below, Durgesh may rename before sign-off.
 CSV column names equal the table column names above. Extra files:
 - `scans_labels.csv`: scan_id, is_suspicious, fraud_type
 - fraud_type values: `burst_rescan`, `very_low_weight`, `wrong_category_weight`, `night_burst`, `replay`
+
