@@ -1,0 +1,10 @@
+﻿.venv/
+.env
+*.key
+*.pem
+simulator/keys/
+simulator/state/
+__pycache__/
+.ipynb_checkpoints/
+.pytest_cache/
+.ruff_cache/
