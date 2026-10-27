@@ -1,0 +1,78 @@
+-- ============================================================================
+-- D9 · Realtime channels
+--
+-- Task sheet: D9 Realtime channels
+-- Unblocks: A8 (Sarthak's live scan feed)
+--
+-- Realtime channel configuration for VeriBin.
+-- Two channel types:
+--   1. Private company channel: company:<company_id>
+--   2. Public demo channel: demo
+--
+-- Access control is enforced by Supabase Realtime's built-in rules,
+-- which consult the database's Row Level Security (D8) policies.
+--
+-- Broadcast events are sent by the ingest Edge Function (D6)
+-- on the company's private channel whenever a scan is accepted.
+-- ============================================================================
+
+-- ---------------------------------------------------------------------------
+-- Channel configuration (set via Supabase Dashboard or CLI)
+-- ---------------------------------------------------------------------------
+--
+-- 1. Private company channels
+--    Name pattern: company:<company_id>   (e.g., company:11111111-1111-1111-1111-111111111111)
+--    Access:  Only users belonging to that company (via RLS in D8),
+--             plus admin and regulator, may join.
+--    Broadcast: The ingest Edge Function (D6) publishes new scans
+--               to this channel. The dashboard (Sarthak's A8) subscribes
+--               and receives new scans in real time.
+--
+--    Supabase CLI command to create (run once per company):
+--      supabase realtime channel create "company:11111111-1111-1111-1111-111111111111"
+--
+-- 2. Public demo channel
+--    Name: demo
+--    Access:  Open to all anonymous users.
+--    Broadcast: Demo bin scans may be published here so the website
+--               simulator (A16) can display them. Demo scans must be
+--               excluded from public stats per D17.
+--
+--    Supabase CLI command to create (run once):
+--      supabase realtime channel create demo
+--
+-- ---------------------------------------------------------------------------
+-- Realtime event payload (sent by D6 ingest Edge Function)
+-- ---------------------------------------------------------------------------
+-- Topic:        "scan"
+-- Channel:      company:<company_id> (private) or "demo" (public)
+-- Payload:      {
+--    scan_id:    uuid,
+--    bin_id:     text,
+--    product_id: uuid,
+--    category:   epr_category,
+--    weight_g:   integer,
+--    scanned_at: timestamptz,
+--    chain_hash: text
+--  }
+--
+-- ---------------------------------------------------------------------------
+-- How A8 (Live Data) subscribes
+-- ---------------------------------------------------------------------------
+-- In the Next.js dashboard, after login the component:
+--   1. Creates a Supabase realtime client with the user's session
+--   2. Joins the channel `company:<company_id>` (private) or `demo` (public)
+--   3. Listens for `scan` topic messages
+--   4. On each message, prepends the scan to the feed and bumps
+--      the matching KPI and category bar
+--   5. Quietly refetches every 60 seconds to maintain accuracy
+--
+-- ---------------------------------------------------------------------------
+-- Done when
+-- ---------------------------------------------------------------------------
+--   • A company user logs in and joins their private channel
+--   • That user cannot join another company's channel
+--   • The demo channel is open and receives demo bin scans
+--   • With Yash's simulator running, scans appear on the live feed
+--     within about one second
+-- ============================================================================
