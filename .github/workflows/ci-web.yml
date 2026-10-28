@@ -1,0 +1,62 @@
+name: ci-web
+
+on:
+  pull_request:
+    paths:
+      - 'web/**'
+  workflow_dispatch:
+
+concurrency:
+  group: ci-web-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  web-check:
+    name: Web App Lint, Type-Check, and Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify web directory exists
+        id: check-web
+        run: |
+          if [ ! -f "package.json" ]; then
+            echo "package_exists=false" >> $GITHUB_OUTPUT
+            echo "Web application not created yet (web/package.json missing). Passing check."
+          else
+            echo "package_exists=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up Node.js 20 LTS
+        if: steps:check-web.outputs.package_exists == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        if: steps:check-web.outputs.package_exists == 'true'
+        run: npm ci
+
+      - name: Run linter
+        if: steps:check-web.outputs.package_exists == 'true'
+        run: npm run lint
+
+      - name: Run TypeScript type-check
+        if: steps:check-web.outputs.package_exists == 'true'
+        run: npx tsc --noEmit
+
+      - name: Build Next.js application
+        if: steps:check-web.outputs.package_exists == 'true'
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummy_anon_key_for_build
+        run: npm run build

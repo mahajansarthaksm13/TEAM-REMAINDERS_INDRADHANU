@@ -1,0 +1,57 @@
+name: ci-database
+
+on:
+  pull_request:
+    paths:
+      - 'database/**'
+  workflow_dispatch:
+
+concurrency:
+  group: ci-database-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  database-check:
+    name: Supabase Migrations and Database Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: database
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check if Supabase project is initialized
+        id: check-supabase
+        run: |
+          if [ ! -f "supabase/config.toml" ]; then
+            echo "config_exists=false" >> $GITHUB_OUTPUT
+            echo "Supabase config not found (database/supabase/config.toml missing). Passing check."
+          else
+            echo "config_exists=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up Supabase CLI
+        if: steps:check-supabase.outputs.config_exists == 'true'
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start local Supabase instance
+        if: steps:check-supabase.outputs.config_exists == 'true'
+        run: supabase start
+
+      - name: Apply migrations from scratch
+        if: steps:check-supabase.outputs.config_exists == 'true'
+        run: supabase db reset
+
+      - name: Run database tests
+        if: steps:check-supabase.outputs.config_exists == 'true'
+        run: supabase test db
+
+      - name: Stop Supabase instance
+        if: always() && steps:check-supabase.outputs.config_exists == 'true'
+        run: supabase stop
