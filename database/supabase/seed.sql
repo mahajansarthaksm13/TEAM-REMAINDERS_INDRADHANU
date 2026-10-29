@@ -1,0 +1,9 @@
+-- ============================================================================
+-- VeriBin seed data
+--
+-- Loaded automatically by `npx supabase db reset`.
+-- Filled in by D4 from Yash's mock dataset (Y2) and bin public keys (Y5).
+--
+-- Deliberately empty for now: no companies, no products, no bins, and above all
+-- no scans. Scans only ever arrive through the ingest path, never through seed.
+-- ============================================================================
