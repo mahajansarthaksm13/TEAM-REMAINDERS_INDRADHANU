@@ -49,7 +49,10 @@ def build_record_text(
     code: str,
     weight_g: int,
 ) -> str:
-    """Build canonical record text format v1|<bin_id>|<seq>|<scanned_at>|<type>|<code>|<weight_g>."""
+    """Build canonical record text format.
+
+    Format: v1|<bin_id>|<sequence>|<scanned_at>|<code_type>|<code>|<weight_g>
+    """
     return f"v1|{bin_id}|{sequence}|{scanned_at_iso}|{code_type}|{code}|{weight_g}"
 
 
@@ -211,7 +214,8 @@ def generate_mock_dataset() -> None:
     # Pre-derive in-memory Ed25519 signing keys
     bin_keys = {bin_id: get_bin_private_key(bin_id) for bin_id, _, _ in bin_specs}
 
-    # DECISION: Distribute suspicious scans across 3 planted bins (VB-PUN-0002, VB-MUM-0002, VB-NAG-0002)
+    # DECISION: Distribute suspicious scans across 3 planted bins:
+    # (VB-PUN-0002, VB-MUM-0002, VB-NAG-0002)
     # One per city, keeping VB-PUN-0001, VB-MUM-0001, VB-NAG-0001 completely clean.
     # Total scans = 2000. Exactly 50 suspicious scans, 1950 normal scans.
     # Scans per bin:

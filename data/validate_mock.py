@@ -102,7 +102,7 @@ def read_csv(filename: str) -> tuple[list[str], list[dict[str, str]]]:
     filepath = DATA_DIR / filename
     if not filepath.exists():
         raise FileNotFoundError(f"Missing required mock data file: {filepath}")
-    with open(filepath, mode="r", encoding="utf-8") as f:
+    with open(filepath, encoding="utf-8") as f:
         reader = csv.DictReader(f)
         fieldnames = reader.fieldnames or []
         rows = list(reader)
@@ -169,7 +169,9 @@ def validate() -> None:
         f"Product category distribution mismatch. Expected {expected_cat_distribution}, "
         f"got {categories_count}"
     )
-    print("  [OK] products.csv: 15 products (4/4/4/3 across EPR categories) with valid EAN-13 barcodes")
+    print(
+        "  [OK] products.csv: 15 products (4/4/4/3 across categories) with valid EAN-13 barcodes"
+    )
 
     # 4. Bins Validation
     _, bins = read_csv("bins.csv")
@@ -232,13 +234,16 @@ def validate() -> None:
             f"{s['code_type']}|{s['code']}|{s['weight_g']}"
         )
         assert s["record_text"] == expected_text, (
-            f"Scan {s['id']} record_text mismatch.\nExpected: {expected_text}\nActual:   {s['record_text']}"
+            f"Scan {s['id']} record_text mismatch.\n"
+            f"Expected: {expected_text}\n"
+            f"Actual:   {s['record_text']}"
         )
 
         # Check record_hash
         calc_record_hash = hashlib.sha256(s["record_text"].encode()).hexdigest()
         assert s["record_hash"] == calc_record_hash, (
-            f"Scan {s['id']} record_hash mismatch. Expected {calc_record_hash}, got {s['record_hash']}"
+            f"Scan {s['id']} record_hash mismatch. "
+            f"Expected {calc_record_hash}, got {s['record_hash']}"
         )
 
         # Check chain_hash computation
@@ -257,12 +262,14 @@ def validate() -> None:
         b_scans.sort(key=lambda s: int(s["sequence"]))
         sequences = [int(s["sequence"]) for s in b_scans]
         assert sequences == list(range(1, len(b_scans) + 1)), (
-            f"Bin {bin_id} sequence has gaps or does not start at 1: {sequences[:5]}...{sequences[-5:]}"
+            f"Bin {bin_id} sequence has gaps or does not start at 1: "
+            f"{sequences[:5]}...{sequences[-5:]}"
         )
 
         # Check chaining from genesis
         assert b_scans[0]["prev_chain_hash"] == "0" * 64, (
-            f"Bin {bin_id} sequence 1 prev_chain_hash must be 64 zeros, got {b_scans[0]['prev_chain_hash']}"
+            f"Bin {bin_id} sequence 1 prev_chain_hash must be 64 zeros, "
+            f"got {b_scans[0]['prev_chain_hash']}"
         )
         for i in range(1, len(b_scans)):
             assert b_scans[i]["prev_chain_hash"] == b_scans[i - 1]["chain_hash"], (
@@ -274,17 +281,21 @@ def validate() -> None:
         bin_meta = bins_by_id[bin_id]
         final_scan = b_scans[-1]
         assert int(bin_meta["last_sequence"]) == int(final_scan["sequence"]), (
-            f"Bin {bin_id} last_sequence mismatch: {bin_meta['last_sequence']} vs {final_scan['sequence']}"
+            f"Bin {bin_id} last_sequence mismatch: "
+            f"{bin_meta['last_sequence']} vs {final_scan['sequence']}"
         )
         assert bin_meta["chain_head"] == final_scan["chain_hash"], (
-            f"Bin {bin_id} chain_head mismatch: {bin_meta['chain_head']} vs {final_scan['chain_hash']}"
+            f"Bin {bin_id} chain_head mismatch: "
+            f"{bin_meta['chain_head']} vs {final_scan['chain_hash']}"
         )
         assert bin_meta["last_seen"] == final_scan["scanned_at"], (
-            f"Bin {bin_id} last_seen mismatch: {bin_meta['last_seen']} vs {final_scan['scanned_at']}"
+            f"Bin {bin_id} last_seen mismatch: "
+            f"{bin_meta['last_seen']} vs {final_scan['scanned_at']}"
         )
 
     print(
-        f"  [OK] scans.csv: {len(scans)} scans verified (gap-free sequences, hash chains intact, weights 1..5000)"
+        f"  [OK] scans.csv: {len(scans)} scans verified "
+        "(gap-free sequences, hash chains intact, weights 1..5000)"
     )
 
     # 7. Labels Validation
@@ -294,23 +305,23 @@ def validate() -> None:
     )
 
     scans_id_set = {s["id"] for s in scans}
-    labels_id_set = {l["scan_id"] for l in labels}
+    labels_id_set = {lbl["scan_id"] for lbl in labels}
     assert scans_id_set == labels_id_set, "scans_labels scan_id set does not match scans.csv id set"
 
     suspicious_count = 0
     fraud_counts: dict[str, int] = {}
-    for l in labels:
-        is_susp = l["is_suspicious"]
-        f_type = l["fraud_type"]
+    for lbl in labels:
+        is_susp = lbl["is_suspicious"]
+        f_type = lbl["fraud_type"]
         if is_susp == "true":
             suspicious_count += 1
             assert f_type in EXPECTED_FRAUD_TYPES, (
-                f"Scan {l['scan_id']} has unknown fraud_type: {f_type}"
+                f"Scan {lbl['scan_id']} has unknown fraud_type: {f_type}"
             )
             fraud_counts[f_type] = fraud_counts.get(f_type, 0) + 1
         elif is_susp == "false":
             assert f_type == "", (
-                f"Scan {l['scan_id']} is not suspicious but has fraud_type: '{f_type}'"
+                f"Scan {lbl['scan_id']} is not suspicious but has fraud_type: '{f_type}'"
             )
         else:
             raise AssertionError(f"Invalid is_suspicious value: {is_susp}")
