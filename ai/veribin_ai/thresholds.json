@@ -1,0 +1,66 @@
+{
+  "min_scans_required": 20,
+  "anomaly_alert_threshold": 60.0,
+  "scan_level_rules": {
+    "repeat_scan_gap_seconds": 3.0,
+    "weight_mismatch_ratio": 0.30,
+    "very_low_weight_ratio": 0.20,
+    "wrong_category_weight_multiplier": 3.0,
+    "odd_hours_ist": {
+      "start_hour": 0,
+      "end_hour": 5
+    },
+    "scripted_repeat_min_run": 5
+  },
+  "bin_scoring_measures": {
+    "REPEAT_SCANS": {
+      "measure": "rescan_share",
+      "free_share": 0.005,
+      "slope": 6.0,
+      "cap": 35.0,
+      "description": "Share of scans less than 3 seconds after previous scan on the bin"
+    },
+    "WEIGHT_MISMATCH": {
+      "measure": "weight_mismatch_share",
+      "free_share": 0.005,
+      "slope": 5.0,
+      "cap": 25.0,
+      "description": "Share of scans with weight deviating more than 30% from product unit weight"
+    },
+    "VERY_LOW_WEIGHT": {
+      "measure": "very_low_weight_share",
+      "free_share": 0.005,
+      "slope": 10.0,
+      "cap": 25.0,
+      "description": "Share of scans with weight less than 20% of product unit weight"
+    },
+    "ODD_HOURS": {
+      "measure": "odd_hours_share",
+      "free_share": 0.005,
+      "slope": 6.0,
+      "cap": 25.0,
+      "description": "Share of scans recorded between 00:00 and 05:00 IST"
+    },
+    "SCRIPTED_REPEAT": {
+      "measure": "scripted_repeat_share",
+      "free_share": 0.005,
+      "slope": 10.0,
+      "cap": 25.0,
+      "description": "Share of scans part of scripted repetitions of identical code and weight"
+    },
+    "HIGH_BARCODE_SHARE": {
+      "measure": "barcode_share",
+      "free_share": 0.60,
+      "slope": 0.5,
+      "cap": 10.0,
+      "description": "Share of barcode scans exceeding normal operating ratio"
+    },
+    "HIGH_REJECTIONS": {
+      "measure": "rejection_rate",
+      "free_share": 0.05,
+      "slope": 1.5,
+      "cap": 15.0,
+      "description": "Rejection rate exceeding baseline operational allowance"
+    }
+  }
+}
