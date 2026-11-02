@@ -1,1 +1,1 @@
-﻿# VeriBin AI Engine Package
+"""VeriBin AI layer core package."""

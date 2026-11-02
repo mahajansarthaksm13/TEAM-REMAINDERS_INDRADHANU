@@ -1,0 +1,51 @@
+name: ci-ai
+
+on:
+  pull_request:
+    paths:
+      - 'ai/**'
+      - 'simulator/**'
+      - 'data/**'
+      - 'ruff.toml'
+      - 'pytest.ini'
+  workflow_dispatch:
+
+concurrency:
+  group: ci-ai-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ai-check:
+    name: Python Lint, Pytest, and Mock Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: |
+            simulator/requirements.txt
+            ai/requirements.txt
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f "ai/requirements.txt" ]; then pip install -r ai/requirements.txt; fi
+          if [ -f "simulator/requirements.txt" ]; then pip install -r simulator/requirements.txt; fi
+          pip install ruff pytest
+
+      - name: Lint with ruff
+        run: ruff check .
+
+      - name: Run test suite with pytest
+        run: pytest
+
+      - name: Validate mock dataset integrity
+        run: python data/validate_mock.py
