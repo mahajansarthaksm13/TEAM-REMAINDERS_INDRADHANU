@@ -242,7 +242,6 @@ def generate_mock_dataset() -> None:
 
     # Structure to hold scan raw definitions before sequencing and chaining
     class RawScan:
-
         def __init__(
             self,
             bin_id: str,

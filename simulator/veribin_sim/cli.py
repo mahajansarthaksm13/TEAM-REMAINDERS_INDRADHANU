@@ -53,9 +53,7 @@ def sign_payload(raw_text: str, private_key_hex: str) -> str:
     return sig_bytes.hex()
 
 
-def create_scan_record(
-    state, weight_g=250, product_id="PROD-001", ts=None, anomaly_label="normal"
-):
+def create_scan_record(state, weight_g=250, product_id="PROD-001", ts=None, anomaly_label="normal"):
     """Construct, sign, and increment sequence for a scan event."""
     state["sequence"] += 1
     seq = state["sequence"]
@@ -116,9 +114,7 @@ def run_live_mode(state, count=10, delay=2):
     """Stream real-time scans every few seconds."""
     print(f"--- Running LIVE mode ({count} scans, delay {delay}s) ---")
     for _ in range(count):
-        scan = create_scan_record(
-            state, weight_g=random.randint(200, 500), anomaly_label="normal"
-        )
+        scan = create_scan_record(state, weight_g=random.randint(200, 500), anomaly_label="normal")
         send_to_ingest(scan)
         time.sleep(delay)
 
@@ -150,7 +146,5 @@ def run_fraud_mode(state):
     # 2. Odd hours scan (3:00 AM)
     print("Simulating: Odd hours anomaly")
     odd_ts = datetime.now(UTC).replace(hour=3, minute=15).isoformat()
-    scan2 = create_scan_record(
-        state, weight_g=300, ts=odd_ts, anomaly_label="odd_hours"
-    )
+    scan2 = create_scan_record(state, weight_g=300, ts=odd_ts, anomaly_label="odd_hours")
     send_to_ingest(scan2)

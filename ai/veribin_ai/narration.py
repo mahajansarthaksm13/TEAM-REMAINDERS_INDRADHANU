@@ -1,5 +1,7 @@
-﻿import os
+import os
+
 import google.generativeai as genai
+
 
 class GeminiNarrator:
     """Generates concise 1-sentence AI executive summaries with strict fallback validation."""
@@ -15,14 +17,15 @@ class GeminiNarrator:
             return fallback
 
         try:
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            model = genai.GenerativeModel("gemini-1.5-flash")
             prompt = (
-                f"Summarize this waste collection insight into exactly ONE sentence of at most 35 words. "
-                f"Do not invent any numbers. Insight: Title: {title}. Details: {message}"
+                "Summarize this waste collection insight into exactly ONE sentence "
+                f"of at most 35 words. Do not invent any numbers. Insight: Title: {title}. "
+                f"Details: {message}"
             )
             response = model.generate_content(prompt)
             summary = response.text.strip()
-            
+
             # Simple fallback check on length
             if summary and len(summary.split()) <= 35:
                 return summary

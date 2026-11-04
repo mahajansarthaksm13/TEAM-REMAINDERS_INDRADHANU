@@ -1,5 +1,3 @@
-﻿import pandas as pd
-
 class DetectorEvaluator:
     """Evaluates AI anomaly detection performance against ground-truth labels."""
 
@@ -25,7 +23,9 @@ class DetectorEvaluator:
                     missed += 1
 
         total_actual = caught + missed
-        precision = round(caught / (caught + false_alarms), 4) if (caught + false_alarms) > 0 else 1.0
+        precision = (
+            round(caught / (caught + false_alarms), 4) if (caught + false_alarms) > 0 else 1.0
+        )
         recall = round(caught / total_actual, 4) if total_actual > 0 else 1.0
 
         return {
@@ -33,5 +33,5 @@ class DetectorEvaluator:
             "missed": missed,
             "false_alarms": false_alarms,
             "precision": precision,
-            "recall": recall
+            "recall": recall,
         }

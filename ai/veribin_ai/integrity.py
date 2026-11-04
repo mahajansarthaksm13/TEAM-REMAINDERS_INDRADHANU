@@ -1,14 +1,15 @@
-﻿from cryptography.hazmat.primitives.asymmetric import ed25519
+from cryptography.hazmat.primitives.asymmetric import ed25519
+
 
 class IntegrityChecker:
     """Verifies Ed25519 cryptographic signatures and hash chain continuity."""
-    
+
     def verify_scan_signature(self, raw_text: str, signature_hex: str, public_key_hex: str) -> bool:
         try:
             pub_bytes = bytes.fromhex(public_key_hex)
             sig_bytes = bytes.fromhex(signature_hex)
             pub_key = ed25519.Ed25519PublicKey.from_public_bytes(pub_bytes)
-            pub_key.verify(sig_bytes, raw_text.encode('utf-8'))
+            pub_key.verify(sig_bytes, raw_text.encode("utf-8"))
             return True
         except Exception:
             return False

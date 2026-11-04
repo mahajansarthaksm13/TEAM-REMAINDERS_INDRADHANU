@@ -1,5 +1,6 @@
-﻿import json
+import json
 import os
+
 
 class TrustScoreEngine:
     def __init__(self, thresholds_path="ai/veribin_ai/thresholds.json"):
@@ -7,16 +8,16 @@ class TrustScoreEngine:
 
     def _load_thresholds(self, path):
         if os.path.exists(path):
-            with open(path, 'r') as f:
+            with open(path) as f:
                 return json.load(f)
         return {
             "weights": {
                 "burst_rescan": 15,
                 "very_low_weight": 20,
                 "odd_hours": 10,
-                "rejection": 25
+                "rejection": 25,
             },
-            "min_scans_for_score": 20
+            "min_scans_for_score": 20,
         }
 
     def calculate_bin_score(self, total_scans, anomaly_counts):
