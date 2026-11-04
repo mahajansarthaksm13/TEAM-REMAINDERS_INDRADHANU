@@ -1,5 +1,6 @@
 import pytest
 from datetime import datetime, timedelta, timezone
+from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric import ed25519
 from simulator.veribin_sim.cli import load_or_create_state, create_scan_record, sign_payload
 
@@ -28,7 +29,7 @@ def test_tampered_text(test_state):
     # Signature verification should fail on modified raw text
     pub_bytes = bytes.fromhex(scan["public_key"])
     pub_key = ed25519.Ed25519PublicKey.from_public_bytes(pub_bytes)
-    with pytest.raises(Exception):
+    with pytest.raises(InvalidSignature):
         pub_key.verify(bytes.fromhex(scan["signature"]), tampered_raw.encode("utf-8"))
 
 # 3. Sequence increment check
