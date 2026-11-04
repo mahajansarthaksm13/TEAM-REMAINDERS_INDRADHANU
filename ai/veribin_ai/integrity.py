@@ -1,5 +1,6 @@
 import hashlib
 
+from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric import ed25519
 
 GENESIS_HASH = "0" * 64
@@ -27,7 +28,7 @@ class IntegrityChecker:
             pub_key = ed25519.Ed25519PublicKey.from_public_bytes(pub_bytes)
             pub_key.verify(sig_bytes, raw_text.encode())
             return True
-        except Exception:
+        except (InvalidSignature, TypeError, ValueError):
             return False
 
     def verify_batch(self, scan_list: list[dict]) -> dict:
