@@ -23,7 +23,7 @@ class GeminiNarrator:
                 f"of at most 35 words. Do not invent any numbers. Insight: Title: {title}. "
                 f"Details: {message}"
             )
-            response = model.generate_content(prompt)
+            response = model.generate_content(prompt, request_options={"timeout": 2})
             summary = response.text.strip()
 
             # Simple fallback check on length

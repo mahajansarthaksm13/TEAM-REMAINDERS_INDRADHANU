@@ -7,16 +7,20 @@ class TrustScoreEngine:
         self.thresholds = self._load_thresholds(thresholds_path)
 
     def _load_thresholds(self, path):
+        default_weights = {
+            "burst_rescan": 15,
+            "very_low_weight": 20,
+            "odd_hours": 10,
+            "rejection": 25,
+        }
         if os.path.exists(path):
             with open(path) as f:
-                return json.load(f)
+                data = json.load(f)
+                if "weights" not in data:
+                    data["weights"] = default_weights
+                return data
         return {
-            "weights": {
-                "burst_rescan": 15,
-                "very_low_weight": 20,
-                "odd_hours": 10,
-                "rejection": 25,
-            },
+            "weights": default_weights,
             "min_scans_for_score": 20,
         }
 

@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from ai.veribin_ai.narration import GeminiNarrator
 
 
@@ -9,5 +11,10 @@ def test_fallback_without_api_key():
 
 def test_fallback_structure():
     narrator = GeminiNarrator(api_key="MOCK_KEY_FOR_TESTING")
-    res = narrator.narrate_card("Normal Operations", "5000 kg collected cleanly.")
+    with patch(
+        "google.generativeai.GenerativeModel.generate_content",
+        side_effect=Exception("API Error"),
+    ):
+        res = narrator.narrate_card("Normal Operations", "5000 kg collected cleanly.")
     assert isinstance(res, str)
+    assert res == "Normal Operations: 5000 kg collected cleanly."
