@@ -1,5 +1,5 @@
-﻿import pytest
 from ai.veribin_ai.trends import TrendsForecastEngine
+
 
 def test_forecast_calculation():
     engine = TrendsForecastEngine()
@@ -8,6 +8,7 @@ def test_forecast_calculation():
     assert res["daily_avg_kg"] == 10.0
     assert res["days_remaining"] == 355
     assert res["projected_total_kg"] == 3650.0
+
 
 def test_insight_card_generation():
     engine = TrendsForecastEngine()

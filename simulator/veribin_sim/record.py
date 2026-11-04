@@ -54,9 +54,7 @@ def build_record(
         )
 
     if not isinstance(sequence, int) or isinstance(sequence, bool) or sequence < 1:
-        raise ValueError(
-            f"Invalid sequence: {sequence}. Must be an integer >= 1."
-        )
+        raise ValueError(f"Invalid sequence: {sequence}. Must be an integer >= 1.")
 
     if not isinstance(scanned_at, str) or not TIMESTAMP_REGEX.match(scanned_at):
         raise ValueError(
@@ -70,27 +68,19 @@ def build_record(
         raise ValueError(f"Invalid calendar date/time in scanned_at: '{scanned_at}'.") from exc
 
     if code_type not in ("qr", "barcode"):
-        raise ValueError(
-            f"Invalid code_type: '{code_type}'. Must be 'qr' or 'barcode'."
-        )
+        raise ValueError(f"Invalid code_type: '{code_type}'. Must be 'qr' or 'barcode'.")
 
     if not isinstance(code, str):
         raise ValueError(f"Invalid code type: {type(code)}. Expected string.")
 
     if code_type == "qr" and not QR_CODE_REGEX.match(code):
-        raise ValueError(
-            f"Invalid QR code: '{code}'. Expected format 'VBQ1.P<4digits>.<32hex>'."
-        )
+        raise ValueError(f"Invalid QR code: '{code}'. Expected format 'VBQ1.P<4digits>.<32hex>'.")
 
     if code_type == "barcode" and not BARCODE_REGEX.match(code):
-        raise ValueError(
-            f"Invalid barcode: '{code}'. Expected 8 to 14 digits."
-        )
+        raise ValueError(f"Invalid barcode: '{code}'. Expected 8 to 14 digits.")
 
     if not isinstance(weight_g, int) or isinstance(weight_g, bool) or weight_g < 1:
-        raise ValueError(
-            f"Invalid weight_g: {weight_g}. Must be an integer >= 1."
-        )
+        raise ValueError(f"Invalid weight_g: {weight_g}. Must be an integer >= 1.")
 
     return f"v1|{bin_id}|{sequence}|{scanned_at}|{code_type}|{code}|{weight_g}"
 

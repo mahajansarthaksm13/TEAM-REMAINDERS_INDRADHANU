@@ -45,7 +45,9 @@ jobs:
         run: ruff check .
 
       - name: Run test suite with pytest
-        run: pytest
+        run: python -m pytest
+        env:
+          PYTHONPATH: .
 
       - name: Validate mock dataset integrity
         run: python data/validate_mock.py

@@ -33,8 +33,7 @@ def test_build_record_valid_qr() -> None:
         weight_g=184,
     )
     expected = (
-        "v1|VB-PUN-0001|1|2026-10-25T10:30:05Z|qr|"
-        "VBQ1.P0007.9f2c4e1a7b3d48c6a5e0d1f2b3c4a596|184"
+        "v1|VB-PUN-0001|1|2026-10-25T10:30:05Z|qr|VBQ1.P0007.9f2c4e1a7b3d48c6a5e0d1f2b3c4a596|184"
     )
     assert record == expected
 
@@ -212,8 +211,7 @@ def test_verify_fails_on_tampered_text() -> None:
 
     # Tamper weight
     tampered_record = (
-        "v1|VB-PUN-0001|1|2026-10-25T10:30:05Z|qr|"
-        "VBQ1.P0007.9f2c4e1a7b3d48c6a5e0d1f2b3c4a596|185"
+        "v1|VB-PUN-0001|1|2026-10-25T10:30:05Z|qr|VBQ1.P0007.9f2c4e1a7b3d48c6a5e0d1f2b3c4a596|185"
     )
     assert verify_record(pub_b64, tampered_record, sig_b64) is False
 
@@ -258,8 +256,7 @@ def test_test_vectors_exact_match() -> None:
         weight_g=184,
     )
     expected = (
-        "v1|VB-PUN-0001|1|2026-10-25T10:30:05Z|qr|"
-        "VBQ1.P0007.9f2c4e1a7b3d48c6a5e0d1f2b3c4a596|184"
+        "v1|VB-PUN-0001|1|2026-10-25T10:30:05Z|qr|VBQ1.P0007.9f2c4e1a7b3d48c6a5e0d1f2b3c4a596|184"
     )
     assert record == expected
 

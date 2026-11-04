@@ -169,9 +169,7 @@ def validate() -> None:
         f"Product category distribution mismatch. Expected {expected_cat_distribution}, "
         f"got {categories_count}"
     )
-    print(
-        "  [OK] products.csv: 15 products (4/4/4/3 across categories) with valid EAN-13 barcodes"
-    )
+    print("  [OK] products.csv: 15 products (4/4/4/3 across categories) with valid EAN-13 barcodes")
 
     # 4. Bins Validation
     _, bins = read_csv("bins.csv")
@@ -274,7 +272,8 @@ def validate() -> None:
         for i in range(1, len(b_scans)):
             assert b_scans[i]["prev_chain_hash"] == b_scans[i - 1]["chain_hash"], (
                 f"Bin {bin_id} chain broken at seq {b_scans[i]['sequence']}. "
-                f"prev_chain_hash: {b_scans[i]['prev_chain_hash']} != {b_scans[i-1]['chain_hash']}"
+                f"prev_chain_hash: {b_scans[i]['prev_chain_hash']} != "
+                f"{b_scans[i - 1]['chain_hash']}"
             )
 
         # Check bins.csv last_sequence, chain_head, last_seen match final scan
@@ -335,9 +334,7 @@ def validate() -> None:
 
     # 8. Rejected Scans Validation
     _, rejected = read_csv("rejected_scans.csv")
-    assert 50 <= len(rejected) <= 70, (
-        f"Expected about 60 rejected scans, found {len(rejected)}"
-    )
+    assert 50 <= len(rejected) <= 70, f"Expected about 60 rejected scans, found {len(rejected)}"
     for r in rejected:
         assert r["bin_id"] in scans_by_bin, f"Rejected scan has unknown bin_id: {r['bin_id']}"
         assert r["reason"] in VALID_REASONS, (
