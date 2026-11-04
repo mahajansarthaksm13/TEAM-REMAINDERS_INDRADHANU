@@ -1,11 +1,11 @@
-import argparse
 import csv
 import json
 import os
 import random
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime
 from pathlib import Path
+
 import requests
 from cryptography.hazmat.primitives.asymmetric import ed25519
 
@@ -20,7 +20,7 @@ INGEST_URL = os.getenv("INGEST_URL", "http://127.0.0.1:54321/functions/v1/ingest
 def load_or_create_state():
     """Load local sequence counter and Ed25519 key state."""
     if STATE_FILE.exists():
-        with open(STATE_FILE, "r") as f:
+        with open(STATE_FILE) as f:
             return json.load(f)
 
     # Generate a default keypair if state file does not exist
@@ -53,27 +53,29 @@ def sign_payload(raw_text: str, private_key_hex: str) -> str:
     return sig_bytes.hex()
 
 
-def create_scan_record(state, weight_g=250, product_id="PROD-001", ts=None, anomaly_label="normal"):
+def create_scan_record(
+    state, weight_g=250, product_id="PROD-001", ts=None, anomaly_label="normal"
+):
     """Construct, sign, and increment sequence for a scan event."""
     state["sequence"] += 1
     seq = state["sequence"]
-    
+
     if ts is None:
-        ts = datetime.now(timezone.utc).isoformat()
-        
+        ts = datetime.now(UTC).isoformat()
+
     bin_id = state["bin_id"]
     raw_text = f"{ts}|{bin_id}|{product_id}|{seq}|{weight_g}"
     signature = sign_payload(raw_text, state["private_key_hex"])
-    
+
     save_state(state)
-    
+
     scan_data = {
         "raw_text": raw_text,
         "signature": signature,
         "public_key": state["public_key_hex"],
-        "anomaly_label": anomaly_label
+        "anomaly_label": anomaly_label,
     }
-    
+
     log_label(raw_text, anomaly_label)
     return scan_data
 
@@ -82,12 +84,12 @@ def log_label(raw_text, label):
     """Append every generated scan record and truth label to data/sim_labels.csv."""
     LABELS_FILE.parent.mkdir(parents=True, exist_ok=True)
     file_exists = LABELS_FILE.exists()
-    
+
     with open(LABELS_FILE, "a", newline="") as f:
         writer = csv.writer(f)
         if not file_exists:
             writer.writerow(["raw_text", "label", "timestamp"])
-        writer.writerow([raw_text, label, datetime.now(timezone.utc).isoformat()])
+        writer.writerow([raw_text, label, datetime.now(UTC).isoformat()])
 
 
 def send_to_ingest(scan_data):
@@ -95,22 +97,28 @@ def send_to_ingest(scan_data):
     payload = {
         "raw_text": scan_data["raw_text"],
         "signature": scan_data["signature"],
-        "public_key": scan_data["public_key"]
+        "public_key": scan_data["public_key"],
     }
     try:
         res = requests.post(INGEST_URL, json=payload, timeout=5)
-        print(f"[{res.status_code}] Sent: {scan_data['raw_text']} | Label: {scan_data['anomaly_label']}")
-    except Exception as e:
+        print(
+            f"[{res.status_code}] Sent: {scan_data['raw_text']} | "
+            f"Label: {scan_data['anomaly_label']}"
+        )
+    except requests.RequestException as e:
         print(f"[ERR] Failed to post scan: {e}")
 
 
 # --- EXECUTION MODES ---
 
+
 def run_live_mode(state, count=10, delay=2):
     """Stream real-time scans every few seconds."""
     print(f"--- Running LIVE mode ({count} scans, delay {delay}s) ---")
     for _ in range(count):
-        scan = create_scan_record(state, weight_g=random.randint(200, 500), anomaly_label="normal")
+        scan = create_scan_record(
+            state, weight_g=random.randint(200, 500), anomaly_label="normal"
+        )
         send_to_ingest(scan)
         time.sleep(delay)
 
@@ -120,9 +128,11 @@ def run_offline_mode(state, queue_size=20):
     print(f"--- Running OFFLINE mode (Queueing {queue_size} scans) ---")
     queue = []
     for _ in range(queue_size):
-        scan = create_scan_record(state, weight_g=random.randint(180, 450), anomaly_label="offline_queued")
+        scan = create_scan_record(
+            state, weight_g=random.randint(180, 450), anomaly_label="offline_queued"
+        )
         queue.append(scan)
-        
+
     print(f"Flushing {len(queue)} offline scans to ingest endpoint...")
     for scan in queue:
         send_to_ingest(scan)
@@ -131,59 +141,16 @@ def run_offline_mode(state, queue_size=20):
 def run_fraud_mode(state):
     """Generate anomalous scan events (low weight, odd hours, burst rescans)."""
     print("--- Running FRAUD simulation mode ---")
-    
+
     # 1. Very low weight scan
     print("Simulating: Low weight anomaly")
     scan1 = create_scan_record(state, weight_g=5, anomaly_label="very_low_weight")
     send_to_ingest(scan1)
-    
+
     # 2. Odd hours scan (3:00 AM)
     print("Simulating: Odd hours anomaly")
-    odd_ts = datetime.now(timezone.utc).replace(hour=3, minute=15).isoformat()
-    scan2 = create_scan_record(state, weight_g=300, ts=odd_ts, anomaly_label="odd_hours")
-    send_to_ingest(scan2)
-    
-    # 3. Burst rescans (< 3 seconds apart)
-    print("Simulating: Rapid burst rescans")
-    for _ in range(3):
-        scan3 = create_scan_record(state, weight_g=250, anomaly_label="burst_rescan")
-        send_to_ingest(scan3)
-        time.sleep(0.5)
-
-
-def run_backfill_mode(state, days=90, scans_per_day=5):
-    """Populate historical scan records spanning back up to 90 days."""
-    print(f"--- Running BACKFILL mode ({days} days) ---")
-    now = datetime.now(timezone.utc)
-    for d in range(days, 0, -1):
-        day_date = now - timedelta(days=d)
-        for _ in range(scans_per_day):
-            ts = (day_date + timedelta(hours=random.randint(8, 18))).isoformat()
-            scan = create_scan_record(state, weight_g=random.randint(200, 600), ts=ts, anomaly_label="backfill_historical")
-            send_to_ingest(scan)
-
-
-def main():
-    parser = argparse.ArgumentParser(description="VeriBin CLI Smart Bin Simulator")
-    parser.add_argument(
-        "--mode",
-        choices=["live", "offline", "fraud", "backfill"],
-        default="live",
-        help="Simulator execution mode",
+    odd_ts = datetime.now(UTC).replace(hour=3, minute=15).isoformat()
+    scan2 = create_scan_record(
+        state, weight_g=300, ts=odd_ts, anomaly_label="odd_hours"
     )
-    args = parser.parse_args()
-
-    state = load_or_create_state()
-
-    if args.mode == "live":
-        run_live_mode(state)
-    elif args.mode == "offline":
-        run_offline_mode(state)
-    elif args.mode == "fraud":
-        run_fraud_mode(state)
-    elif args.mode == "backfill":
-        run_backfill_mode(state)
-
-
-if __name__ == "__main__":
-    main()
+    send_to_ingest(scan2)
