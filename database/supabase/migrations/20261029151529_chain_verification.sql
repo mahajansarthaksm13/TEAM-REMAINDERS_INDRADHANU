@@ -1,151 +1,89 @@
 -- ============================================================================
--- D15 · Chain verification
+-- D15 · Chain verification (rewritten)
 --
--- Task sheet: D15 Chain verification
--- Unblocks: Y10 integrity, Y18 tamper demo (Yash)
+--   select * from public.verify_chain('VB-PUN-0001');
+--   -> ok | scans_checked | failing_scan | reason
 --
--- Verifies the hash chain integrity for a given bin. Walks the scans in order
--- and checks:
---   1. The stored text hash matches the stored record hash
---   2. The separate fields (weight, code, sequence) match the signed text
---   3. The previous hash matches the running chain head
---   4. The chain hash recalculates correctly
--- Reports the first failing scan and the reason, or "OK".
+-- Walks one bin's scans in insertion order and checks, for each scan:
+--   1. record_hash  = sha256(record_text)                 'record_hash_mismatch'
+--   2. the columns equal the fields of the signed text    'columns_differ_from_signed_text'
+--   3. prev_chain_hash = the previous scan's chain_hash   'prev_hash_mismatch'
+--   4. chain_hash = sha256(prev_chain_hash || ':' || record_hash)
+--                                                         'chain_hash_mismatch'
+-- and finally that bins.chain_head equals the last chain hash, which catches a
+-- deleted LAST scan                                       'chain_head_mismatch'
+--
+-- Ed25519 signatures cannot be checked in Postgres; the AI job (Y11) checks
+-- those in Python. Together they catch any edit made without the bin's key.
+--
+-- Runs as the caller, so RLS applies: auditors can verify the bins they may
+-- see; the AI role and service role can verify every bin.
 -- ============================================================================
 
--- ---------------------------------------------------------------------------
--- 1. Chain verification function
--- ---------------------------------------------------------------------------
--- Usage: select public.verify_chain('VB-PUN-0001');
--- Returns: (result text, first_failing_scan uuid, reason text)
---   - 'OK' if all checks pass
---   - 'FAILURE at scan <id>: <reason>' if any check fails
--- ---------------------------------------------------------------------------
-create or replace function public.verify_chain(bin_id text)
-returns table (result text, failing_scan uuid, reason text)
+create or replace function public.verify_chain(p_bin_id text)
+returns table (ok boolean, scans_checked bigint, failing_scan uuid, reason text)
 language plpgsql
+stable
 set search_path = ''
 as $$
 declare
-  v_prev_hash text := repeat('0', 64); -- genesis: all zeros
-  v_scan      public.scans%rowtype;
-  v_scan_id   uuid;
-  v_expected_hash text;
-  v_expected_prev_hash text;
-  v_expected_chain_hash text;
-  v_computed_hash text;
-  v_computed_prev_hash text;
-  v_computed_chain_hash text;
-  v_weight_ok boolean;
-  v_seq_check boolean;
-  v_text_match boolean;
-  v_prev_hash_match boolean;
-  v_found_first_failure boolean := false;
-  v_first_failure_uuid uuid;
-  v_first_failure_reason text;
+  r       public.scans%rowtype;
+  f       text[];
+  v_prev  text := repeat('0', 64);
+  v_n     bigint := 0;
+  v_head  text;
 begin
-  result := 'OK';
-  failing_scan := null::uuid;
-  reason := null::text;
+  select b.chain_head into v_head from public.bins b where b.id = p_bin_id;
+  if not found then
+    return query select false, 0::bigint, null::uuid, 'unknown_bin'::text;
+    return;
+  end if;
 
-  for v_scan in
-    select id, record_text, signature, record_hash, prev_chain_hash, chain_hash, sequence, weight_g, code, code_type
-    from public.scans
-    where bin_id = verify_chain.bin_id
-    order by insertion_order
+  for r in
+    select * from public.scans s where s.bin_id = p_bin_id order by s.insertion_order
   loop
-    -- Skip if we already found a failure (we only report the first one)
-    if v_found_first_failure then
-      exit;
+    v_n := v_n + 1;
+
+    if encode(sha256(convert_to(r.record_text, 'UTF8')), 'hex') <> r.record_hash then
+      return query select false, v_n, r.id, 'record_hash_mismatch'::text;
+      return;
     end if;
 
-    v_scan_id := v_scan.id;
-
-    -- 1. Check: stored text hash matches the stored record hash
-    v_expected_hash := v_scan.record_hash;
-    -- Compute hash of the actual record text
-    -- Using pgcrypto sha256
-    v_computed_hash := encode(sha256(v_scan.record_text), 'hex');
-
-    if v_computed_hash != v_expected_hash then
-      v_found_first_failure := true;
-      v_first_failure_uuid := v_scan_id;
-      v_first_failure_reason := 'record_hash_mismatch';
-      result := 'FAILURE at scan ' || v_scan_id || ': record_hash_mismatch';
-      exit;
+    f := string_to_array(r.record_text, '|');
+    if coalesce(array_length(f, 1), 0) <> 7
+       or f[1] <> 'v1'
+       or f[2] <> r.bin_id
+       or f[3] <> r.sequence::text
+       or f[4] <> to_char(r.scanned_at at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+       or f[5] <> r.code_type::text
+       or f[6] <> r.code
+       or f[7] <> r.weight_g::text
+    then
+      return query select false, v_n, r.id, 'columns_differ_from_signed_text'::text;
+      return;
     end if;
 
-    -- 2. Check: columns match the signed text (weight, code, sequence)
-    -- Check weight matches
-    if v_scan.weight_g != 0 then
-      -- Compare weight to what we'd expect from the product's catalogue
-      -- For now, we just check that weight_g is consistent (non-negative, within range)
-      if v_scan.weight_g > 5000 then
-        v_found_first_failure := true;
-        v_first_failure_uuid := v_scan_id;
-        v_first_failure_reason := 'weight_out_of_range';
-        result := 'FAILURE at scan ' || v_scan_id || ': weight_out_of_range';
-        exit;
-      end if;
+    if r.prev_chain_hash <> v_prev then
+      return query select false, v_n, r.id, 'prev_hash_mismatch'::text;
+      return;
     end if;
 
-    -- Check sequence is positive and consistent
-    if v_scan.sequence <= 0 then
-      v_found_first_failure := true;
-      v_first_failure_uuid := v_scan_id;
-      v_first_failure_reason := 'invalid_sequence';
-      result := 'FAILURE at scan ' || v_scan_id || ': invalid_sequence';
-      exit;
+    if encode(sha256(convert_to(v_prev || ':' || r.record_hash, 'UTF8')), 'hex') <> r.chain_hash then
+      return query select false, v_n, r.id, 'chain_hash_mismatch'::text;
+      return;
     end if;
 
-    -- 3. Check: previous hash matches the running chain head
-    if v_scan.prev_chain_hash != v_prev_hash then
-      v_found_first_failure := true;
-      v_first_failure_uuid := v_scan_id;
-      v_first_failure_reason := 'prev_hash_mismatch';
-      result := 'FAILURE at scan ' || v_scan_id || ': prev_hash_mismatch (expected ' || v_prev_hash || ', got ' || v_scan.prev_chain_hash || ')';
-      exit;
-    end if;
-
-    -- 4. Check: chain hash recalculates correctly
-    -- chain_hash = SHA256(prev_chain_hash || ':' || record_hash)
-    v_expected_chain_hash := encode(sha256(v_prev_hash || ':' || v_expected_hash), 'hex');
-
-    if v_scan.chain_hash != v_expected_chain_hash then
-      v_found_first_failure := true;
-      v_first_failure_uuid := v_scan_id;
-      v_first_failure_reason := 'chain_hash_mismatch';
-      result := 'FAILURE at scan ' || v_scan_id || ': chain_hash_mismatch (expected ' || v_expected_chain_hash || ', got ' || v_scan.chain_hash || ')';
-      exit;
-    end if;
-
-    -- All checks passed for this scan; update running state
-    v_prev_hash := v_scan.chain_hash; -- next scan's prev_hash is this scan's chain_hash
+    v_prev := r.chain_hash;
   end loop;
 
-  -- If we completed the loop without finding any failure
-  if not v_found_first_failure then
-    result := 'OK';
-    failing_scan := null::uuid;
-    reason := null::text;
+  if v_head <> v_prev then
+    return query select false, v_n, null::uuid, 'chain_head_mismatch'::text;
+    return;
   end if;
+
+  return query select true, v_n, null::uuid, null::text;
 end;
 $$;
 
--- ---------------------------------------------------------------------------
--- 2. Grant execute permissions
--- ---------------------------------------------------------------------------
-grant execute on function public.verify_chain(text) to service_role;
-
--- ---------------------------------------------------------------------------
--- 3. Summary
--- ---------------------------------------------------------------------------
--- This migration provides:
---   • verify_chain(bin_id) function that walks a bin's scan chain and checks
---     integrity at each step
---   • Returns 'OK' if the entire chain is valid, or 'FAILURE at scan <id>: <reason>'
---     if any check fails: record_hash_mismatch, weight_out_of_range,
---     invalid_sequence, prev_hash_mismatch, chain_hash_mismatch
---   • Only service_role can execute the function (enforces that only authorized
---     checkers can verify the chain)
--- ============================================================================
+revoke all on function public.verify_chain(text) from public, anon;
+grant execute on function public.verify_chain(text) to authenticated, service_role, ai_job_role;

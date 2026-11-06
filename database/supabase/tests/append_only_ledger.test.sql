@@ -22,7 +22,7 @@ values ('11111111-1111-1111-1111-111111111111', 'Test Company');
 
 insert into public.bins (id, company_id, city, public_key, chain_head)
 values (
-  'VB-PUN-0001',
+  'VB-TST-0001',
   '11111111-1111-1111-1111-111111111111',
   'Pune',
   'dGVzdC1wdWJsaWMta2V5',
@@ -39,14 +39,14 @@ select lives_ok(
       bin_id, company_id, sequence, scanned_at, code_type, code, weight_g,
       record_text, signature, record_hash, prev_chain_hash, chain_hash
     ) values (
-      'VB-PUN-0001',
+      'VB-TST-0001',
       '11111111-1111-1111-1111-111111111111',
       1,
       '2026-10-25T10:30:05Z',
       'qr',
-      'VBQ1.P0007.9f2c4e1a7b3d48c6a5e0d1f2b3c4a596',
+      'VBQ1.P8007.9f2c4e1a7b3d48c6a5e0d1f2b3c4a596',
       184,
-      'v1|VB-PUN-0001|1|2026-10-25T10:30:05Z|qr|VBQ1.P0007.9f2c4e1a7b3d48c6a5e0d1f2b3c4a596|184',
+      'v1|VB-TST-0001|1|2026-10-25T10:30:05Z|qr|VBQ1.P8007.9f2c4e1a7b3d48c6a5e0d1f2b3c4a596|184',
       'c2lnbmF0dXJl',
       repeat('a', 64),
       repeat('0', 64),

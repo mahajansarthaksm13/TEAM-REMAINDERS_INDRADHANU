@@ -1,102 +1,58 @@
 -- ============================================================================
--- D13 · AI database role
+-- D13 · AI database role (rewritten)
 --
--- Task sheet: D13 AI database role
--- Unblocks: Y9 onwards (Yash)
+-- ai_job_role is a NOLOGIN group role that holds the permissions. The actual
+-- login user is created by hand, once per project, in the SQL editor, with a
+-- password from the password manager (never in git):
 --
--- Creates a dedicated database role for the nightly AI job with strict
--- read/write boundaries. The role can only read designated views and write
--- to designated AI output tables. It cannot modify the ledger (scans table).
+--   create role ai_job login password '<from password manager>' in role ai_job_role;
 --
--- Connection string and role credentials are provided to Yash via the
--- password manager. The role is intended for use with pg_cron and the
--- nightly AI job (Y14).
+-- GitHub Actions runners have no IPv6, so AI_DATABASE_URL must use the
+-- Supabase connection POOLER (Session mode), with user  ai_job.<project_ref>
+--   postgresql://ai_job.<project_ref>:<password>@<pooler-host>:5432/postgres
+--
+-- RLS is on for every table, so grants alone are not enough: the role also
+-- needs policies, otherwise every SELECT returns zero rows.
 -- ============================================================================
 
--- ---------------------------------------------------------------------------
--- 1. Create AI job role
--- ---------------------------------------------------------------------------
-
-create role ai_job_role;
-
--- ---------------------------------------------------------------------------
--- 2. AI job role permissions
---    Read: scans, bins, products, targets, rejected_scans, daily_totals, checkpoints
---    Write: ONLY bin_scores, scan_flags, insights, forecasts, alerts
---    The role uses set_search_path to restrict which tables it can reference.
--- ---------------------------------------------------------------------------
-
--- Grant read access to AI job role
-grant select on public.scans to ai_job_role;
-grant select on public.bins to ai_job_role;
-grant select on public.products to ai_job_role;
-grant select on public.targets to ai_job_role;
-grant select on public.rejected_scans to ai_job_role;
-grant select on public.daily_totals to ai_job_role;
-grant select on public.checkpoints to ai_job_role;
-
--- Grant write access ONLY to AI output tables (never the ledger)
-grant select, insert, update on public.bin_scores to ai_job_role;
-grant select, insert on public.scan_flags to ai_job_role;
-grant select, insert on public.insights to ai_job_role;
-grant select, insert on public.forecasts to ai_job_role;
-grant select, insert on public.alerts to ai_job_role;
-
--- ---------------------------------------------------------------------------
--- 3. Ensure the role cannot modify the ledger
---    (This is enforced by: (a) no INSERT/UPDATE/DELETE on scans, (b) the role
---     can only write to the AI output tables listed above.)
--- ---------------------------------------------------------------------------
-
--- Revoke all write permissions on scans from ai_job_role
-revoke all on public.scans from ai_job_role;
-
--- ---------------------------------------------------------------------------
--- 4. Helper function: run AI job as the AI role
--- ---------------------------------------------------------------------------
-
-create or replace function public.ai_job_run()
-returns jsonb
-language plpgsql
-security definer
-set search_path = ''
-as $$
-declare
-  v_result jsonb;
+do $$
 begin
-  -- This function runs as the ai_job_role and can only operate within
-  -- the permissions defined above. It is a wrapper that the nightly
-  -- GitHub Action (Y14) can call safely.
-
-  -- Example: Run integrity check (D15) within safe boundaries
-  declare
-    v_check_result jsonb;
-  begin
-    -- Note: The actual integrity check logic would be called carefully
-    -- to avoid modifying the ledger. This is a placeholder.
-    v_result := jsonb_build_object('status', 'ai_job_placeholder');
-  end;
-
-  return v_result;
-end;
+  if not exists (select 1 from pg_roles where rolname = 'ai_job_role') then
+    create role ai_job_role nologin;
+  end if;
+end
 $$;
 
-comment on function public.ai_job_run() is
-  'Placeholder function for the nightly AI job. Runs as ai_job_role.
-   Actual job logic is in the GitHub Action (Y14) via psql commands.';
+grant usage on schema public to ai_job_role;
 
--- ---------------------------------------------------------------------------
--- 4. Grant execute to ai_job_run (optional, for GitHub Actions)
--- ---------------------------------------------------------------------------
-grant execute on function public.ai_job_run() to ai_job_role;
+-- Read
+grant select on public.scans, public.bins, public.products, public.targets,
+                public.rejected_scans, public.daily_totals, public.checkpoints,
+                public.companies
+  to ai_job_role;
 
--- ---------------------------------------------------------------------------
--- 5. Summary
--- ---------------------------------------------------------------------------
--- The ai_job_role is designed so that:
---   • It can read all necessary data for analysis
---   • It can write AI results to dedicated tables only
---   • It CANNOT modify the scans ledger (enforced by revoke all)
---   • Connection string and role password are stored in the password manager
---   • The nightly GitHub Action (Y14) uses this role via psql
--- ============================================================================
+create policy ai_read_scans          on public.scans          for select to ai_job_role using (true);
+create policy ai_read_bins           on public.bins           for select to ai_job_role using (true);
+create policy ai_read_products       on public.products       for select to ai_job_role using (true);
+create policy ai_read_targets        on public.targets        for select to ai_job_role using (true);
+create policy ai_read_rejected       on public.rejected_scans for select to ai_job_role using (true);
+create policy ai_read_daily_totals   on public.daily_totals   for select to ai_job_role using (true);
+create policy ai_read_checkpoints    on public.checkpoints    for select to ai_job_role using (true);
+create policy ai_read_companies      on public.companies      for select to ai_job_role using (true);
+
+-- Write: only the AI output tables (upserts need update; weekly insight
+-- regeneration needs delete)
+grant select, insert, update         on public.bin_scores to ai_job_role;
+grant select, insert, update         on public.scan_flags to ai_job_role;
+grant select, insert, update, delete on public.insights   to ai_job_role;
+grant select, insert, update         on public.forecasts  to ai_job_role;
+grant select, insert, update         on public.alerts     to ai_job_role;
+
+create policy ai_write_bin_scores on public.bin_scores for all to ai_job_role using (true) with check (true);
+create policy ai_write_scan_flags on public.scan_flags for all to ai_job_role using (true) with check (true);
+create policy ai_write_insights   on public.insights   for all to ai_job_role using (true) with check (true);
+create policy ai_write_forecasts  on public.forecasts  for all to ai_job_role using (true) with check (true);
+create policy ai_write_alerts     on public.alerts     for all to ai_job_role using (true) with check (true);
+
+-- Never the ledger. (D3 triggers block UPDATE/DELETE for everyone anyway.)
+revoke insert, update, delete, truncate on public.scans from ai_job_role;

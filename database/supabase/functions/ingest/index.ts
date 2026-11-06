@@ -127,8 +127,11 @@ async function logRejection(
   if (error) console.error("log_rejection failed", reason, error.message);
 }
 
+// Every channel is private (D9). Demo-bin scans go to "demo", all others to
+// "company:<company_id>". Without private: true the message would go to a
+// PUBLIC topic that anyone with the publishable key could read.
 async function broadcastScan(
-  companyId: string,
+  topic: string,
   payload: Record<string, unknown>,
 ): Promise<void> {
   try {
@@ -141,7 +144,7 @@ async function broadcastScan(
       },
       body: JSON.stringify({
         messages: [
-          { topic: `company:${companyId}`, event: "scan", payload },
+          { topic, event: "scan", payload, private: true },
         ],
       }),
     });
@@ -244,7 +247,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   // ---- tell the company's dashboard ----------------------------------------
-  await broadcastScan(String(result.company_id), {
+  const topic = result.is_demo === true ? "demo" : `company:${result.company_id}`;
+  await broadcastScan(topic, {
     scan_id: result.scan_id,
     bin_id: result.bin_id,
     product_id: result.product_id,
