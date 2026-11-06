@@ -1,57 +1,48 @@
-﻿name: Deploy to Dev & Run Ingest Tests
+name: deploy-dev
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
     paths:
       - 'database/**'
-      - 'supabase/**'
-      - 'simulator/**'
+      - '.github/workflows/deploy-dev.yml'
   workflow_dispatch:
 
+concurrency:
+  group: deploy-dev
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
 jobs:
-  deploy-dev:
-    name: Deploy to Supabase Dev & Execute Y7 Tests
+  deploy:
     runs-on: ubuntu-latest
-
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DEV_DB_PASSWORD }}
+      PROJECT_REF: ${{ secrets.SUPABASE_DEV_PROJECT_REF }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
         with:
-          node-version: '20'
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
+          version: 2.122.0
+      - name: Link the dev project
+        working-directory: database
+        run: supabase link --project-ref "$PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+      - name: Push new migrations
+        working-directory: database
+        run: supabase db push --password "$SUPABASE_DB_PASSWORD"
+      - name: Deploy Edge Functions
+        working-directory: database
+        run: supabase functions deploy ingest heartbeat --project-ref "$PROJECT_REF"
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-
-      - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install requests cryptography pytest
-
-      - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v1
-        with:
-          version: latest
-
-      - name: Start local Supabase instance
-        run: npx supabase start
-
-      - name: Deploy Supabase Edge Functions to Dev
+      - run: pip install -r simulator/requirements.txt
+      - name: Y7 ingest suite against dev
         env:
-          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-        run: |
-          echo "Supabase Edge Functions deployment step initialized."
-          # npx supabase functions deploy ingest --project-ref ${{ secrets.SUPABASE_DEV_PROJECT_ID }}
-
-      - name: Execute Y7 Ingest Test Suite
-        env:
-          PYTHONPATH: "."
-        run: |
-          python -m pytest simulator/tests/test_ingest.py
+          INGEST_URL: ${{ secrets.INGEST_URL_DEV }}
+          TEST_BIN_PRIVATE_KEY: ${{ secrets.TEST_BIN_PRIVATE_KEY }}
+          TEST_QR_SERIAL: ${{ secrets.TEST_QR_SERIAL }}
+        run: pytest simulator/tests/test_ingest_live.py -v
