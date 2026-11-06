@@ -135,7 +135,7 @@ def generate_products(companies: list[dict[str, str]]) -> list[dict[str, str | i
 
     products: list[dict[str, str | int]] = []
     for idx, (code, name, category, unit_wt, comp_idx) in enumerate(specs, start=1):
-        product_uuid = f"p{idx:07d}-0000-4000-8000-{idx:012d}"
+        product_uuid = f"e{idx:07d}-0000-4000-8000-{idx:012d}"
         company_id = str(companies[comp_idx]["id"])
         raw_prefix = f"890123456{idx:03d}"
         barcode = make_ean13_barcode(raw_prefix)
@@ -580,7 +580,7 @@ def generate_mock_dataset() -> None:
     )
     rejected_rows: list[dict[str, str]] = []
     for idx, reason in enumerate(reasons_distribution, start=1):
-        rej_uuid = f"r{idx:07d}-0000-4000-8000-{idx:012d}"
+        rej_uuid = f"f{idx:07d}-0000-4000-8000-{idx:012d}"
         bin_spec = bin_specs[idx % len(bin_specs)]
         bin_id = bin_spec[0]
         comp_id = str(bin_spec[2])
