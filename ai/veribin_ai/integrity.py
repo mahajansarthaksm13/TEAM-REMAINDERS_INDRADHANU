@@ -1,24 +1,45 @@
-﻿from cryptography.hazmat.primitives.asymmetric import ed25519
+"""Integrity check, the first step of every nightly run (Y10/Y11).
 
-class IntegrityChecker:
-    """Verifies Ed25519 cryptographic signatures and hash chain continuity."""
-    
-    def verify_scan_signature(self, raw_text: str, signature_hex: str, public_key_hex: str) -> bool:
-        try:
-            pub_bytes = bytes.fromhex(public_key_hex)
-            sig_bytes = bytes.fromhex(signature_hex)
-            pub_key = ed25519.Ed25519PublicKey.from_public_bytes(pub_bytes)
-            pub_key.verify(sig_bytes, raw_text.encode('utf-8'))
-            return True
-        except Exception:
-            return False
+1. Re-verify the Ed25519 signature of every scan (keys and signatures are
+   base64, per CONTRACTS §5) - Postgres cannot do this, so Python does.
+2. Ask the database to walk each bin's hash chain (verify_chain, D15).
+Any failure -> the run writes a chain_break alert and STOPS: no scores or
+insights are published on top of a ledger that does not verify.
+"""
 
-    def verify_batch(self, scan_list):
-        corrupted = []
-        for scan in scan_list:
-            is_valid = self.verify_scan_signature(
-                scan["raw_text"], scan["signature"], scan["public_key"]
-            )
-            if not is_valid:
-                corrupted.append(scan)
-        return {"total": len(scan_list), "corrupted_count": len(corrupted), "corrupted": corrupted}
+from __future__ import annotations
+
+import base64
+
+import pandas as pd
+from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
+
+
+def signature_ok(public_key_b64: str, signature_b64: str, text: str) -> bool:
+    try:
+        key = Ed25519PublicKey.from_public_bytes(base64.b64decode(public_key_b64))
+        key.verify(base64.b64decode(signature_b64), text.encode("utf-8"))
+        return True
+    except (InvalidSignature, ValueError, TypeError):
+        return False
+
+
+def bad_signatures(scans: pd.DataFrame) -> list[dict]:
+    """scans needs: id, bin_id, record_text, signature, public_key."""
+    bad = []
+    for row in scans.itertuples(index=False):
+        if not signature_ok(row.public_key, row.signature, row.record_text):
+            bad.append({"scan_id": str(row.id), "bin_id": row.bin_id})
+    return bad
+
+
+def chain_breaks(verify, bin_ids: list[str]) -> list[dict]:
+    """verify(bin_id) -> {'ok', 'scans_checked', 'failing_scan', 'reason'}."""
+    breaks = []
+    for bin_id in bin_ids:
+        result = verify(bin_id)
+        if not result["ok"]:
+            breaks.append({"bin_id": bin_id, "failing_scan": result["failing_scan"],
+                           "reason": result["reason"]})
+    return breaks

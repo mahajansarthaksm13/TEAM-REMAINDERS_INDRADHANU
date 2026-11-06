@@ -1,18 +1,15 @@
-﻿import pytest
-from ai.veribin_ai.evaluation import DetectorEvaluator
+import pandas as pd
+from veribin_ai.evaluation import evaluate
 
-def test_evaluation_metrics():
-    evaluator = DetectorEvaluator()
-    predictions = {
-        "BIN-001": {"very_low_weight", "odd_hours"},
-        "BIN-002": {"burst_rescan"}
-    }
-    ground_truth = {
-        "BIN-001": {"very_low_weight"},
-        "BIN-002": {"burst_rescan"}
-    }
-    res = evaluator.evaluate_performance(predictions, ground_truth)
-    assert res["caught"] == 2
-    assert res["false_alarms"] == 1
-    assert res["missed"] == 0
-    assert res["precision"] == 0.6667
+
+def test_caught_missed_and_false_alarms():
+    labels = pd.DataFrame([
+        {"bin_id": "B", "sequence": 1, "fraud_type": "very_low_weight"},
+        {"bin_id": "B", "sequence": 2, "fraud_type": "very_low_weight"},
+        {"bin_id": "B", "sequence": 3, "fraud_type": "normal"},
+    ])
+    flagged = pd.DataFrame([{"bin_id": "B", "sequence": 1, "reason": "VERY_LOW_WEIGHT"},
+                            {"bin_id": "B", "sequence": 3, "reason": "ODD_HOURS"}])
+    r = evaluate(labels, flagged)
+    assert r["very_low_weight"] == {"planted": 2, "caught": 1, "missed": 1}
+    assert r["false_alarms"] == {"clean_scans": 1, "flagged": 1}

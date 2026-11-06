@@ -1,140 +1,141 @@
 -- ============================================================================
--- D7 · Auth and roles
+-- D7 · Auth and roles (rewritten)
 --
--- Task sheet: D7 Auth and roles
--- Unblocks: A6 (Sarthak's login)
+-- profiles and auditor_assignments already exist (created in D2), so this
+-- migration does NOT create them again. It adds:
+--   * the helper functions every RLS policy uses (D8, D9, D16)
+--   * a guard so only admins can approve products
+--   * a sequence that hands out product codes (P0001, P0002, ...)
 --
--- 1. Disable public sign‑ups, enable email‑only login
--- 2. Create profiles + auditor‑assignments tables
--- 3. Script that creates test users (one per company, one auditor assigned to one company,
---    one regulator, one admin) and share logins via password manager
+-- Identity always comes from auth.uid(), the user id inside the Supabase JWT.
+-- Nothing here reads app.current_user_id: Supabase never sets that.
+--
+-- Sign-ups are switched off in config.toml ([auth] enable_signup = false) and
+-- in the dashboard for dev and prod. Test users are created with
+-- database/scripts/create_test_users.py, never in a migration.
 -- ============================================================================
 
 -- ---------------------------------------------------------------------------
--- 1. Disable public sign‑ups and enable email login
+-- 1. Helpers. SECURITY DEFINER so they can read profiles without tripping
+--    profiles' own RLS (which would otherwise recurse).
 -- ---------------------------------------------------------------------------
 
--- Supabase project config: turn off public sign‑ups, enable email login
--- (done via dashboard or API; recorded here for audit trail).
+create or replace function public.my_role()
+returns public.user_role
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select p.role from public.profiles p where p.user_id = (select auth.uid())
+$$;
 
--- ---------------------------------------------------------------------------
--- 2. Profiles table
--- ---------------------------------------------------------------------------
+create or replace function public.my_company()
+returns uuid
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select p.company_id from public.profiles p where p.user_id = (select auth.uid())
+$$;
 
--- One row per auth user. role + company_id drive every RLS policy in D8.
--- A company user must belong to a company; an auditor is linked via
--- auditor_assignments; admin and regulator are not tied to one company.
+-- Turns any text into a uuid, or null if it is not one. Used where a uuid is
+-- taken from a channel name or a storage folder, so bad input never crashes.
+create or replace function public.try_uuid(p_value text)
+returns uuid
+language plpgsql
+immutable
+set search_path = ''
+as $$
+begin
+  return p_value::uuid;
+exception when others then
+  return null;
+end;
+$$;
 
-create table public.profiles (
-  user_id     uuid primary key references auth.users (id) on delete cascade,
-  role        public.user_role not null,
-  company_id  uuid references public.companies (id) on delete set null,
-  full_name   text,
-  created_at  timestamptz not null default now(),
-
-  -- Constraint ensures a company user always has a company;
-  -- non‑company roles (auditor, regulator, admin) may have company_id null.
-  constraint profiles_company_required check (
-    (role = 'company' and company_id is not null)
-    or (role <> 'company')
+-- The single rule behind every "who sees which company" policy.
+create or replace function public.can_see_company(p_company_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select coalesce(
+    case public.my_role()
+      when 'admin'     then true
+      when 'regulator' then true
+      when 'company'   then p_company_id = public.my_company()
+      when 'auditor'   then exists (
+        select 1
+        from public.auditor_assignments a
+        where a.auditor_id = (select auth.uid())
+          and a.company_id = p_company_id
+      )
+    end,
+    false
   )
-);
+$$;
 
-comment on table public.profiles is
-  'Maps auth users to roles and companies. Drives all RLS policies in D8.';
-
--- ---------------------------------------------------------------------------
--- 3. Auditor assignments
--- ---------------------------------------------------------------------------
-
-create table public.auditor_assignments (
-  auditor_id  uuid not null references public.profiles (user_id) on delete cascade,
-  company_id  uuid not null references public.companies (id) on delete cascade,
-  created_at  timestamptz not null default now(),
-  primary key (auditor_id, company_id)
-);
-
-comment on table public.auditor_assignments is
-  'Links auditors (profiles with role = auditor) to companies they can audit.',
-  'Each auditor may be assigned to one or more companies.';
+revoke all on function public.my_role()               from public, anon;
+revoke all on function public.my_company()            from public, anon;
+revoke all on function public.can_see_company(uuid)   from public, anon;
+grant execute on function public.my_role()             to authenticated, service_role;
+grant execute on function public.my_company()          to authenticated, service_role;
+grant execute on function public.can_see_company(uuid) to authenticated, service_role;
+grant execute on function public.try_uuid(text)        to anon, authenticated, service_role;
 
 -- ---------------------------------------------------------------------------
--- 4. Seed script (conceptual — run manually via npx supabase db exec)
+-- 2. Product codes are issued by the database, not typed by users
 -- ---------------------------------------------------------------------------
 
--- The following SQL creates the four test users. Execute with:
---   npx supabase db exec < seed-users.sql
---
--- Passwords are hashed; never store plain text in migration files.
--- Logins are shared via the team password manager.
+create sequence if not exists public.product_code_seq start 1;
 
--- VERBATIM from task sheet: "Script that creates test users: one per company,
--- one auditor assigned to one company, one regulator, one admin."
+alter table public.products
+  alter column product_code
+  set default 'P' || lpad(nextval('public.product_code_seq')::text, 4, '0');
 
 -- ---------------------------------------------------------------------------
--- 5. RLS is already enabled on profiles and auditor_assignments from D2
+-- 3. Only admins approve products. Calls without a logged-in user
+--    (service role, migrations, seed) are trusted.
 -- ---------------------------------------------------------------------------
 
--- D2 already ran:  alter table public.profiles enable row level security;
--- D2 already ran:  alter table public.auditor_assignments enable row level security;
+create or replace function public.products_guard()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if (select auth.uid()) is null or public.my_role() = 'admin' then
+    return new;
+  end if;
 
--- ---------------------------------------------------------------------------
--- 6. Sample policies (the task sheet says "Done when: all test users exist in dev")
--- ------------------------------------------------------------------------
+  if tg_op = 'INSERT' then
+    new.approved := false;                       -- every new product waits for an admin
+    return new;
+  end if;
 
--- These policies allow the web app to function while we D8 fine‑tune them.
--- D8 will replace/adjust them with the exact RLS matrix.
+  if new.approved is distinct from old.approved then
+    raise exception 'Only an admin can change product approval'
+      using errcode = '42501';
+  end if;
 
--- Companies see only their own profile
-create policy "companies_see_own_profile" on public.profiles
-  for select using (company_id = (select company_id from public.profiles where user_id = current_setting('app.current_user_id')));
+  -- Once approved, the fields that decide EPR totals are frozen.
+  if old.approved and (new.product_code, new.barcode, new.category, new.unit_weight_g, new.company_id)
+                is distinct from
+                      (old.product_code, old.barcode, old.category, old.unit_weight_g, old.company_id) then
+    raise exception 'An approved product cannot change code, barcode, category, weight or owner'
+      using errcode = '42501';
+  end if;
 
--- Auditors see assigned companies
-create policy "auditors_see_assigned_companies" on public.profiles
-  for select using (role = 'auditor');
+  return new;
+end;
+$$;
 
--- Regulators see all (will be tightened in D8)
-create policy "regulators_see_all_profiles" on public.profiles
-  for select using (role = 'regulator');
-
--- Admin sees all (will be tightened in D8)
-create policy "admins_see_all_profiles" on public.profiles
-  for select using (role = 'admin');
-
--- ---------------------------------------------------------------------------
--- 7. Test users (to be created manually)
--- ------------------------------------------------------------------------
-
--- After this migration merges, run:
---   npx supabase db exec seed-users.sql
---
--- Where seed-users.sql contains:
---
---   -- Company 1 user
---   insert into public.profiles (user_id, role, company_id, full_name)
---     values ('c1111111-1111-1111-1111-111111111111', 'company', '11111111-1111-1111-1111-111111111111', 'Company A User');
---
---   -- Company 2 user
---   insert into public.profiles (user_id, role, company_id, full_name)
---     values ('c2222222-2222-2222-2222-222222222222', 'company', '22222222-2222-2222-2222-222222222222', 'Company B User');
---
---   -- Auditor (assigned to Company 1)
---   insert into public.profiles (user_id, role, company_id, full_name)
---     values ('a1111111-1111-1111-1111-111111111111', 'auditor', '11111111-1111-1111-1111-111111111111', 'Audit User');
---
---   -- Auditor assignments
---   insert into public.auditor_assignments (auditor_id, company_id)
---     values ('a1111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111');
---
---   -- Regulator
---   insert into public.profiles (user_id, role, company_id, full_name)
---     values ('r1111111-1111-1111-1111-111111111111', 'regulator', null, 'Regulator User');
---
---   -- Admin
---   insert into public.profiles (user_id, role, company_id, full_name)
---     values ('admin1111111-1111-1111-1111-111111111111', 'admin', null, 'Admin User');
---
---   -- Set the Supabase anon key / service role env vars so the above
---   -- can be run in the supabase local environment.
-
--- Done when: all four user types (company, auditor, regulator, admin) exist in the database.
+drop trigger if exists products_guard on public.products;
+create trigger products_guard
+  before insert or update on public.products
+  for each row execute function public.products_guard();

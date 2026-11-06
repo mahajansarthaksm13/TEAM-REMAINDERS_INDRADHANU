@@ -1,16 +1,18 @@
-﻿import pytest
-from ai.veribin_ai.trends import TrendsForecastEngine
+from datetime import date
 
-def test_forecast_calculation():
-    engine = TrendsForecastEngine()
-    # 100 kg collected over 10 days out of 365 days
-    res = engine.calculate_company_forecast(current_collected_kg=100.0, days_elapsed=10)
-    assert res["daily_avg_kg"] == 10.0
-    assert res["days_remaining"] == 355
-    assert res["projected_total_kg"] == 3650.0
+import pandas as pd
+from veribin_ai import trends
 
-def test_insight_card_generation():
-    engine = TrendsForecastEngine()
-    insights = engine.generate_insight_cards("Company A", total_scans=100, anomaly_ratio=0.20)
-    assert len(insights) > 0
-    assert insights[0]["type"] == "alert"
+
+def test_fy_bounds():
+    assert trends.fy_bounds(date(2026, 11, 3))[0] == "2026-27"
+    assert trends.fy_bounds(date(2027, 2, 1))[0] == "2026-27"
+
+
+def test_forecast_flags_shortfall():
+    days = pd.date_range("2026-09-08", "2026-11-02").date
+    daily = pd.DataFrame({"day": days, "company_id": "c1", "category": "cat1_rigid",
+                          "city": "PUN", "scan_count": 1, "weight_g": 100})
+    targets = pd.DataFrame([{"company_id": "c1", "category": "cat1_rigid", "target_kg": 1000}])
+    [f] = trends.forecasts(daily, targets, date(2026, 11, 3))
+    assert f["at_risk"] and f["low_kg"] <= f["projected_kg"] <= f["high_kg"]

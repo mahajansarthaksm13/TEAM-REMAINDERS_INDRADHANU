@@ -1,0 +1,31 @@
+name: nightly-ai
+
+on:
+  schedule:
+    - cron: '0 20 * * *'      # 01:30 IST
+  workflow_dispatch:
+
+concurrency:
+  group: nightly-ai
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r ai/requirements.txt
+      - name: Integrity -> scores -> flags -> trends -> forecast -> narration
+        env:
+          PYTHONPATH: ai
+          AI_DATABASE_URL: ${{ secrets.AI_DATABASE_URL }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ secrets.GEMINI_MODEL }}
+        run: python -m veribin_ai.run

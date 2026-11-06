@@ -1,280 +1,192 @@
 -- ============================================================================
--- D10 · Dashboard read functions
+-- D10 · Dashboard read functions (rewritten)
 --
--- Task sheet: D10 Dashboard read functions
--- Unblocks: A7 (Sarthak: Switch to real data)
+-- The first three run as the CALLER (security invoker, the default), so RLS
+-- from D8 decides which companies' rows are summed. A company user gets their
+-- own numbers; admin and regulator get every non-demo company.
 --
--- Provides the read functions the dashboard front-end calls to populate the
--- six blocks on the home page. All functions run with the caller's RLS
--- permissions, so no additional WHERE clauses are needed in the function
--- bodies — RLS does the filtering.
+-- They read daily_totals, which ingest keeps up to date using the CATALOGUE
+-- weight (products.unit_weight_g). Weights are stored in grams and returned
+-- in kg with 3 decimals.
 --
--- TypeScript types are generated from this schema into web/src/lib/database.types.ts.
+-- get_public_stats() is SECURITY DEFINER for the logged-out website:
+-- national aggregates only, never one company's numbers, never demo data.
+--
+-- Names and parameters match docs/CONTRACTS.md §8: p_from, p_to (inclusive,
+-- IST calendar dates).
 -- ============================================================================
 
+-- Indian financial year label for a date: 2026-05-10 -> '2026-27'
+create or replace function public.fy_label(p_day date)
+returns text
+language sql
+immutable
+set search_path = ''
+as $$
+  select y::text || '-' || lpad(((y + 1) % 100)::text, 2, '0')
+  from (select extract(year from p_day)::int
+               - case when extract(month from p_day) < 4 then 1 else 0 end as y) t
+$$;
+
 -- ---------------------------------------------------------------------------
--- 1. KPIs by category for a date range
+-- 1. KPIs: one row per EPR category (always all 4, even with no scans)
+--    target_kg is the full financial-year target of the FY containing p_from.
 -- ---------------------------------------------------------------------------
---
--- Usage: public.get_kpis_by_category(p_from_date, p_to_date)
--- Returns rows with one row per EPR category for the given date range.
--- The dashboard calls this with the selected financial-year period.
---
-create or replace function public.get_kpis_by_category(
-  p_from_date date,
-  p_to_date date
-)
+create or replace function public.get_kpis_by_category(p_from date, p_to date)
 returns table (
   category      public.epr_category,
-  target_kg     numeric(12, 3),
-  collected_kg  numeric(12, 3),
-  pct           numeric(5, 1),
-  needed_per_day numeric(8, 3),
-  current_per_day numeric(8, 3),
-  projected_pct numeric(5, 1),
-  status        public.Status
+  collected_kg  numeric,
+  scan_count    bigint,
+  target_kg     numeric,
+  gap_kg        numeric,
+  progress_pct  numeric
 )
-language plpgsql
+language sql
+stable
 set search_path = ''
 as $$
-begin
-  return query
-  with company_filter as (
-    -- The caller's company_id is set by the Edge Function (D6) via
-    -- set_config('app.current_user_id', ...). RLS will automatically
-    -- filter rows based on the user's profile.company_id.
-    select company_id from public.profiles where user_id = current_setting('app.current_user_id', true)
+  with cats as (
+    select unnest(enum_range(null::public.epr_category)) as category
   ),
-  period_scans as (
-    select
-      s.category,
-      sum(case when s.weight_g > 0 then s.weight_g else 0 end)::numeric as collected_kg,
-      count(s.id)::numeric as scan_count
-    from public.scans s
-    where s.scanned_at >= p_from_date
-      and s.scanned_at < p_to_date
-      and s.weight_g is not null
-    group by s.category
+  tot as (
+    select d.category, sum(d.weight_g) as grams, sum(d.scan_count) as n
+    from public.daily_totals d
+    join public.companies c on c.id = d.company_id
+    where d.day between p_from and p_to
+      and not c.is_demo
+    group by d.category
   ),
-  targets as (
-    select
-      c.category,
-      t.target_kg
-    from public.companies comp
-    join public.targets t on t.company_id = comp.id and t.financial_year = extract(year from age(current_date, make_date(1,1,current_date))::text || '-01' || '--' || extract(year from current_date)::text)
-    cross join company_filter cf on comp.id = cf.company_id
-    where comp.is_demo = false
+  tgt as (
+    select t.category, sum(t.target_kg) as kg
+    from public.targets t
+    join public.companies c on c.id = t.company_id
+    where t.financial_year = public.fy_label(p_from)
+      and not c.is_demo
+    group by t.category
   )
   select
-    sc.category,
-    coalesce(t.target_kg, 0)::numeric(12,3) as target_kg,
-    coalesce(ps.collected_kg, 0)::numeric(12,3) as collected_kg,
-    case when coalesce(t.target_kg, 0) > 0 then
-      coalesce(ps.collected_kg, 0) / coalesce(t.target_kg, 0) * 100
-    else 0 end::numeric(5,1) as pct,
-    case when coalesce(t.target_kg, 0) > 0 then
-      (coalesce(t.target_kg, 0) - coalesce(ps.collected_kg, 0)) / nullif(extract(day from (p_to_date - p_from_date)), 0)::numeric(8,3)
-    else 0 end::numeric(8,3) as needed_per_day,
-    case when coalesce(ps.collected_kg, 0) > 0 then
-      coalesce(ps.collected_kg, 0) / nullif(extract(day from (p_to_date - p_from_date)), 0)::numeric(8,3)
-    else 0 end::numeric(8,3) as current_per_day,
-    case when coalesce(t.target_kg, 0) > 0 then
-      greatest(greatest(
-        greatest(coalesce(ps.collected_kg, 0) / nullif(extract(day from (p_to_date - p_from_date)), 0)::numeric(8,3) * nullif(extract(day from (p_to_date - p_from_date)), 0)::numeric(8,3), 0),
-        0) / coalesce(t.target_kg, 0) * 100
-    else 0 end::numeric(5,1) as projected_pct,
-    case when
-      greatest(greatest(
-        greatest(coalesce(ps.collected_kg, 0) / nullif(extract(day from (p_to_date - p_from_date)), 0)::numeric(8,3) * nullif(extract(day from (p_to_date - p_from_date)), 0)::numeric(8,3), 0),
-        0) / greatest(coalesce(t.target_kg, 0), 1) * 100
-    then
-      case when greatest(greatest(
-        greatest(coalesce(ps.collected_kg, 0) / nullif(extract(day from (p_to_date - p_from_date)), 0)::numeric(8,3) * nullif(extract(day from (p_to_date - p_from_date)), 0)::numeric(8,3), 0),
-        0) / greatest(coalesce(t.target_kg, 0), 1) * 100) >= 100 then 'on_track'
-        when greatest(greatest(
-        greatest(coalesce(ps.collected_kg, 0) / nullif(extract(day from (p_to_date - p_from_date)), 0)::numeric(8,3) * nullif(extract(day from (p_to_date - p_from_date)), 0)::numeric(8,3), 0),
-        0) / greatest(coalesce(t.target_kg, 0), 1) * 100) >= 85 then 'slipping'
-        else 'missing' end
-    else 'missing' end::public.Status as status
-  from public.epr_category sc
-  left join targets t on sc = t.category
-  left join period_scans ps on sc = ps.category
-  order by sc;
-end;
+    cats.category,
+    round(coalesce(tot.grams, 0) / 1000.0, 3)                               as collected_kg,
+    coalesce(tot.n, 0)::bigint                                              as scan_count,
+    tgt.kg                                                                  as target_kg,
+    case when tgt.kg is null then null
+         else greatest(tgt.kg - coalesce(tot.grams, 0) / 1000.0, 0) end     as gap_kg,
+    case when tgt.kg > 0
+         then round(coalesce(tot.grams, 0) / 1000.0 / tgt.kg * 100, 1) end  as progress_pct
+  from cats
+  left join tot using (category)
+  left join tgt using (category)
+  order by cats.category
 $$;
 
 -- ---------------------------------------------------------------------------
--- 2. Monthly trend
+-- 2. Monthly trend: kg per month per category
 -- ---------------------------------------------------------------------------
---
--- Usage: public.get_monthly_trend(p_from_date, p_to_date)
--- Returns daily totals per category, aggregated by month.
--- The dashboard uses this for the line chart (Block 3).
---
-create or replace function public.get_monthly_trend(
-  p_from_date date,
-  p_to_date date
-)
+create or replace function public.get_monthly_trend(p_from date, p_to date)
 returns table (
-  month           date,
-  category        public.epr_category,
-  collected_kg    numeric(12, 3),
-  cumulative_kg   numeric(12, 3)
+  month         date,
+  category      public.epr_category,
+  collected_kg  numeric,
+  scan_count    bigint
 )
-language plpgsql
+language sql
+stable
 set search_path = ''
 as $$
-begin
-  return query
-  with monthly as (
-    select
-      date_trunc('month', s.scanned_at)::date as month,
-      s.category,
-      sum(case when s.weight_g > 0 then s.weight_g else 0 end)::numeric(12,3) as collected_kg
-    from public.scans s
-    where s.scanned_at >= p_from_date
-      and s.scanned_at < p_to_date
-      and s.weight_g is not null
-    group by 1, 2
-  ),
-  ordered as (
-    select month, category, collected_kg,
-      sum(collected_kg) over (partition by category order by month rows between unbound preceding and current row) as cumulative_kg
-    from monthly
-  )
-  select month, category, collected_kg, cumulative_kg
-  from ordered
-  order by category, month;
-end;
+  select
+    date_trunc('month', d.day)::date,
+    d.category,
+    round(sum(d.weight_g) / 1000.0, 3),
+    sum(d.scan_count)::bigint
+  from public.daily_totals d
+  join public.companies c on c.id = d.company_id
+  where d.day between p_from and p_to
+    and not c.is_demo
+  group by 1, 2
+  order by 1, 2
 $$;
 
 -- ---------------------------------------------------------------------------
--- 3. Bin list with latest score and open alerts
+-- 3. Bin list with the latest trust score (written by the AI job) and the
+--    number of open alerts. trust_score is null until the AI has scored it.
 -- ---------------------------------------------------------------------------
---
--- Usage: public.get_bin_list()
--- Returns one row per bin with latest trust score, status, and open alert count.
--- The dashboard uses this for Block 4 (Location table).
---
 create or replace function public.get_bin_list()
 returns table (
-  bin_id          text,
-  company_id      uuid,
-  city            text,
-  status          public.bin_status,
-  last_sequence   bigint,
-  chain_head      text,
-  last_seen       timestamptz,
-  trust_score     integer,
-  trust_reason    text,
-  open_alerts     integer
+  bin_id         text,
+  company_id     uuid,
+  city           text,
+  status         public.bin_status,
+  last_seen      timestamptz,
+  last_sequence  bigint,
+  trust_score    integer,
+  trust_reasons  jsonb,
+  score_day      date,
+  open_alerts    bigint,
+  is_demo        boolean
 )
-language plpgsql
+language sql
+stable
 set search_path = ''
 as $$
-begin
-  return query
   select
-    b.id as bin_id,
-    b.company_id,
-    b.city,
-    b.status,
-    b.last_sequence,
-    b.chain_head,
-    b.last_seen,
-    -- Trust score: if bins table has a score column we'd use it; otherwise compute from
-    -- the latest 90 days of scans. For now we derive a simple score from scan density.
-    case
-      when last_seen < current_date - interval '30 days' then 20
-      when last_seen is null then 0
-      else 80 end as trust_score,
-    case
-      when last_seen < current_date - interval '30 days' then 'likely to go silent within 7 days'
-      when last_seen is null then 'no scans recorded'
-      else null end as trust_reason,
-    -- Open alerts count
-    (select count(*) from public.alerts a where a.bin_id = b.id and a.closed_at is null) as open_alerts
+    b.id, b.company_id, b.city, b.status, b.last_seen, b.last_sequence,
+    s.score, s.reasons, s.day,
+    (select count(*) from public.alerts a where a.bin_id = b.id and a.closed_at is null),
+    b.is_demo
   from public.bins b
-  order by b.city, b.id;
-end;
+  left join lateral (
+    select x.score, x.reasons, x.day
+    from public.bin_scores x
+    where x.bin_id = b.id
+    order by x.day desc
+    limit 1
+  ) s on true
+  order by b.city, b.id
 $$;
 
 -- ---------------------------------------------------------------------------
--- 4. Public national stats (aggregates only)
+-- 4. National stats for the public website
 -- ---------------------------------------------------------------------------
---
--- Usage: public.get_public_stats()
--- Returns aggregates across all companies, but never one company's volumes.
--- The dashboard uses these for the national overview displayed alongside
--- the company-specific KPIs. Demo companies are excluded.
---
 create or replace function public.get_public_stats()
 returns table (
-  total_collected_kg numeric(12, 3),
-  total_target_kg    numeric(12, 3),
-  total_scans        bigint,
-  active_bins        bigint,
-  categories        jsonb,
-  breakdown_by_city jsonb
+  total_kg     numeric,
+  total_scans  bigint,
+  active_bins  bigint,
+  cities       bigint,
+  by_category  jsonb
 )
-language plpgsql
+language sql
+stable
+security definer
 set search_path = ''
 as $$
-begin
-  return query
-  with company_filter as (
-    select company_id from public.profiles where user_id = current_setting('app.current_user_id', true)
-  ),
-  stats as (
-    select
-      sum(case when s.weight_g > 0 then s.weight_g else 0 end)::numeric(12,3) as total_collected_kg,
-      count(*)::bigint as total_scans,
-      count(distinct b.id)::bigint as active_bins
-    from public.scans s
-    join public.bins b on b.id = s.bin_id
-    where b.is_demo = false
-      and s.weight_g is not null
-  ),
-  breakdown as (
-    select
-      b.city,
-      count(*)::jsonb as city_data
-    from public.bins b
-    join public.scans s on s.bin_id = b.id
-    where b.is_demo = false
-    group by b.city
+  with t as (
+    select d.category, sum(d.weight_g) as grams, sum(d.scan_count) as n
+    from public.daily_totals d
+    join public.companies c on c.id = d.company_id
+    where not c.is_demo
+    group by d.category
   )
   select
-    s.total_collected_kg,
-    -- Target: sum across all non-demo companies for the current financial year
-    (select sum(t.target_kg)::numeric(12,3) from public.targets t
-     join public.companies c on c.id = t.company_id
-     where c.is_demo = false
-       and t.financial_year = extract(year from age(current_date, make_date(1,1,current_date))::text || '-01' || '--' || extract(year from current_date)::text)) as total_target_kg,
-    s.total_scans,
-    s.active_bins,
-    -- Categories aggregate: count of distinct categories seen in public stats
-    jsonb_agg(distinct s.category) as categories,
-    -- Breakdown by city as JSON
-    jsonb_object_agg(b.city, city_data) as breakdown_by_city
-  from stats s, breakdown b
-  group by s.total_collected_kg;
-end;
+    round(coalesce(sum(t.grams), 0) / 1000.0, 3),
+    coalesce(sum(t.n), 0)::bigint,
+    (select count(*) from public.bins b where b.status = 'active' and not b.is_demo),
+    (select count(distinct b.city) from public.bins b where not b.is_demo),
+    coalesce(jsonb_object_agg(t.category, round(t.grams / 1000.0, 3))
+               filter (where t.category is not null), '{}'::jsonb)
+  from t
 $$;
 
 -- ---------------------------------------------------------------------------
--- 5. Helper: Status enum used by KPIs
+-- 5. Who may call what
 -- ---------------------------------------------------------------------------
-create type public.Status as enum ('on_track', 'slipping', 'missing');
+revoke all on function public.get_kpis_by_category(date, date) from public, anon;
+revoke all on function public.get_monthly_trend(date, date)    from public, anon;
+revoke all on function public.get_bin_list()                   from public, anon;
+grant execute on function public.get_kpis_by_category(date, date) to authenticated;
+grant execute on function public.get_monthly_trend(date, date)    to authenticated;
+grant execute on function public.get_bin_list()                   to authenticated;
 
--- ---------------------------------------------------------------------------
--- 6. Grant execute to service_role (Edge Functions) and anon (for public stats)
--- ---------------------------------------------------------------------------
-grant execute on function public.get_kpis_by_category(date, date) to service_role, anon;
-grant execute on function public.get_monthly_trend(date, date) to service_role, anon;
-grant execute on function public.get_bin_list() to service_role, anon;
-grant execute on function public.get_public_stats() to service_role, anon;
-
--- ---------------------------------------------------------------------------
--- End of D10
--- ---------------------------------------------------------------------------
+revoke all on function public.get_public_stats() from public;
+grant execute on function public.get_public_stats() to anon, authenticated;
+grant execute on function public.fy_label(date) to anon, authenticated, service_role;

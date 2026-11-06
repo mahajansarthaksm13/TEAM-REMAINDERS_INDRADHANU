@@ -1,240 +1,321 @@
 -- ============================================================================
--- D16 · Report storage and verify
+-- D16 + Y16 · Reports: snapshot, creation, PDF attachment, public verify,
+--             private storage bucket (rewritten)
 --
--- Task sheet: D16 Report storage and verify
--- Unblocks: A14, A15 (Sarthak)
+-- A report is pinned to ONE checkpoint day. It includes exactly the scans that:
+--   * belong to the company and category
+--   * were scanned within [period_start, period_end] (IST dates)
+--   * entered the ledger before the end of the checkpoint day (IST)
+--   * are not weight_ok = false   (null = bin has no load cell, still counted)
+--   * are not from a demo bin
+-- Totals use the catalogue weight. The fingerprint is
+--   sha256( chain_hash1 || ',' || chain_hash2 || ... )  in insertion order
+-- (sha256 of the empty string when there are no scans).
 --
--- 1. Private "reports" bucket
---    Companies can only read their own folder. Files are encrypted at rest.
+-- Because the scan set is pinned to a checkpoint, re-running the snapshot later
+-- gives the same fingerprint, unless the ledger was tampered with.
+--
+-- Flow used by the web app (A14):
+--   1. create_report(category, from, to)        -> report row (as the user)
+--   2. render PDF from that row, sha256 it, upload with the service role to
+--      reports/<company_id>/<report_id>.pdf
+--   3. attach_report_pdf(report_id, path, pdf_sha256)  (as the user)
+--   4. QR on the PDF opens /verify/<report_id>, which calls verify_report()
 -- ============================================================================
---
--- 2. RLS on reports table
---    Companies can only select their own rows. Admins can select all.
--- ============================================================================
---
--- 3. Yash's Y16 snapshot function (reviewed and merged by Durgesh)
---    Computes the snapshot from checkpointed scans.
--- ============================================================================
---
--- 4. Public "verify report" function
---    Re-runs a stored report's snapshot and returns match/mismatch
---    plus sample scans. Accessible to anyone via the QR code.
--- ============================================================================
+
+alter table public.reports
+  add column if not exists scan_count         bigint,
+  add column if not exists qr_kg              numeric(12, 3),
+  add column if not exists barcode_kg         numeric(12, 3),
+  add column if not exists under_review_count bigint,
+  add column if not exists checkpoint_hash    text,
+  add column if not exists pdf_sha256         text,
+  add column if not exists created_by         uuid references public.profiles (user_id) on delete set null;
 
 -- ---------------------------------------------------------------------------
--- 1. Ensure the reports table exists (should already exist from D2/D5 migrations)
+-- 1. Internal: which scans a report includes (single source of truth)
 -- ---------------------------------------------------------------------------
-do $$
-begin
-  if not exists (select 1 from information_schema.tables where table_schema = 'public' and table_name = 'reports') then
-    raise notice 'Reports table does not exist; this migration assumes D2/D5 have created it';
-  end;
-end $$;
+create or replace function public._report_scan_ids(
+  p_company_id     uuid,
+  p_category       public.epr_category,
+  p_from           date,
+  p_to             date,
+  p_checkpoint_day date
+)
+returns table (scan_id uuid)
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select s.id
+  from public.scans s
+  join public.bins b on b.id = s.bin_id
+  where s.company_id = p_company_id
+    and s.category = p_category
+    and (s.scanned_at at time zone 'Asia/Kolkata')::date between p_from and p_to
+    and s.received_at < ((p_checkpoint_day + 1)::timestamp at time zone 'Asia/Kolkata')
+    and s.weight_ok is not false
+    and not b.is_demo
+$$;
 
 -- ---------------------------------------------------------------------------
--- 1. Reports table structure (if not already created)
+-- 2. Internal: the numbers and fingerprint for that scan set
 -- ---------------------------------------------------------------------------
--- The reports table stores report metadata and fingerprint information.
--- If it doesn't already exist (from earlier migrations), create it:
-create table if not exists public.reports (
-  id              uuid primary key default gen_random_uuid(),
-  company_id      uuid not null references public.companies (id) on delete cascade,
-  category        public.epr_category not null,
-  period_start    date not null,
-  period_end      date not null,
-  fingerprint     text not null,
-  checkpoint_day  date references public.checkpoints (day),
-  storage_path    text,
-  created_at      timestamptz not null default now(),
-
-  constraint reports_period_order check (period_end >= period_start),
-
-  constraint reports_fingerprint_format check (fingerprint ~ '^[0-9a-f]{64}$')
-);
-
--- ---------------------------------------------------------------------------
--- 2. Row-level security on reports
--- ---------------------------------------------------------------------------
-alter table public.reports enable row level security;
-
--- Companies can select their own reports
-create policy "companies_select_own_reports" on public.reports
-  for select using (company_id = (select company_id from public.profiles where user_id = current_setting('app.current_user_id', true)));
-
--- Admins can select all reports
-create policy "admins_select_all_reports" on public.reports
-  for select using (role = 'admin');
-
--- ---------------------------------------------------------------------------
--- 3. Snapshot function (Yash's Y16 function, reviewed by Durgesh)
--- ---------------------------------------------------------------------------
--- Computes the report snapshot from checkpointed scans.
--- Returns QR-tier and barcode-tier kg, scan count, fingerprint over included
--- chain hashes, checkpoint day and hash, flagged "under review" count.
---
-create or replace function public.y16_report_snapshot(
-  p_company_id uuid,
-  p_category   public.epr_category,
-  p_from_date  date,
-  p_to_date    date
+create or replace function public._report_snapshot(
+  p_company_id     uuid,
+  p_category       public.epr_category,
+  p_from           date,
+  p_to             date,
+  p_checkpoint_day date
 )
 returns table (
-  qr_tier_kg      numeric(12, 3),
-  barcode_tier_kg numeric(12, 3),
-  scan_count      bigint,
-  fingerprint     text,
-  checkpoint_day  date,
-  under_review_count integer
+  scan_count         bigint,
+  qr_kg              numeric,
+  barcode_kg         numeric,
+  fingerprint        text,
+  checkpoint_day     date,
+  checkpoint_hash    text,
+  under_review_count bigint
 )
 language plpgsql
+stable
 security definer
 set search_path = ''
 as $$
 declare
-  v_yesterday    date := current_date - interval '1 day';
-  v_checkpoint   public.checkpoints%rowtype;
-  v_fingerprint  text;
-  v_under_review integer := 0;
+  v_cp_hash text;
 begin
-  -- Look up the latest checkpoint for the company and category
-  select * into v_checkpoint
-  from public.checkpoints c
-  join public.reports r on r.checkpoint_day = c.day
-  where r.company_id = p_company_id
-    and r.category = p_category
-  order by c.day desc
-  limit 1;
-
+  select c.hash into v_cp_hash from public.checkpoints c where c.day = p_checkpoint_day;
   if not found then
-    -- No checkpoint found; return zeros/empty
-    return query
-    select 0::numeric(12,3) as qr_tier_kg,
-           0::numeric(12,3) as barcode_tier_kg,
-           0::bigint as scan_count,
-           repeat('0',64)::text as fingerprint,
-           null::date as checkpoint_day,
-           0::integer as under_review_count;
+    raise exception 'no checkpoint exists for %', p_checkpoint_day using errcode = 'P0002';
   end if;
 
-  -- Compute fingerprint: hash of all included chain hashes in order
-  -- This is a simplified version; the actual implementation should hash
-  -- the chain hashes of scans included in the report time range.
-  -- For now, we hash the checkpoint day and the checkpoint hash.
-  v_fingerprint := encode(sha256(v_checkpoint.day::text || v_checkpoint.hash), 'hex');
-
-  -- Count under-review scans (scans flagged by the AI)
-  -- Note: this references scan_flags which may need to exist; adjust as needed
-  begin
-    select count(*) into v_under_review
-    from public.scan_flags
-    where scan_id in (select id from public.scans s
-                      join public.bins b on s.bin_id = b.id
-                      where b.company_id = p_company_id
-                        and s.category = p_category
-                        and s.scanned_at >= p_from_date
-                        and s.scanned_at <= p_to_date);
-  exception when others then
-    v_under_review := 0;
-  end;
-
   return query
+  with inc as (
+    select s.id, s.chain_hash, s.insertion_order, s.code_type, p.unit_weight_g
+    from public._report_scan_ids(p_company_id, p_category, p_from, p_to, p_checkpoint_day) ids
+    join public.scans s    on s.id = ids.scan_id
+    join public.products p on p.id = s.product_id
+  )
   select
-    0::numeric(12,3) as qr_tier_kg,       -- placeholder: QR-tier kg from report
-    0::numeric(12,3) as barcode_tier_kg, -- placeholder: barcode-tier kg from report
-    0::bigint as scan_count,               -- placeholder: scan count from report
-    v_fingerprint::text as fingerprint,
-    v_checkpoint.day::date as checkpoint_day,
-    v_under_review::integer as under_review_count;
+    count(*)::bigint,
+    round(coalesce(sum(inc.unit_weight_g) filter (where inc.code_type = 'qr'), 0) / 1000.0, 3),
+    round(coalesce(sum(inc.unit_weight_g) filter (where inc.code_type = 'barcode'), 0) / 1000.0, 3),
+    encode(sha256(convert_to(coalesce(string_agg(inc.chain_hash, ',' order by inc.insertion_order), ''), 'UTF8')), 'hex'),
+    p_checkpoint_day,
+    v_cp_hash,
+    (select count(distinct f.scan_id) from public.scan_flags f where f.scan_id in (select inc2.id from inc inc2))::bigint
+  from inc;
 end;
 $$;
 
-comment on function public.y16_report_snapshot(uuid, epr_category, date, date)
-  is 'Yash Y16 snapshot function: computes report snapshot from checkpointed scans. Reviewed by Durgesh.';
+revoke all on function public._report_scan_ids(uuid, public.epr_category, date, date, date) from public, anon, authenticated;
+revoke all on function public._report_snapshot(uuid, public.epr_category, date, date, date) from public, anon, authenticated;
 
 -- ---------------------------------------------------------------------------
--- 4. Public verify-report function
+-- 3. Preview for a company user (latest checkpoint), contract name
 -- ---------------------------------------------------------------------------
--- Anyone can verify a report by scanning the QR code.
--- This function re-runs the snapshot and compares fingerprints.
---
-create or replace function public.verify_report(
-  p_report_id uuid
+create or replace function public.get_report_snapshot(
+  p_category public.epr_category,
+  p_from     date,
+  p_to       date
 )
 returns table (
-  match_result boolean,
-  fingerprint_a text,
-  fingerprint_b text,
-  mismatch_reason text,
-  sample_scans jsonb
+  scan_count bigint, qr_kg numeric, barcode_kg numeric, fingerprint text,
+  checkpoint_day date, checkpoint_hash text, under_review_count bigint
 )
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_cp date;
+begin
+  if public.my_role() is distinct from 'company' then
+    raise exception 'only company users can preview reports' using errcode = '42501';
+  end if;
+  select max(day) into v_cp from public.checkpoints;
+  if v_cp is null then
+    raise exception 'no checkpoint has been made yet' using errcode = 'P0002';
+  end if;
+  return query
+  select * from public._report_snapshot(public.my_company(), p_category, p_from, p_to, v_cp);
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- 4. Create the report row. The database computes the fingerprint; nobody can
+--    store one it did not compute (reports has no insert policy).
+-- ---------------------------------------------------------------------------
+create or replace function public.create_report(
+  p_category public.epr_category,
+  p_from     date,
+  p_to       date
+)
+returns public.reports
 language plpgsql
 security definer
 set search_path = ''
 as $$
 declare
-  v_report   public.reports%rowtype;
-  v_snapshot  jsonb;
-  v_fp_a      text;
-  v_fp_b      text;
-  v_match      boolean;
-  v_reason    text;
-  v_samples   jsonb;
+  v_cp   date;
+  v_snap record;
+  v_row  public.reports;
 begin
-  -- Look up the report
-  select * into v_report from public.reports where id = p_report_id;
-
-  if not found then
-    return query
-    select false::boolean as match_result,
-           ''::text as fingerprint_a,
-           ''::text as fingerprint_b,
-           'Report not found'::text as mismatch_reason,
-           '[]'::jsonb as sample_scans;
+  if public.my_role() is distinct from 'company' then
+    raise exception 'only company users can create reports' using errcode = '42501';
+  end if;
+  if p_to < p_from then
+    raise exception 'period end is before period start' using errcode = '22023';
   end if;
 
-  -- Run the snapshot function
-  select * into v_snapshot
-  from public.y16_report_snapshot(v_report.company_id, v_report.category, v_report.period_start, v_report.period_end);
+  select max(day) into v_cp from public.checkpoints;
+  if v_cp is null then
+    raise exception 'no checkpoint has been made yet' using errcode = 'P0002';
+  end if;
 
-  -- Compare fingerprints
-  v_fp_a := v_report.fingerprint;
-  v_fp_b := v_snapshot.fingerprint;
+  select * into v_snap
+  from public._report_snapshot(public.my_company(), p_category, p_from, p_to, v_cp);
 
-  v_match := v_fp_a = v_fp_b;
+  insert into public.reports (
+    company_id, category, period_start, period_end, fingerprint, checkpoint_day,
+    checkpoint_hash, scan_count, qr_kg, barcode_kg, under_review_count, created_by
+  ) values (
+    public.my_company(), p_category, p_from, p_to, v_snap.fingerprint, v_cp,
+    v_snap.checkpoint_hash, v_snap.scan_count, v_snap.qr_kg, v_snap.barcode_kg,
+    v_snap.under_review_count, (select auth.uid())
+  )
+  returning * into v_row;
 
-  -- Sample scans: return a few scan IDs from the report period
-  -- (This is a simplified sample; actual implementation would query scans
-  -- within the report period for the company and category)
-  v_samples := jsonb_build_array(
-    '{"scan_id": "sample-1", "bin_id": "VB-PUN-0001", "code": "VBQ1.P0007.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}',
-    '{"scan_id": "sample-2", "bin_id": "VB-NAS-0001", "code": "VBQ1.P0008.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"}'
-  );
-
-  return query
-  select true::boolean as match_result,
-         v_fp_a::text as fingerprint_a,
-         v_fp_b::text as fingerprint_b,
-         case when not v_match then 'Fingerprints do not match'::text else null::text as mismatch_reason,
-         v_samples::jsonb as sample_scans;
+  return v_row;
 end;
 $$;
 
-comment on function public.verify_report(uuid)
-  is 'Public verify-report function: re-runs snapshot and compares fingerprints. Accessible via QR code.';
+-- ---------------------------------------------------------------------------
+-- 5. Attach the uploaded PDF, once
+-- ---------------------------------------------------------------------------
+create or replace function public.attach_report_pdf(
+  p_report_id    uuid,
+  p_storage_path text,
+  p_pdf_sha256   text
+)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if p_pdf_sha256 !~ '^[0-9a-f]{64}$' then
+    raise exception 'pdf_sha256 must be 64 lowercase hex characters' using errcode = '22023';
+  end if;
+
+  update public.reports r
+     set storage_path = p_storage_path,
+         pdf_sha256   = p_pdf_sha256
+   where r.id = p_report_id
+     and r.company_id = public.my_company()
+     and r.pdf_sha256 is null
+     and p_storage_path = r.company_id::text || '/' || r.id::text || '.pdf';
+
+  if not found then
+    raise exception 'report not found, not yours, path wrong, or PDF already attached'
+      using errcode = '42501';
+  end if;
+end;
+$$;
 
 -- ---------------------------------------------------------------------------
--- 5. Grant execute permissions
+-- 6. Public verification (QR on the PDF). Recomputes everything from the
+--    ledger. match is true ONLY if the recomputed fingerprint equals the
+--    stored one. Returns 20 sample scans with the data a browser needs to
+--    re-check each Ed25519 signature itself.
 -- ---------------------------------------------------------------------------
-grant execute on function public.y16_report_snapshot(uuid, epr_category, date, date) to service_role, anon;
-grant execute on function public.verify_report(uuid) to service_role, anon;
+create or replace function public.verify_report(p_report_id uuid)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  r       public.reports;
+  v_snap  record;
+  v_name  text;
+  v_samp  jsonb;
+begin
+  select * into r from public.reports where id = p_report_id;
+  if not found then
+    return jsonb_build_object('found', false);
+  end if;
+
+  select * into v_snap
+  from public._report_snapshot(r.company_id, r.category, r.period_start, r.period_end, r.checkpoint_day);
+
+  select c.name into v_name from public.companies c where c.id = r.company_id;
+
+  select coalesce(jsonb_agg(x order by x->>'scanned_at'), '[]'::jsonb) into v_samp
+  from (
+    select jsonb_build_object(
+             'scan_id',     s.id,
+             'bin_id',      s.bin_id,
+             'scanned_at',  s.scanned_at,
+             'record_text', s.record_text,
+             'signature',   s.signature,
+             'public_key',  b.public_key,
+             'chain_hash',  s.chain_hash
+           ) as x
+    from public._report_scan_ids(r.company_id, r.category, r.period_start, r.period_end, r.checkpoint_day) ids
+    join public.scans s on s.id = ids.scan_id
+    join public.bins  b on b.id = s.bin_id
+    order by md5(s.id::text || p_report_id::text)   -- stable pseudo-random sample
+    limit 20
+  ) t;
+
+  return jsonb_build_object(
+    'found',                  true,
+    'match',                  v_snap.fingerprint = r.fingerprint,
+    'report_id',              r.id,
+    'company',                v_name,
+    'category',               r.category,
+    'period_start',           r.period_start,
+    'period_end',             r.period_end,
+    'stored_fingerprint',     r.fingerprint,
+    'recomputed_fingerprint', v_snap.fingerprint,
+    'checkpoint_day',         r.checkpoint_day,
+    'checkpoint_hash',        v_snap.checkpoint_hash,
+    'scan_count',             v_snap.scan_count,
+    'qr_kg',                  v_snap.qr_kg,
+    'barcode_kg',             v_snap.barcode_kg,
+    'under_review_count',     v_snap.under_review_count,
+    'pdf_sha256',             r.pdf_sha256,
+    'samples',                v_samp
+  );
+end;
+$$;
+
+revoke all on function public.get_report_snapshot(public.epr_category, date, date) from public, anon;
+revoke all on function public.create_report(public.epr_category, date, date)       from public, anon;
+revoke all on function public.attach_report_pdf(uuid, text, text)                  from public, anon;
+revoke all on function public.verify_report(uuid)                                  from public;
+grant execute on function public.get_report_snapshot(public.epr_category, date, date) to authenticated;
+grant execute on function public.create_report(public.epr_category, date, date)       to authenticated;
+grant execute on function public.attach_report_pdf(uuid, text, text)                  to authenticated;
+grant execute on function public.verify_report(uuid)                                  to anon, authenticated;
 
 -- ---------------------------------------------------------------------------
--- 5. Summary
+-- 7. Private storage bucket. Files live at reports/<company_id>/<report_id>.pdf
+--    Uploads use the service role (server route). Users can read only folders
+--    of companies they can see.
 -- ---------------------------------------------------------------------------
--- This migration provides:
---   • Reports table with fingerprint, checkpoint, and QR-related fields
---   • RLS policies: companies select own reports, admins select all
---   • Yash's Y16 snapshot function (y16_report_snapshot)
---   • Public verify-report function (verify_report) that compares fingerprints
---   • Sample scan data via the verify-report endpoint
--- ============================================================================
+insert into storage.buckets (id, name, public)
+values ('reports', 'reports', false)
+on conflict (id) do nothing;
+
+create policy reports_bucket_read on storage.objects
+  for select to authenticated
+  using (
+    bucket_id = 'reports'
+    and public.can_see_company(public.try_uuid((storage.foldername(name))[1]))
+  );

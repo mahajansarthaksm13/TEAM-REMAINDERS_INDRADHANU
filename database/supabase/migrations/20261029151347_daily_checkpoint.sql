@@ -1,118 +1,82 @@
 -- ============================================================================
--- D14 · Daily checkpoint
+-- D14 · Daily checkpoint (rewritten)
 --
--- Task sheet: D14 Daily checkpoint
--- Unblocks: Y17 publishing (Yash)
+-- One row per IST day. Recomputable by anyone from the ledger:
 --
--- One row per night. The hash of all bin chain heads, chained to yesterday.
--- Published to the veribin-checkpoints repo so history cannot be quietly rewritten.
+--   heads   = for every bin created before the cutoff, in bin-id order:
+--             "<bin_id>=<chain_hash of its last scan received before the cutoff>"
+--             (64 zeros if it had none), joined with "|"
+--   payload = "<day>|<previous checkpoint hash>|<heads>"
+--   hash    = sha256(payload) as lowercase hex
+--
+--   cutoff  = midnight IST at the END of <day>
+--   previous checkpoint hash = latest earlier checkpoint, or 64 zeros
+--
+-- Because the hash includes yesterday's hash, the checkpoints form their own
+-- chain. Y17 publishes each one to the public veribin-checkpoints repo, so
+-- history cannot be quietly rewritten.
+--
+-- Idempotent: running it twice for the same day returns the existing row and
+-- never overwrites it.
 -- ============================================================================
 
--- ---------------------------------------------------------------------------
--- 1. Ensure checkpoints table exists (should already exist from D2/D5 migrations)
--- ---------------------------------------------------------------------------
-
--- checkpoints table structure (verify existence)
--- If this migration runs fresh, ensure the table exists:
-do $$
-begin
-  if not exists (select 1 from pg_type where typname = 'alert_kind') then
-    raise notice 'alert_kind type should already exist from D2';
-  end if;
-end
-$$;
-
--- ---------------------------------------------------------------------------
--- 2. Checkpoint function
--- ---------------------------------------------------------------------------
--- Computes a daily checkpoint from all bin chain heads.
--- Each bin's latest chain hash as of midnight IST, joined in bin order,
--- hashed with the previous day's checkpoint.
--- Stores: day, hash, previous_hash, created_at
--- ---------------------------------------------------------------------------
-create or replace function public.daily_checkpoint()
-returns void
+create or replace function public.make_checkpoint(p_day date default null)
+returns public.checkpoints
 language plpgsql
+security definer
 set search_path = ''
 as $$
 declare
-  v_yesterday   date := current_date - interval '1 day';
-  v_today       date := current_date;
-  v_hash        text;
-  v_prev_hash   text;
-  v_bin         record;
-  v_hash_chain text := repeat('0', 64); -- genesis: all zeros
-  v_count       integer := 0;
+  v_day    date := coalesce(p_day, (now() at time zone 'Asia/Kolkata')::date - 1);
+  v_cutoff timestamptz := ((v_day + 1)::timestamp at time zone 'Asia/Kolkata');
+  v_prev   text;
+  v_heads  text;
+  v_row    public.checkpoints;
 begin
-  -- Compute hash from all active bins' chain heads at midnight IST
-  -- IST is UTC+5:30; we convert yesterday's date to IST boundary
-  -- For simplicity, we use the current approach: hash all current chain heads
-  -- The exact IST midnight boundary can be adjusted per project needs.
-
-  -- Hash all bin chain heads in a fixed order (by bin id)
-  v_hash := repeat('0', 64); -- start with genesis hash
-
-  -- Iterate over bins ordered by id
-  for v_bin in
-    select id, chain_head from public.bins where status = 'active' order by id
-  loop
-    -- If bin has no chain head (never ingested), skip or use genesis
-    if v_bin.chain_head is null then
-      -- Use genesis hash; do not update v_hash
-      continue;
-    end if;
-
-    -- v_hash = SHA256(v_hash || ':' || v_bin.chain_head)
-    -- Note: This is a simplified chaining approach.
-    -- The actual implementation should hash the concatenation.
-    -- For now, we chain them sequentially.
-    v_hash := encode(sha256(v_hash || ':' || v_bin.chain_head), 'hex');
-    v_count := v_count + 1;
-  end loop;
-
-  -- Determine previous hash: look up the most recent previous checkpoint
-  declare
-    v_prev_rec record;
-  select * into v_prev_rec from public.checkpoints where day < v_yesterday order by day desc limit 1;
-  if v_prev_rec is null then
-    v_prev_hash := repeat('0', 64); -- genesis: no previous checkpoint
-  else
-    v_prev_hash := v_prev_rec.hash;
+  select * into v_row from public.checkpoints where day = v_day;
+  if found then
+    return v_row;
   end if;
 
-  -- Insert the new checkpoint
-  insert into public.checkpoints (day, hash, previous_hash, created_at)
-  values (v_yesterday, v_hash, v_prev_hash, current_timestamp);
+  select c.hash into v_prev
+  from public.checkpoints c
+  where c.day < v_day
+  order by c.day desc
+  limit 1;
+  v_prev := coalesce(v_prev, repeat('0', 64));
 
-  raise notice 'Checkpoint for % created with hash % (prev: %, bins: %)', v_yesterday, v_hash, v_prev_hash, v_count;
+  select coalesce(string_agg(b.id || '=' || coalesce(h.chain_hash, repeat('0', 64)), '|' order by b.id), '')
+    into v_heads
+  from public.bins b
+  left join lateral (
+    select s.chain_hash
+    from public.scans s
+    where s.bin_id = b.id and s.received_at < v_cutoff
+    order by s.insertion_order desc
+    limit 1
+  ) h on true
+  where b.created_at < v_cutoff;
+
+  insert into public.checkpoints (day, hash, previous_hash)
+  values (
+    v_day,
+    encode(sha256(convert_to(v_day::text || '|' || v_prev || '|' || v_heads, 'UTF8')), 'hex'),
+    v_prev
+  )
+  returning * into v_row;
+
+  return v_row;
 end;
 $$;
 
--- ---------------------------------------------------------------------------
--- 3. Schedule via pg_cron (to be set up separately, typically D14 or D15)
--- ---------------------------------------------------------------------------
--- To enable the daily checkpoint to run automatically, run this in psql:
---   select pg_cron.schedule('0 0 * * *', 'select public.daily_checkpoint();');
---   This schedules the checkpoint to run every day at midnight UTC.
---   Note: IST is UTC+5:30, so adjust the schedule accordingly or use a
---   timezone-aware cron setup.
---
--- Alternatively, the checkpoint can be triggered manually:
---   select public.daily_checkpoint();
---
--- ---------------------------------------------------------------------------
--- 4. Grant execute permissions
--- ---------------------------------------------------------------------------
-grant execute on function public.daily_checkpoint() to service_role;
+revoke all on function public.make_checkpoint(date) from public, anon, authenticated;
+grant execute on function public.make_checkpoint(date) to service_role;
 
--- ---------------------------------------------------------------------------
--- 5. Summary
--- ---------------------------------------------------------------------------
--- This migration provides:
---   • daily_checkpoint() function that computes a daily fingerprint from all
---     active bins' chain heads
---   • Checkpoint stored in public.checkpoints table with day, hash, previous_hash
---   • Guidance for pg_cron scheduling (every day at midnight IST)
---   • The checkpoints are published to the veribin-checkpoints repo for
---     immutable history (handled by D17/Yash workflow)
--- ============================================================================
+-- pg_cron runs in UTC. 00:05 IST = 18:35 UTC (previous calendar day).
+create extension if not exists pg_cron with schema pg_catalog;
+
+select cron.schedule(
+  'veribin-daily-checkpoint',
+  '35 18 * * *',
+  $$select public.make_checkpoint()$$
+);
