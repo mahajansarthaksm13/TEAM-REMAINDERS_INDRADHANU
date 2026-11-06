@@ -18,6 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       web: ${{ steps.filter.outputs.web }}
+      web_exists: ${{ steps.exists.outputs.web_exists }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -27,11 +28,14 @@ jobs:
             web:
               - 'web/**'
               - '.github/workflows/ci-web.yml'
+      # Skip the web job until the web app exists (otherwise setup-node fails on the missing lock file).
+      - id: exists
+        run: echo "web_exists=$([ -f web/package-lock.json ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
 
   web:
     name: Lint, type-check, build
     needs: changes
-    if: needs.changes.outputs.web == 'true'
+    if: needs.changes.outputs.web == 'true' && needs.changes.outputs.web_exists == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
