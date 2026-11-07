@@ -1,0 +1,70 @@
+name: publish-checkpoint
+
+# Y17 · Publish every nightly checkpoint to the public veribin-checkpoints repo,
+# so history cannot be quietly rewritten. Runs after the 00:05 IST pg_cron job.
+#
+# Needs:
+#   secrets.AI_DATABASE_URL        read-only ai_job login (can read checkpoints, D13)
+#   secrets.CHECKPOINT_REPO_TOKEN  fine-grained token, Contents: write, that repo only
+#   vars.CHECKPOINT_REPO           e.g. mahajansarthaksm13/veribin-checkpoints
+#
+# Writes checkpoints/<day>.json = {"day", "hash", "previous_hash", "created_at"}
+# for every checkpoint not yet in the repo (so a missed night catches up), and
+# never rewrites a file that is already there.
+
+on:
+  schedule:
+    - cron: '30 18 * * *'     # 00:30 IST
+  workflow_dispatch:
+
+concurrency:
+  group: publish-checkpoint
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out the checkpoints repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ vars.CHECKPOINT_REPO }}
+          token: ${{ secrets.CHECKPOINT_REPO_TOKEN }}
+          path: published
+
+      - name: Export checkpoints from the database
+        env:
+          AI_DATABASE_URL: ${{ secrets.AI_DATABASE_URL }}
+        run: |
+          psql "$AI_DATABASE_URL" -v ON_ERROR_STOP=1 -At -c "
+            select day::text || ' ' || json_build_object(
+                     'day', day, 'hash', hash, 'previous_hash', previous_hash,
+                     'created_at', created_at)::text
+            from public.checkpoints order by day" > checkpoints.txt
+          mkdir -p published/checkpoints
+          added=0
+          while read -r day body; do
+            file="published/checkpoints/${day}.json"
+            if [ ! -f "$file" ]; then
+              printf '%s\n' "$body" > "$file"
+              added=$((added + 1))
+            fi
+          done < checkpoints.txt
+          echo "new checkpoint files: $added"
+
+      - name: Commit and push
+        working-directory: published
+        run: |
+          git config user.name  "veribin-bot"
+          git config user.email "veribin-bot@users.noreply.github.com"
+          git add checkpoints
+          if git diff --cached --quiet; then
+            echo "nothing new"
+            exit 0
+          fi
+          git commit -m "checkpoint $(ls checkpoints | sort | tail -1 | sed 's/.json$//')"
+          git push
