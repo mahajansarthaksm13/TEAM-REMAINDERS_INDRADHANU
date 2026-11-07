@@ -25,7 +25,29 @@ permissions:
   contents: read
 
 jobs:
+  # Skips (instead of failing) until the secrets exist, so a repo without the
+  # dev project set up does not send a failure email on every run.
+  # vars.CHECKPOINT_REPO must also be set.
+  check-secrets:
+    runs-on: ubuntu-latest
+    outputs:
+      ready: ${{ steps.s.outputs.ready }}
+    steps:
+      - id: s
+        env:
+          AI_DATABASE_URL: ${{ secrets.AI_DATABASE_URL }}
+          CHECKPOINT_REPO_TOKEN: ${{ secrets.CHECKPOINT_REPO_TOKEN }}
+        run: |
+          if [ -n "$AI_DATABASE_URL" ] && [ -n "$CHECKPOINT_REPO_TOKEN" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Secrets not set (AI_DATABASE_URL, CHECKPOINT_REPO_TOKEN); skipping."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
+
   publish:
+    needs: check-secrets
+    if: needs.check-secrets.outputs.ready == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
