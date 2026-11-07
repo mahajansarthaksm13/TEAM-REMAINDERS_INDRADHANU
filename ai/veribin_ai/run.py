@@ -23,16 +23,19 @@ def main() -> int:
         bins = db.load_bins(conn)
         scans = db.load_scans(conn, days=90)
         print(f"loaded {len(scans)} scans from {len(bins)} bins")
+        # Every bin alert carries the bin's company, so the owner (and its
+        # auditor) sees it. Alerts with no company are admin/regulator-only (D8).
+        company_of = dict(zip(bins["id"], bins["company_id"], strict=True))
 
         # 1. Integrity
         bad = integrity.bad_signatures(scans)
         breaks = integrity.chain_breaks(lambda b: db.verify_chain(conn, b), bins["id"].tolist())
         if bad or breaks:
             for br in breaks:
-                db.open_alert(conn, "chain_break", br["bin_id"], None,
+                db.open_alert(conn, "chain_break", br["bin_id"], company_of.get(br["bin_id"]),
                               f"Chain check failed at scan {br['failing_scan']}: {br['reason']}")
             for b in bad[:20]:
-                db.open_alert(conn, "chain_break", b["bin_id"], None,
+                db.open_alert(conn, "chain_break", b["bin_id"], company_of.get(b["bin_id"]),
                               f"Signature does not verify for scan {b['scan_id']}")
             conn.commit()
             print(f"INTEGRITY FAILURE: {len(breaks)} chain breaks, {len(bad)} bad signatures")
@@ -44,7 +47,6 @@ def main() -> int:
         rejected = db.load_rejected(conn, days=90)
         scores = scoring.trust_scores(scoring.bin_measures(real, rejected))
         db.save_bin_scores(conn, today, scores)
-        company_of = dict(zip(bins["id"], bins["company_id"], strict=True))
         for s in scores:
             if s["score"] is not None and s["score"] < scoring.CONFIG["anomaly_alert_threshold"]:
                 top = s["reasons"][0]["code"] if s["reasons"] else "UNKNOWN"
