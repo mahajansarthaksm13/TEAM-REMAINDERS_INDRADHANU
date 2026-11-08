@@ -69,7 +69,7 @@ function NavList({ role }: { role: Role }) {
 
 export function Sidebar({ role }: { role: Role }) {
   return (
-    <aside className="no-print fixed inset-y-0 left-0 z-40 hidden w-[248px] flex-col gap-8 border-r border-line bg-deep/95 px-4 py-6 lg:flex">
+    <aside className="no-print fixed inset-y-0 left-0 z-40 hidden w-[248px] flex-col gap-8 border-r glass-bar px-4 py-6 lg:flex">
       <Wordmark href="/app/live" className="px-4" />
       <NavList role={role} />
       <p className="eyebrow mt-auto px-4 text-dim">All times IST</p>
@@ -100,7 +100,7 @@ export function TopBar({ user, scope, alerts }: { user: { name: string; email: s
   const readOnly = user.role === "auditor" || user.role === "regulator"
 
   return (
-    <header className="no-print sticky top-0 z-30 border-b border-line bg-ground/90 backdrop-blur">
+    <header className="no-print sticky top-0 z-30 border-b glass-bar">
       <div className="flex h-16 items-center gap-2 px-4 sm:gap-3 lg:px-8">
         <Sheet>
           <SheetTrigger asChild>
@@ -108,7 +108,7 @@ export function TopBar({ user, scope, alerts }: { user: { name: string; email: s
               <Menu />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-[min(86vw,320px)] border-line bg-deep px-4 py-5 text-ink">
+          <SheetContent side="left" className="w-[min(86vw,320px)] glass-bar px-4 py-5 text-ink">
             <SheetTitle className="px-4 font-display text-[28px] font-normal text-ink">VeriBin</SheetTitle>
             <SheetClose asChild>
               <div><NavList role={user.role} /></div>

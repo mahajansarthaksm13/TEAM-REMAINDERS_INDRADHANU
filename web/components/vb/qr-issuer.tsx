@@ -12,7 +12,7 @@ import { issueQr } from "@/lib/actions"
 import { FieldError, Notice } from "./ui"
 import { HashChip } from "./client"
 
-const select = "h-10 w-full skeu-inset rounded-input text-ink px-3 text-sm focus-visible:ring-2 focus-visible:ring-lit focus-visible:outline-none"
+const select = "h-10 w-full glass-inset rounded-input text-ink px-3 text-sm focus-visible:ring-2 focus-visible:ring-lit focus-visible:outline-none"
 const QUANTITY_RANGE = "Quantity must be a whole number from 1 to 10,000."
 
 export function QrIssuer({ products, printBase }: { products: { id: string; name: string }[]; printBase: string }) {

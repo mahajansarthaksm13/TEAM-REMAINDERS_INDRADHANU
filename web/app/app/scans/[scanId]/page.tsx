@@ -21,7 +21,7 @@ export default async function ScanDetailPage({ params, searchParams }: { params:
   if (!d || !d.products || !d.bins) {
     return (
       <>
-        <PageHeader title="Scan detail" />
+        <PageHeader title="Scan detail" back={{ href: href("/app/scans", sp), label: "All scans" }} />
         <EmptyState action={<Link href={href("/app/scans", sp)} className="font-semibold text-dim underline-offset-4 hover:underline">Back to scans</Link>}>Scan not found or not visible to you.</EmptyState>
       </>
     )
@@ -37,7 +37,7 @@ export default async function ScanDetailPage({ params, searchParams }: { params:
         eyebrow={`${s.bin_id} · sequence ${s.sequence}`}
         title={p.name}
         desc={`Totals use the catalogue weight (${p.unit_weight_g} g), not the measured weight.`}
-        actions={<Link href={href("/app/scans", sp)} className="text-sm font-semibold text-dim underline-offset-4 hover:underline">← All scans</Link>}
+        back={{ href: href("/app/scans", sp), label: "All scans" }}
       />
       <div className="flex flex-col gap-6">
         <Card>

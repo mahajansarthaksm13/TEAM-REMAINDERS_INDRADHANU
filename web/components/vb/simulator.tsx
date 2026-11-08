@@ -105,9 +105,9 @@ export function Simulator({ initialFeed }: { initialFeed: FeedItem[] }) {
 
   return (
     <div className="grid gap-6 lg:grid-cols-12">
-      <div className="skeu-raised rounded-card p-4 sm:p-6 lg:col-span-8">
+      <div className="glass rounded-card p-4 sm:p-6 lg:col-span-8">
         <p className="eyebrow mb-3 text-dim">1 · The packet</p>
-        <div className="flex items-center gap-4 skeu-inset rounded-[14px] p-4 text-sm">
+        <div className="flex items-center gap-4 glass-inset rounded-[14px] p-4 text-sm">
           <span className="font-semibold">Demo bottle</span>
           <span className="text-dim">Category I · 24 g · barcode 8900000099999 · bin VB-PUN-9999-DEMO</span>
         </div>
@@ -178,7 +178,7 @@ export function Simulator({ initialFeed }: { initialFeed: FeedItem[] }) {
         )}
       </div>
 
-      <aside className="skeu-raised rounded-card p-4 sm:p-6 lg:col-span-4" aria-label="Demo feed">
+      <aside className="glass rounded-card p-4 sm:p-6 lg:col-span-4" aria-label="Demo feed">
         <div className="mb-4 flex items-center justify-between">
           <p className="eyebrow text-dim">Live demo feed</p>
           {feedLive ? (

@@ -15,7 +15,7 @@ export default async function PrintPage({ params }: { params: Promise<{ batchId:
   const { sb } = await requireSession()
   const { batchId } = await params
   const b = UUID_RE.test(batchId) ? await batchCodes(sb, batchId, MAX) : null
-  if (!b) return <><PageHeader title="QR sheet" /><EmptyState>Batch not found.</EmptyState></>
+  if (!b) return <><PageHeader title="QR sheet" back={{ href: "/app/catalogue/qr", label: "QR codes" }} /><EmptyState>Batch not found.</EmptyState></>
   const product = b.product
   // The QR encodes the full payload VBQ1.<product_code>.<serial>, which the bin scanner reads.
   const codes = await Promise.all(b.payloads.map(async (s) => ({ s, svg: await QRCode.toString(s, { type: "svg", margin: 0, errorCorrectionLevel: "M" }) })))
@@ -23,6 +23,7 @@ export default async function PrintPage({ params }: { params: Promise<{ batchId:
     <>
       <div className="no-print">
         <PageHeader
+          back={{ href: "/app/catalogue/qr", label: "QR codes" }}
           eyebrow="QR sheet"
           title={product?.name ?? "Batch"}
           desc={b.quantity > MAX ? `Showing the first ${MAX} of ${num(b.quantity)} codes. Use the CSV for the full batch.` : `${num(b.quantity)} codes.`}

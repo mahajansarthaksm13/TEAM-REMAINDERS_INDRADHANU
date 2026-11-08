@@ -4,25 +4,25 @@ import { hasSessionCookie } from "@/lib/shared"
 import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Cta } from "@/components/vb/magnetic"
-import { MossBackdrop } from "@/components/vb/brand"
+import { GlowBackdrop } from "@/components/vb/brand"
 import { SAMPLE_REPORT_ID, STEPS } from "@/lib/shared"
 
 export default async function Home() {
   const loggedIn = hasSessionCookie(await cookies())
   return (
     <>
-      <section className="relative isolate flex min-h-[72vh] items-end lg:min-h-[88vh]">
-        <MossBackdrop />
-        <div className="relative mx-auto w-full max-w-[1200px] px-4 pt-24 pb-16 sm:px-6 lg:pb-24">
-          <p className="eyebrow reveal mb-5 text-dim">Verifiable plastic collection for EPR</p>
-          <h1 className="t-display reveal max-w-3xl" style={{ animationDelay: "120ms" }}>
+      <section className="relative isolate flex min-h-[72vh] items-center lg:min-h-[86vh]">
+        <GlowBackdrop />
+        <div className="relative mx-auto flex w-full max-w-[1200px] flex-col items-center px-4 pt-20 pb-16 text-center sm:px-6 lg:pb-24">
+          <p className="glass-pill reveal mb-7 rounded-full px-4 py-1.5 text-sm text-orchid">Verifiable plastic collection for EPR</p>
+          <h1 className="t-display reveal max-w-4xl" style={{ animationDelay: "120ms" }}>
             A small scan.
             <br />A bigger change.
           </h1>
-          <p className="reveal mt-6 max-w-[56ch] text-base text-ink/80 lg:text-lg lg:leading-7" style={{ animationDelay: "240ms" }}>
+          <p className="reveal mt-6 max-w-[56ch] text-base text-ink/75 lg:text-lg lg:leading-7" style={{ animationDelay: "240ms" }}>
             VeriBin bins sign every packet they collect. The records chain together and are checkpointed in public, so a recycling claim can be checked by anyone — without trusting us.
           </p>
-          <div className="reveal mt-8 flex flex-wrap gap-3" style={{ animationDelay: "360ms" }}>
+          <div className="reveal mt-9 flex flex-wrap justify-center gap-3" style={{ animationDelay: "360ms" }}>
             <Cta asChild size="lg" playOnLoad><Link href="/how-it-works#simulator">Try the simulator</Link></Cta>
             <Button asChild variant="secondary" size="lg"><Link href={loggedIn ? "/app/live" : "/login"}>Open dashboard</Link></Button>
           </div>
@@ -31,16 +31,16 @@ export default async function Home() {
 
       <section className="py-16 lg:py-24" aria-labelledby="problem">
         <div className="mx-auto max-w-[1200px] px-4 sm:px-6">
-          <p className="eyebrow mb-3 text-dim">The problem in numbers</p>
-          <h2 id="problem" className="t-h2 max-w-2xl">Paper certificates are easy to fake. Plastic is not easy to hide.</h2>
+          <p data-reveal className="eyebrow mb-3 text-dim">The problem in numbers</p>
+          <h2 data-reveal id="problem" className="t-h2 max-w-2xl">Paper certificates are easy to fake. Plastic is not easy to hide.</h2>
           <dl className="stagger mt-12 grid gap-6 md:grid-cols-3">
             {[
               ["6 lakh", "EPR certificates flagged as fake in the plastic packaging system."],
               ["₹355 crore", "in environmental compensation proposed against non-compliant producers."],
               ["July 2024", "The National Green Tribunal took suo motu notice of fake EPR credits."],
             ].map(([v, d]) => (
-              <div key={v} className="skeu-raised rounded-card p-6 transition-transform duration-500 ease-(--ease-spring) hover:-translate-y-1 lg:p-8">
-                <dt className="font-display text-[40px] leading-none font-bold text-lit lg:text-[52px]">{v}</dt>
+              <div key={v} className="glass rounded-card p-6 transition-transform duration-500 ease-(--ease-spring) hover:-translate-y-1 lg:p-8">
+                <dt className="font-display text-[40px] leading-none font-semibold tracking-[-0.03em] text-lit lg:text-[52px]">{v}</dt>
                 <dd className="mt-4 max-w-[34ch] text-sm text-ink">{d}</dd>
               </div>
             ))}
@@ -49,9 +49,9 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="border-y border-line bg-deep/50 py-16 lg:py-24" aria-labelledby="evidence">
+      <section className="border-y border-line bg-deep/40 py-16 lg:py-24" aria-labelledby="evidence">
         <div className="mx-auto grid max-w-[1200px] gap-12 px-4 sm:px-6 lg:grid-cols-12 lg:items-center">
-          <div className="lg:col-span-7">
+          <div data-reveal className="lg:col-span-7">
             <p className="eyebrow mb-3 text-dim">Why evidence matters</p>
             <h2 id="evidence" className="t-h2 max-w-xl">Every number has a receipt.</h2>
             <div className="mt-6 max-w-[60ch] space-y-4 text-base text-ink/80 lg:text-lg lg:leading-7">
@@ -59,7 +59,7 @@ export default async function Home() {
               <p>Auditors and regulators don&apos;t need access to our servers to check a claim. A phone camera and the report&apos;s QR code are enough.</p>
             </div>
           </div>
-          <figure className="skeu-raised rounded-card p-6 lg:col-span-5" aria-label="Example of a signed scan record">
+          <figure data-reveal className="glass rounded-card p-6 lg:col-span-5" aria-label="Example of a signed scan record">
             <p className="eyebrow text-dim">Signed record · BIN-0001</p>
             <pre className="mt-3 overflow-x-auto font-mono text-[13px] leading-5 text-ink [overflow-wrap:anywhere] whitespace-pre-wrap">1|BIN-0001|4182|2026-10-25T08:15:03Z|VB1A3F9C2E…|24</pre>
             <dl className="mt-5 space-y-3 font-mono text-xs">
@@ -82,13 +82,13 @@ export default async function Home() {
 
       <section className="py-16 lg:py-24" aria-labelledby="how">
         <div className="mx-auto max-w-[1200px] px-4 sm:px-6">
-          <p className="eyebrow mb-3 text-dim">How it works</p>
-          <h2 id="how" className="t-h2">Four steps from packet to proof.</h2>
-          <ol className="mt-12 grid gap-0 lg:grid-cols-4 lg:gap-6">
+          <p data-reveal className="eyebrow mb-3 text-dim">How it works</p>
+          <h2 data-reveal id="how" className="t-h2">Four steps from packet to proof.</h2>
+          <ol className="stagger mt-12 grid gap-0 lg:grid-cols-4 lg:gap-6">
             {STEPS.map((s, i) => (
               <li key={s.n} className="relative flex gap-5 pb-8 lg:block lg:pb-0">
                 {i < 3 && <span aria-hidden className="absolute top-10 bottom-0 left-5 w-px bg-line-strong lg:top-5 lg:right-0 lg:bottom-auto lg:left-14 lg:h-px lg:w-auto" />}
-                <span className="relative z-10 flex size-10 shrink-0 items-center justify-center rounded-full bg-lit font-bold text-on-lit">{s.n}</span>
+                <span className="relative z-10 flex size-10 shrink-0 items-center justify-center rounded-full btn-lit font-display font-semibold text-snow">{s.n}</span>
                 <Link href={`/how-it-works#step-${s.n}`} className="group block rounded-card lg:mt-6 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
                   <h3 className="t-h3 flex items-center gap-2">
                     {s.title}
@@ -104,8 +104,8 @@ export default async function Home() {
 
       <section className="pb-16 lg:pb-24">
         <div className="mx-auto max-w-[1200px] px-4 sm:px-6">
-          <div className="skeu-raised relative isolate overflow-hidden rounded-card px-6 py-12 lg:px-12 lg:py-16">
-            <MossBackdrop className="opacity-70" />
+          <div data-reveal className="glass relative isolate overflow-hidden rounded-card px-6 py-12 lg:px-12 lg:py-16">
+            <GlowBackdrop className="opacity-70" />
             <div className="relative grid gap-6 lg:grid-cols-12 lg:items-end">
               <h2 className="t-h2 lg:col-span-7">See the proof yourself. It takes ten seconds.</h2>
               <div className="flex flex-wrap gap-3 lg:col-span-5 lg:justify-end">

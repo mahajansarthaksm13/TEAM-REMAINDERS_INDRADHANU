@@ -11,7 +11,8 @@ export const metadata: Metadata = { title: "Issue QR codes" }
 
 export default async function QrPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { sb, user, sp } = await pageCtx(searchParams)
-  if (user.role !== "company" || !user.company_id) return <><PageHeader title="Issue QR codes" /><EmptyState>Only company users can issue QR codes.</EmptyState></>
+  const back = { href: href("/app/catalogue", sp), label: "Catalogue" }
+  if (user.role !== "company" || !user.company_id) return <><PageHeader title="Issue QR codes" back={back} /><EmptyState>Only company users can issue QR codes.</EmptyState></>
   const [{ data: approved }, { data: batchRows }] = await Promise.all([
     sb.from("products").select("id, name").eq("company_id", user.company_id).eq("approved", true).order("name"),
     sb.from("qr_batches").select("id, quantity, created_at, products!inner(name, product_code, company_id)").eq("products.company_id", user.company_id).order("created_at", { ascending: false }).limit(50),
@@ -20,7 +21,7 @@ export default async function QrPage({ searchParams }: { searchParams: Promise<R
   const link = "font-semibold text-dim underline-offset-4 hover:underline"
   return (
     <>
-      <PageHeader eyebrow="Catalogue" title="Issue QR codes" desc="Each code is a one-time serial. A QR-tier scan counts once; a second scan of the same code is rejected." />
+      <PageHeader back={back} eyebrow="Catalogue" title="Issue QR codes" desc="Each code is a one-time serial. A QR-tier scan counts once; a second scan of the same code is rejected." />
       <div className="grid gap-6 lg:grid-cols-12">
         <Card className="lg:col-span-5">
           <CardHead eyebrow="New batch" title="1 to 10,000 codes" />

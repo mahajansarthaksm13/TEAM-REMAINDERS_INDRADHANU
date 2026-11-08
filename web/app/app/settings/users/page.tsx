@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { Badge, Card, CardHead, DataTable, EmptyState, PageHeader } from "@/components/vb/ui"
 import { InviteDialog } from "@/components/vb/invite-dialog"
 import { serviceDb } from "@/lib/supabase"
-import { pageCtx } from "@/lib/session"
+import { href, pageCtx } from "@/lib/session"
 import { ROLE_LABEL, type Role } from "@/lib/shared"
 import { fmtDateTime } from "@/lib/format"
 
@@ -11,8 +11,9 @@ export const metadata: Metadata = { title: "Users" }
 type Row = { id: string; email: string; name: string; role: Role; company: string; status: "active" | "invited"; at: string | null }
 
 export default async function UsersPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  const { sb, user, companies } = await pageCtx(searchParams)
-  if (user.role !== "admin") return <><PageHeader title="Users" /><EmptyState>Only admins can manage users.</EmptyState></>
+  const { sb, user, companies, sp } = await pageCtx(searchParams)
+  const back = { href: href("/app/settings", sp), label: "Settings" }
+  if (user.role !== "admin") return <><PageHeader title="Users" back={back} /><EmptyState>Only admins can manage users.</EmptyState></>
   // Profiles and assignments through RLS (admin reads all); emails need the auth admin API (service role).
   const [{ data: profiles }, { data: assignments }, list] = await Promise.all([
     sb.from("profiles").select("user_id, role, company_id, full_name"),
@@ -36,7 +37,7 @@ export default async function UsersPage({ searchParams }: { searchParams: Promis
   })
   return (
     <>
-      <PageHeader title="Users" desc="Public sign-up is off. Invited people get an email to set their password." actions={<InviteDialog companies={companies} />} />
+      <PageHeader back={back} title="Users" desc="Public sign-up is off. Invited people get an email to set their password." actions={<InviteDialog companies={companies} />} />
       <Card>
         <CardHead eyebrow="Accounts" title={`${rows.length} people`} />
         <DataTable<Row>

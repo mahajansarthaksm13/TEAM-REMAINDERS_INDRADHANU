@@ -42,13 +42,13 @@ export default async function LiveDataPage() {
                 ["Active bins", num(s.active_bins)],
                 ["Cities", num(s.cities)],
               ].map(([k, v]) => (
-                <div key={k} className="skeu-raised rounded-card p-4 sm:p-6">
+                <div key={k} className="glass rounded-card p-4 sm:p-6">
                   <dt className="eyebrow text-dim">{k}</dt>
                   <dd className="t-kpi mt-2">{v}</dd>
                 </div>
               ))}
             </dl>
-            <div className="skeu-raised rounded-card p-4 sm:p-6 lg:col-span-7">
+            <div className="glass rounded-card p-4 sm:p-6 lg:col-span-7">
               <p className="eyebrow text-dim">By EPR category</p>
               <div className="mt-5 space-y-6">
                 {s.by_category.map((c) => (

@@ -4,21 +4,22 @@ import { ApproveButton } from "@/components/vb/catalogue-client"
 import type { Category } from "@/lib/shared"
 
 type Product = { id: string; company_id: string; product_code: string; name: string; barcode: string | null; category: Category; unit_weight_g: number; created_at: string; companies: { name: string } | null }
-import { pageCtx } from "@/lib/session"
+import { href, pageCtx } from "@/lib/session"
 import { CATEGORY_LABEL } from "@/lib/shared"
 import { fmtDateTime } from "@/lib/format"
 
 export const metadata: Metadata = { title: "Approval queue" }
 
 export default async function ApprovalsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  const { sb, user } = await pageCtx(searchParams)
-  if (user.role !== "admin") return <><PageHeader title="Approval queue" /><EmptyState>Only admins can approve products.</EmptyState></>
+  const { sb, user, sp } = await pageCtx(searchParams)
+  const back = { href: href("/app/catalogue", sp), label: "Catalogue" }
+  if (user.role !== "admin") return <><PageHeader title="Approval queue" back={back} /><EmptyState>Only admins can approve products.</EmptyState></>
   const { data } = await sb.from("products").select("id, company_id, product_code, name, barcode, category, unit_weight_g, created_at, companies(name)").eq("approved", false).order("created_at")
   const rows = (data ?? []) as unknown as Product[]
   return (
     <>
       {/* Reject / unapprove behaviour is [FILL] in the App Flow — not built. */}
-      <PageHeader title="Approval queue" desc="Check the catalogue weight against a physical sample before approving." />
+      <PageHeader back={back} title="Approval queue" desc="Check the catalogue weight against a physical sample before approving." />
       <Card>
         {rows.length === 0 ? (
           <EmptyState>Nothing waiting for approval.</EmptyState>

@@ -17,7 +17,7 @@ export default async function BinDetailPage({ params, searchParams }: { params: 
   const { binId } = await params
   const { sb, sp } = await pageCtx(searchParams)
   const b = (await binList(sb, null)).find((x) => x.bin_id === binId)
-  if (!b) return <><PageHeader title="Bin detail" /><EmptyState>No bin with this ID, or it is not visible to you.</EmptyState></>
+  if (!b) return <><PageHeader title="Bin detail" back={{ href: href("/app/bins", sp), label: "All bins" }} /><EmptyState>No bin with this ID, or it is not visible to you.</EmptyState></>
   const [{ data: keyRow }, { data: scoreRows }, allAlerts] = await Promise.all([
     sb.from("bins").select("public_key").eq("id", binId).maybeSingle(),
     sb.from("bin_scores").select("day, score, reasons, scans_considered").eq("bin_id", binId).order("day", { ascending: false }).limit(90),
@@ -29,7 +29,7 @@ export default async function BinDetailPage({ params, searchParams }: { params: 
 
   return (
     <>
-      <PageHeader eyebrow={cityName(b.city)} title={b.bin_id} actions={<Link href={href("/app/bins", sp)} className="text-sm font-semibold text-dim underline-offset-4 hover:underline">← All bins</Link>} />
+      <PageHeader eyebrow={cityName(b.city)} title={b.bin_id} back={{ href: href("/app/bins", sp), label: "All bins" }} />
 
       <Card>
         <div className="grid gap-6 lg:grid-cols-12 lg:items-center">

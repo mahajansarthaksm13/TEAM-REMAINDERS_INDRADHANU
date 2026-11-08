@@ -2,12 +2,12 @@
 import Link from "next/link"
 import type { ReactNode } from "react"
 import { cn } from "cn"
-import { AlertTriangle, CheckCircle2, ChevronLeft, ChevronRight, XCircle } from "lucide-react"
+import { AlertTriangle, ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, XCircle } from "lucide-react"
 import { ANOMALY_THRESHOLD, CATEGORY_COLOR, CATEGORY_DESC, CATEGORY_LABEL, reasonLabel, type Category, type ScoreReason } from "@/lib/shared"
 import { kg, pct } from "@/lib/format"
 
 export function Card({ className, children, id }: { className?: string; children: ReactNode; id?: string }) {
-  return <section id={id} className={cn("skeu-raised rounded-card p-4 sm:p-6", className)}>{children}</section>
+  return <section id={id} className={cn("glass rounded-card p-4 sm:p-6", className)}>{children}</section>
 }
 
 export function CardHead({ eyebrow, title, action, className }: { eyebrow?: string; title: ReactNode; action?: ReactNode; className?: string }) {
@@ -22,10 +22,18 @@ export function CardHead({ eyebrow, title, action, className }: { eyebrow?: stri
   )
 }
 
-export function PageHeader({ eyebrow, title, desc, actions }: { eyebrow?: string; title: string; desc?: ReactNode; actions?: ReactNode }) {
+// back: where this page sits under, shown as a "← Bins" link above the title so a detail page
+// always says how to get out of it.
+export function PageHeader({ eyebrow, title, desc, actions, back }: { eyebrow?: string; title: string; desc?: ReactNode; actions?: ReactNode; back?: { href: string; label: string } }) {
   return (
     <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div className="max-w-[68ch]">
+        {back && (
+          <Link href={back.href} className="glass-pill mb-4 inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold text-dim transition-colors hover:text-ink focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
+            <ArrowLeft className="size-3.5" aria-hidden />
+            {back.label}
+          </Link>
+        )}
         {eyebrow && <p className="eyebrow mb-2 text-dim">{eyebrow}</p>}
         <h1 className="t-h2">{title}</h1>
         {desc && <p className="mt-2 text-sm text-dim">{desc}</p>}
@@ -36,16 +44,16 @@ export function PageHeader({ eyebrow, title, desc, actions }: { eyebrow?: string
 }
 
 const badgeStyles = {
-  qr: "bg-lit text-on-lit",
+  qr: "bg-violet text-snow",
   barcode: "bg-chip text-ink ring-1 ring-line-strong",
   ok: "border border-success text-success",
   mismatch: "border border-warning text-warning",
-  flagged: "border border-error text-error",
+  flagged: "border border-error bg-error font-bold text-on-lit",
   pending: "bg-chip text-ink",
   approved: "bg-success/15 text-success ring-1 ring-success/50",
-  readonly: "bg-lit text-on-lit",
+  readonly: "bg-violet text-snow",
   warning: "border border-warning text-warning",
-  error: "border border-error text-error",
+  error: "border border-error bg-error font-bold text-on-lit",
   neutral: "border border-line-strong text-ink",
 } as const
 
@@ -98,7 +106,7 @@ export function EmptyState({ children, action }: { children: ReactNode; action?:
 
 export function KpiCard({ href, label, value, caption }: { href: string; label: string; value: string; caption?: ReactNode }) {
   return (
-    <Link href={href} className="group skeu-raised rounded-card p-4 transition-transform duration-500 ease-(--ease-spring) hover:-translate-y-1 focus-visible:outline-none sm:p-6">
+    <Link href={href} className="group glass rounded-card p-4 transition-transform duration-500 ease-(--ease-spring) hover:-translate-y-1 focus-visible:outline-none sm:p-6">
       <p className="eyebrow text-dim">{label}</p>
       <p className="t-kpi mt-3 text-ink transition-colors group-hover:text-lit">{value}</p>
       {caption && <p className="mt-1 text-xs text-dim">{caption}</p>}
@@ -228,7 +236,7 @@ export function DataTable<T>({ rows, cols, rowKey, rowHref, title, caption }: { 
 
 export function Pagination({ page, total, per, hrefFor }: { page: number; total: number; per: number; hrefFor: (p: number) => string }) {
   const pages = Math.max(1, Math.ceil(total / per))
-  const btn = "skeu-btn flow-btn inline-flex h-10 items-center gap-1 rounded-xl px-4 text-sm font-semibold text-ink"
+  const btn = "btn-glass flow-btn inline-flex h-10 items-center gap-1 rounded-xl px-4 text-sm font-semibold text-ink"
   return (
     <nav aria-label="Pagination" className="mt-4 flex items-center justify-between gap-3 text-sm">
       <span className="tnum text-dim">

@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
-import { Comfortaa, JetBrains_Mono, Jost } from "next/font/google";
+import { Inter, Inter_Tight, JetBrains_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { Backdrop } from "@/components/vb/backdrop";
+import { SmoothScroll } from "@/components/vb/smooth-scroll";
 import "./globals.css";
 
-// Type, the reference pairing:
-//  · Comfortaa: monoline geometric with true-circle bowls; titles, copy, controls, numbers.
-//  · Jost (a Futura revival): only the small tracked caps (eyebrows, table heads).
+// Type, after the reference:
+//  · Inter Tight: titles, numbers, controls; set tight for a crisp, confident headline.
+//  · Inter: running text and small caps, built for screens at every size.
 //  · JetBrains Mono: hashes, signatures and IDs, where 0/O and 1/l must never be confused.
-const display = Comfortaa({ variable: "--font-display-face", subsets: ["latin"], weight: ["400", "500", "600", "700"], display: "swap" });
-const caption = Jost({ variable: "--font-caption-face", subsets: ["latin"], display: "swap" });
+const display = Inter_Tight({ variable: "--font-display-face", subsets: ["latin"], display: "swap" });
+const body = Inter({ variable: "--font-body-face", subsets: ["latin"], display: "swap" });
 const mono = JetBrains_Mono({ variable: "--font-mono-face", subsets: ["latin"], display: "swap" });
 
 export const metadata: Metadata = {
@@ -19,10 +20,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en-IN" className={`${display.variable} ${caption.variable} ${mono.variable}`}>
+    <html lang="en-IN" className={`${display.variable} ${body.variable} ${mono.variable}`}>
       <body className="min-h-dvh">
-        {/* Mounted once so it never remounts across navigation. */}
+        {/* Mounted once so neither remounts across navigation. */}
         <Backdrop />
+        <SmoothScroll />
         {children}
         <Toaster />
       </body>

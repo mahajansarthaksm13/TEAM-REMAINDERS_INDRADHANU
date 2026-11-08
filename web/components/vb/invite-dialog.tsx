@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { ROLE_LABEL, type Role } from "@/lib/shared"
 import { FieldError, Notice } from "./ui"
 
-const select = "h-10 w-full skeu-inset rounded-input text-ink px-3 text-sm focus-visible:ring-2 focus-visible:ring-lit focus-visible:outline-none"
+const select = "h-10 w-full glass-inset rounded-input text-ink px-3 text-sm focus-visible:ring-2 focus-visible:ring-lit focus-visible:outline-none"
 
 export function InviteDialog({ companies }: { companies: { id: string; name: string }[] }) {
   const router = useRouter()

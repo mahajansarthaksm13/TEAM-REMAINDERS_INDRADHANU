@@ -1,49 +1,45 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "lenis/dist/lenis.css";
 
 /* ─────────────────────────────────────────────────────────────
-   Moss Ledger, night edition. Single fixed DARK theme.
+   VeriBin, Violet Glass. Single fixed DARK theme.
 
-   The supplied palette is unchanged; only the roles move:
-     Olive Black  #1F261A  the ground, and every surface cut from it
-     Deep Olive   #4A543D  lines, rims, the lifted edge of a panel
-     Muted Sage   #8B9678  secondary type (lifted a step for contrast)
-     Sage Mist    #D7DEC8  the light: one accent control per screen, focus
-     Garden White #F5F7EF  running text
-
-   Like the reference, the light is rationed. Sage Mist fills one control per
-   view, the focus ring, and a faint bloom overhead. Everything else is olive
-   doing the work. Panels are solid materials lit from above: a cold sheen on
-   the top edge, a shade below. No glass, no blur.
+   Strictly four colours. Every value below is one of them, either solid or
+   as a see-through tint of itself; nothing else appears anywhere:
+     Night    #171123   60  the ground and every recessed surface
+     Snow     #FBFBFB   30  running text, and frosted glass as a 4–10% tint
+     Violet   #6F2DBD   10  primary action, active state, glows behind glass
+     Orchid   #A663CC   10  focus, links, highlights, the selected item
+   Status never relies on colour: ✓ ⚠ ✗ icons and words carry the meaning.
    ───────────────────────────────────────────────────────────── */
 :root {
   /* palette */
-  --olive-950: #1f261a;
-  --olive-700: #4a543d;
-  --sage-500: #8b9678;
-  --sage-200: #d7dec8;
-  --garden-50: #f5f7ef;
+  --night: #171123;
+  --snow: #fbfbfb;
+  --violet: #6f2dbd;
+  --orchid: #a663cc;
 
-  /* roles [DERIVED from the palette for a dark ground] */
-  --ground: var(--olive-950);
-  --deep: #151a11; /* recessed: sidebar, wells, inputs */
-  --panel: #283121; /* raised card: Olive Black lifted toward Deep Olive */
-  --panel-hi: #313b29;
-  --chip: #36402d;
-  --line: #3a4532;
-  --line-strong: var(--olive-700);
-  --ink: var(--garden-50);
-  --dim: #a7b194; /* Muted Sage lifted: 6.4:1 on the ground, 5.6:1 on panels */
-  --lit: var(--sage-200);
-  --on-lit: var(--olive-950);
-  --edge-light: rgba(245, 247, 239, 0.1);
-  --edge-dark: #0e120b;
+  /* roles: palette colours, solid or as alpha tints of themselves */
+  --ground: var(--night);
+  --deep: var(--night);
+  --panel: var(--night); /* solid surfaces: popovers, select lists, toasts (lifted by rim + shadow) */
+  --panel-hi: rgba(251, 251, 251, 0.07); /* hover / active row */
+  --chip: rgba(111, 45, 189, 0.42); /* badges, chips */
+  --line: rgba(251, 251, 251, 0.1); /* hairlines, table rules */
+  --line-strong: rgba(166, 99, 204, 0.5);
+  --ink: var(--snow); /* running text: 17.6:1 on the ground */
+  --dim: rgba(251, 251, 251, 0.68); /* secondary text: 8.4:1 on the ground */
+  --lit: var(--orchid); /* focus, links, active nav: 4.6:1 on the ground */
+  --on-lit: var(--night); /* text on an Orchid fill: 4.6:1 */
+  --glass-rim: rgba(251, 251, 251, 0.1);
+  --glass-rim-hi: rgba(251, 251, 251, 0.2);
 
-  /* status, re-tuned for a dark ground (≥ 4.5:1 on panels), always with icon + words */
-  --success: #9dc88c;
-  --warning: #e3bc62;
-  --error: #ee8f7f;
+  /* status: palette only, always paired with an icon and words */
+  --success: var(--snow);
+  --warning: var(--orchid); /* warnings draw the eye; errors add a solid fill + ✗ */
+  --error: var(--orchid);
 
   /* shadcn semantic tokens */
   --background: var(--ground);
@@ -52,8 +48,8 @@
   --card-foreground: var(--ink);
   --popover: var(--panel);
   --popover-foreground: var(--ink);
-  --primary: var(--lit);
-  --primary-foreground: var(--on-lit);
+  --primary: var(--violet);
+  --primary-foreground: var(--snow);
   --secondary: var(--chip);
   --secondary-foreground: var(--ink);
   --muted: var(--chip);
@@ -64,7 +60,7 @@
   --border: var(--line);
   --input: var(--line-strong);
   --ring: var(--lit);
-  --radius: 1.25rem;
+  --radius: 1rem;
 }
 
 @theme inline {
@@ -87,11 +83,10 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  --color-olive-950: var(--olive-950);
-  --color-olive-700: var(--olive-700);
-  --color-sage-500: var(--sage-500);
-  --color-sage-200: var(--sage-200);
-  --color-garden-50: var(--garden-50);
+  --color-night: var(--night);
+  --color-snow: var(--snow);
+  --color-violet: var(--violet);
+  --color-orchid: var(--orchid);
 
   --color-ground: var(--ground);
   --color-deep: var(--deep);
@@ -108,11 +103,11 @@
   --color-warning: var(--warning);
   --color-error: var(--error);
 
-  /* Type, the reference pairing: Comfortaa carries titles, copy and controls;
-     Jost (a Futura revival) only for small tracked caps. Mono for hashes. */
+  /* Type, after the reference: Inter Tight for titles, numbers and controls (tight, confident),
+     Inter for running text and small caps, JetBrains Mono for hashes. */
   --font-display: var(--font-display-face), system-ui, sans-serif;
-  --font-sans: var(--font-display-face), system-ui, sans-serif;
-  --font-caption: var(--font-caption-face), system-ui, sans-serif;
+  --font-sans: var(--font-body-face), system-ui, sans-serif;
+  --font-caption: var(--font-body-face), system-ui, sans-serif;
   --font-mono: var(--font-mono-face), ui-monospace, "SFMono-Regular", Menlo, monospace;
   --font-heading: var(--font-display);
 
@@ -124,9 +119,13 @@
   --radius-lg: 14px;
   --radius-xl: 20px;
 
-  --shadow-pop: 0 18px 40px -14px rgba(0, 0, 0, 0.75), 0 1px 2px rgba(0, 0, 0, 0.5);
-  --shadow-dialog: 0 30px 60px -20px rgba(0, 0, 0, 0.85);
-  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --shadow-pop: 0 24px 48px -16px rgba(23, 17, 35, 0.9), 0 0 0 1px rgba(166, 99, 204, 0.35);
+  --shadow-dialog: 0 40px 80px -24px rgba(23, 17, 35, 0.95);
+  /* Tailwind's stock shadows, re-cast in Night so no off-palette black slips in. */
+  --shadow-sm: 0 1px 2px rgba(23, 17, 35, 0.6);
+  --shadow-md: 0 6px 14px -4px rgba(23, 17, 35, 0.8);
+  --shadow-lg: 0 18px 40px -12px rgba(23, 17, 35, 0.9);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -138,19 +137,18 @@
     @apply font-sans;
     -webkit-text-size-adjust: 100%;
     color-scheme: dark;
+    /* also paints the overscroll area, so a bounce never flashes an off-palette colour */
+    background: var(--ground);
+    color: var(--ink);
   }
   body {
-    /* Olive ground under a Sage Mist bloom overhead and a fainter one low right:
-       a room lit by one lamp just out of frame. Held under 6%. */
-    background:
-      radial-gradient(1200px 760px at 50% -22%, rgba(215, 222, 200, 0.06), transparent 70%),
-      radial-gradient(820px 600px at 94% 110%, rgba(215, 222, 200, 0.035), transparent 70%),
-      var(--ground);
-    background-attachment: fixed;
+    background: var(--ground);
     color: var(--ink);
-    font-weight: 500;
-    letter-spacing: 0.01em;
+    font-weight: 400;
     @apply antialiased;
+  }
+  h1, h2, h3, .font-display {
+    letter-spacing: -0.02em;
   }
   button:not(:disabled),
   [role="button"]:not(:disabled) {
@@ -160,9 +158,13 @@
   input {
     color-scheme: dark;
   }
+  ::selection {
+    background: rgba(166, 99, 204, 0.45);
+    color: var(--snow);
+  }
   /* Native <select> lists. The popup paints each option with the option's own colours and falls
-     back to white when the select itself has a gradient background (skeu-inset), which left
-     Garden White text on white. Set once here so every select, now and later, is readable. */
+     back to white when the select has no solid background, which left light text on white.
+     Set once here so every select, now and later, is readable. */
   select option,
   select optgroup {
     background-color: var(--panel);
@@ -173,14 +175,14 @@
     font-weight: 700;
   }
   select option:checked {
-    background-color: var(--chip);
-    color: var(--lit);
+    background-color: var(--violet);
+    color: var(--snow);
   }
   select option:disabled {
     color: var(--dim);
   }
 
-  /* Keyboard focus: one 2px Sage Mist ring, offset clear of the control's own rim. Kept in the
+  /* Keyboard focus: one 2px Orchid ring, offset clear of the control's own rim. Kept in the
      base layer so a control's own focus utilities (ring-2 + outline-none) replace it, not stack. */
   :focus-visible {
     outline: 2px solid var(--lit);
@@ -191,123 +193,146 @@
 /* ── Type ──────────────────────────────────────────────────── */
 @utility eyebrow {
   font-family: var(--font-caption);
-  font-size: 11.5px;
+  font-size: 12px;
   line-height: 16px;
-  font-weight: 500;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.14em;
 }
 @utility tnum {
   font-variant-numeric: tabular-nums;
 }
+/* Hero headline: Snow falling into Orchid, the reference's lit-from-above lettering. */
 @utility t-display {
   font-family: var(--font-display);
-  font-weight: 700;
-  letter-spacing: 0.005em;
-  font-size: 40px;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  font-size: 42px;
   line-height: 46px;
-  @variant lg { font-size: 64px; line-height: 70px; }
+  background: linear-gradient(180deg, var(--snow) 35%, var(--orchid) 110%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  @variant lg { font-size: 72px; line-height: 76px; }
 }
 @utility t-h1 {
   font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 32px;
-  line-height: 38px;
-  @variant lg { font-size: 46px; line-height: 52px; }
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  font-size: 34px;
+  line-height: 40px;
+  @variant lg { font-size: 50px; line-height: 56px; }
 }
 @utility t-h2 {
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 600;
+  letter-spacing: -0.025em;
   font-size: 26px;
   line-height: 32px;
   @variant lg { font-size: 34px; line-height: 40px; }
 }
 @utility t-h3 {
   font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  font-size: 20px;
   line-height: 28px;
 }
 @utility t-kpi {
   font-family: var(--font-display);
-  font-size: 28px;
-  line-height: 32px;
-  font-weight: 700;
+  font-size: 30px;
+  line-height: 34px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
-  @variant lg { font-size: 34px; line-height: 40px; }
+  @variant lg { font-size: 36px; line-height: 40px; }
 }
 
-/* Category IV pattern: Deep Olive with a Sage Mist diagonal (reads on dark). */
+/* Category IV pattern: Violet with a Snow diagonal, so it never depends on colour alone. */
 @utility hatch {
-  background-image: repeating-linear-gradient(45deg, var(--sage-200) 0 2px, transparent 2px 7px);
-  background-color: var(--olive-700);
+  background-image: repeating-linear-gradient(45deg, var(--snow) 0 2px, transparent 2px 7px);
+  background-color: var(--violet);
 }
 
-/* ── Material ─────────────────────────────────────────────────
-   One light source, high and slightly forward. Raised things catch a sheen on
-   the top edge and cast a shadow; recessed things do the inverse. */
-.skeu-raised {
-  background: linear-gradient(180deg, #2f3927 0%, #283121 46%, #20281a 100%);
-  border: 1px solid var(--edge-dark);
-  border-top-color: var(--edge-light);
+/* ── Glass ────────────────────────────────────────────────────
+   Frosted Snow over the glowing ground: a 4–9% tint, a blur, a hairline rim that
+   catches light on the top edge, and a faint Orchid bloom inside. */
+.glass {
+  background:
+    linear-gradient(180deg, rgba(251, 251, 251, 0.07) 0%, rgba(111, 45, 189, 0.06) 100%),
+    rgba(23, 17, 35, 0.55);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid var(--glass-rim);
+  border-top-color: var(--glass-rim-hi);
   box-shadow:
-    inset 0 1px 0 rgba(245, 247, 239, 0.07),
-    inset 0 -1px 2px rgba(0, 0, 0, 0.45),
-    0 1px 2px rgba(0, 0, 0, 0.45),
-    0 18px 40px -16px rgba(0, 0, 0, 0.7);
+    inset 0 1px 0 rgba(251, 251, 251, 0.07),
+    inset 0 3px 14px rgba(166, 99, 204, 0.1),
+    0 24px 48px -24px rgba(23, 17, 35, 0.95);
 }
-.skeu-inset {
-  background: linear-gradient(180deg, #11150e 0%, #161b12 55%, #1b2116 100%);
-  border: 1px solid var(--edge-dark);
-  border-bottom-color: var(--edge-light);
-  box-shadow:
-    inset 0 3px 7px rgba(0, 0, 0, 0.55),
-    inset 0 -1px 0 rgba(245, 247, 239, 0.05);
+.glass-inset {
+  background: rgba(23, 17, 35, 0.78);
+  border: 1px solid var(--glass-rim);
+  box-shadow: inset 0 2px 6px rgba(23, 17, 35, 0.9);
+  transition: border-color 200ms, box-shadow 200ms;
 }
-.skeu-inset:focus,
-.skeu-inset:focus-visible {
+.glass-inset:hover {
+  border-color: var(--glass-rim-hi);
+}
+.glass-inset:focus,
+.glass-inset:focus-visible {
   border-color: var(--lit);
+  box-shadow: inset 0 2px 6px rgba(23, 17, 35, 0.9), 0 0 0 3px rgba(166, 99, 204, 0.25);
 }
-.skeu-btn {
-  background: linear-gradient(180deg, #343f2b 0%, #2a3323 52%, #1e2519 100%);
-  border: 1px solid var(--edge-dark);
-  border-top-color: var(--edge-light);
+/* Sticky bars and the sidebar: thinner tint, heavier blur, so content slides under them. */
+.glass-bar {
+  background: rgba(23, 17, 35, 0.62);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  backdrop-filter: blur(28px) saturate(160%);
+  border-color: rgba(251, 251, 251, 0.08);
+}
+/* Small glass pill (the reference's tag above the headline). */
+.glass-pill {
+  background: rgba(251, 251, 251, 0.06);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-rim);
+  box-shadow: inset 0 1px 2px rgba(251, 251, 251, 0.1);
+}
+.btn-glass {
+  background: rgba(251, 251, 251, 0.06);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-rim);
+  border-top-color: var(--glass-rim-hi);
+  box-shadow: inset 0 1px 2px rgba(251, 251, 251, 0.12), 0 8px 20px -10px rgba(23, 17, 35, 0.9);
+}
+/* The 10%: one Violet control per view, lit from above toward Orchid. */
+.btn-lit {
+  background: linear-gradient(180deg, rgba(166, 99, 204, 0.55) 0%, rgba(166, 99, 204, 0) 60%), var(--violet);
+  border: 1px solid rgba(166, 99, 204, 0.7);
   box-shadow:
-    inset 0 1px 0 rgba(245, 247, 239, 0.09),
-    inset 0 -2px 3px rgba(0, 0, 0, 0.4),
-    0 2px 3px rgba(0, 0, 0, 0.4),
-    0 10px 18px -8px rgba(0, 0, 0, 0.55);
+    inset 0 1px 0 rgba(251, 251, 251, 0.3),
+    inset 0 -2px 6px rgba(23, 17, 35, 0.35),
+    0 10px 28px -8px rgba(111, 45, 189, 0.75);
 }
-/* The one Sage Mist control per view. */
-.skeu-btn-lit {
-  background: linear-gradient(180deg, #eef2e4 0%, var(--sage-200) 52%, #aeb79c 100%);
-  border: 1px solid #6f7a5e;
-  border-top-color: rgba(255, 255, 255, 0.6);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.55),
-    inset 0 -2px 4px rgba(74, 84, 61, 0.35),
-    0 2px 3px rgba(0, 0, 0, 0.45),
-    0 12px 24px -10px rgba(215, 222, 200, 0.22);
-}
-.skeu-btn-lit:disabled {
-  background: linear-gradient(180deg, #11150e 0%, #161b12 55%, #1b2116 100%);
-  border-color: var(--edge-dark);
+.btn-lit:disabled {
+  background: rgba(251, 251, 251, 0.05);
+  border-color: var(--glass-rim);
   color: var(--dim);
-  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.55);
+  box-shadow: none;
 }
-.skeu-btn:active:not(:disabled),
-.skeu-btn-lit:active:not(:disabled) {
-  box-shadow:
-    inset 0 3px 7px rgba(0, 0, 0, 0.55),
-    inset 0 -1px 0 rgba(245, 247, 239, 0.07);
+.btn-glass:active:not(:disabled),
+.btn-lit:active:not(:disabled) {
+  box-shadow: inset 0 3px 8px rgba(23, 17, 35, 0.6);
 }
 
-/* ── Flow sweep (the reference's Start button) ────────────────
+/* ── Flow sweep (unchanged motion) ───────────────────────────
    An oversized circle parked off the bottom-right corner slides over the face
    on hover and flips the label. Hover only, never :focus-visible, so a
    focused control is never left covered; keyboard focus shows the ring.
-     .flow-btn          olive control  -> sweeps Sage Mist, label goes Olive Black
-     .flow-btn-invert   Sage Mist fill -> sweeps Olive Black, label goes Sage Mist */
+     .flow-btn          glass control  -> sweeps Orchid, label goes Night
+     .flow-btn-invert   Violet fill    -> sweeps Snow, label goes Violet */
 .flow-btn {
   position: relative;
   z-index: 0;
@@ -345,87 +370,75 @@
   transform: scale(0.95);
 }
 .flow-btn-invert::before {
-  background: var(--ground);
+  background: var(--snow);
 }
 .flow-btn-invert:hover:not(:disabled),
 .flow-btn-invert[data-played="true"] {
-  color: var(--lit);
+  color: var(--violet);
 }
 
-/* ── Backdrop: the ledger the app is written on ──────────────
-   Ruled lines draw themselves in once; hash-blocks and links rest in the
-   margins and breathe on long periods. Nothing above 8% opacity: felt, not read. */
+/* ── Backdrop: the glow the glass floats over ────────────────
+   Three soft violet lights drifting on long periods, a faint dot grid fading
+   out toward the bottom, and a vignette. Fixed, never scrolls, never clicks. */
 .vb-backdrop {
   position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
   overflow: hidden;
+  background: var(--ground);
 }
-.vb-backdrop svg {
-  width: 100%;
-  height: 100%;
-  display: block;
+.vb-glow {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  will-change: transform;
+  animation: vb-drift var(--dur, 28s) ease-in-out infinite alternate;
 }
-.vb-rule line {
-  opacity: 0.5;
-  stroke-dasharray: 1600;
-  stroke-dashoffset: 1600;
-  animation: vb-rule 1.6s var(--ease-out) forwards;
+@keyframes vb-drift {
+  to { transform: translate(var(--dx, 6vw), var(--dy, 4vh)) scale(1.08); }
 }
-@keyframes vb-rule {
-  to { stroke-dashoffset: 0; }
-}
-.vb-float {
-  animation: vb-float var(--dur, 24s) ease-in-out infinite;
-}
-@keyframes vb-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(var(--dy, -10px)); }
-}
-.vb-mark {
-  stroke: var(--sage-200);
-  opacity: 0.08;
-  animation: vb-settle 1.8s 1.1s ease-out backwards;
-}
-.vb-mark--warm {
-  stroke: var(--sage-500);
-  opacity: 0.1;
-}
-@keyframes vb-settle {
-  from { opacity: 0; }
+.vb-grid {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(251, 251, 251, 0.09) 1px, transparent 1.4px);
+  background-size: 28px 28px;
+  -webkit-mask-image: radial-gradient(80% 60% at 50% 0%, #171123 0%, transparent 75%);
+  mask-image: radial-gradient(80% 60% at 50% 0%, #171123 0%, transparent 75%);
 }
 
 /* ── Motion ───────────────────────────────────────────────── */
-/* Staggered spring entrance: children rise in one after another. */
+/* Load-time entrance for hero copy (above the fold). */
 @keyframes rise {
-  from { opacity: 0; transform: translateY(14px); }
-  to { opacity: 1; transform: none; }
+  from { opacity: 0; transform: translateY(18px); filter: blur(6px); }
+  to { opacity: 1; transform: none; filter: none; }
 }
 .reveal {
-  animation: rise 700ms var(--ease-spring) both;
+  animation: rise 900ms var(--ease-out) both;
 }
-.stagger > * {
-  animation: rise 650ms var(--ease-spring) both;
-}
-.stagger > *:nth-child(2) { animation-delay: 60ms; }
-.stagger > *:nth-child(3) { animation-delay: 120ms; }
-.stagger > *:nth-child(4) { animation-delay: 180ms; }
-.stagger > *:nth-child(5) { animation-delay: 240ms; }
-.stagger > *:nth-child(6) { animation-delay: 300ms; }
-.stagger > *:nth-child(n + 7) { animation-delay: 360ms; }
 
-/* Live feed row: slide in and hold a Sage Mist wash for 1.2 s. */
+/* Scroll reveal, as on the reference: blocks fade up out of a soft blur as they enter the
+   viewport. components/vb/smooth-scroll.tsx adds html.fx once JavaScript runs and marks each
+   block .is-in when it is seen, so without JavaScript nothing is ever hidden. "backwards" fill
+   only: once played, the block's own hover transforms work untouched. */
+html.fx :where(.stagger > *, [data-reveal]):not(.is-in) {
+  opacity: 0;
+}
+html.fx :where(.stagger > *, [data-reveal]).is-in {
+  animation: rise 800ms var(--ease-out) var(--d, 0ms) backwards;
+}
+
+/* Live feed row: slide in and hold an Orchid wash for 1.2 s. */
 @keyframes feed-in {
-  0% { transform: translateY(-8px); opacity: 0; background-color: rgba(215, 222, 200, 0.18); }
-  15% { transform: none; opacity: 1; background-color: rgba(215, 222, 200, 0.18); }
+  0% { transform: translateY(-8px); opacity: 0; background-color: rgba(166, 99, 204, 0.22); }
+  15% { transform: none; opacity: 1; background-color: rgba(166, 99, 204, 0.22); }
   100% { background-color: transparent; }
 }
 .feed-in { animation: feed-in 1400ms var(--ease-out); }
 
 @keyframes soft-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(215, 222, 200, 0.35); }
-  50% { box-shadow: 0 0 0 6px rgba(215, 222, 200, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(166, 99, 204, 0.5); }
+  50% { box-shadow: 0 0 0 6px rgba(166, 99, 204, 0); }
 }
 .soft-pulse { animation: soft-pulse 1.4s ease-in-out infinite; }
 
@@ -435,12 +448,12 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  .vb-rule line { stroke-dashoffset: 0; }
   .flow-btn:hover:not(:disabled), .flow-btn:active:not(:disabled) { transform: none; }
 }
 
 /* ── Print (QR sheets): plain ink on white ─────────────────── */
 @media print {
   .no-print, .vb-backdrop { display: none !important; }
-  body { background: #fff; color: #000; }
+  body { background: var(--snow); color: var(--night); }
+  .glass { background: var(--snow); box-shadow: none; backdrop-filter: none; }
 }

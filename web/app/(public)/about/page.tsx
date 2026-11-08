@@ -28,7 +28,7 @@ export default function AboutPage() {
           <p className="eyebrow mb-3 text-dim">Roadmap</p>
           <ol className="space-y-4">
             {ROADMAP.map(([k, v], i) => (
-              <li key={k} className={i === 0 ? "skeu-raised rounded-card border-l-4 border-l-lit p-6 text-ink" : "skeu-raised rounded-card p-6 text-ink"}>
+              <li key={k} className={i === 0 ? "glass rounded-card border-l-4 border-l-lit p-6 text-ink" : "glass rounded-card p-6 text-ink"}>
                 <p className="t-h3">{k}</p>
                 <p className="mt-2 max-w-[56ch] opacity-90">{v}</p>
               </li>

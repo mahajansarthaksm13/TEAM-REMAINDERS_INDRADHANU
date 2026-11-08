@@ -27,9 +27,11 @@ export type ReportRow = {
   created_at: string
 }
 
-const OLIVE = rgb(0x1f / 255, 0x26 / 255, 0x1a / 255)
-const DEEP = rgb(0x4a / 255, 0x54 / 255, 0x3d / 255)
-const MIST = rgb(0xd7 / 255, 0xde / 255, 0xc8 / 255)
+// The site palette, on paper: Night ink, Violet labels, Orchid rules, Snow page.
+const OLIVE = rgb(0x17 / 255, 0x11 / 255, 0x23 / 255) // Night
+const DEEP = rgb(0x6f / 255, 0x2d / 255, 0xbd / 255) // Violet
+const MIST = rgb(0xa6 / 255, 0x63 / 255, 0xcc / 255) // Orchid
+const SNOW = rgb(0xfb / 255, 0xfb / 255, 0xfb / 255)
 const ascii = (t: string) => t.replace(/[^ -~]/g, " ") // standard PDF fonts are WinAnsi only
 
 export const pdfPath = (r: Pick<ReportRow, "company_id" | "id">) => `${r.company_id}/${r.id}.pdf`
@@ -48,10 +50,11 @@ export async function renderPdf(r: ReportRow, companyName: string, origin: strin
   const mono = await doc.embedFont(StandardFonts.Courier)
   const serif = await doc.embedFont(StandardFonts.TimesRoman)
   const verifyUrl = `${origin}/verify/${r.id}`
-  const qr = await doc.embedPng(await QRCode.toBuffer(verifyUrl, { margin: 1, width: 300, color: { dark: "#1F261A", light: "#FFFFFF" } }))
+  const qr = await doc.embedPng(await QRCode.toBuffer(verifyUrl, { margin: 1, width: 300, color: { dark: "#171123", light: "#FBFBFB" } }))
 
+  page.drawRectangle({ x: 0, y: 0, width: 595, height: 842, color: SNOW })
   page.drawRectangle({ x: 0, y: 762, width: 595, height: 80, color: OLIVE })
-  page.drawText("VeriBin", { x: 48, y: 792, size: 26, font: serif, color: rgb(0.96, 0.97, 0.94) })
+  page.drawText("VeriBin", { x: 48, y: 792, size: 26, font: serif, color: SNOW })
   page.drawText("COLLECTION EVIDENCE REPORT", { x: 330, y: 798, size: 10, font: bold, color: MIST })
   page.drawText(r.id, { x: 330, y: 782, size: 7.5, font: mono, color: MIST })
 

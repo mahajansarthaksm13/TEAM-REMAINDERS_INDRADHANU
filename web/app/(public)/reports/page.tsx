@@ -8,7 +8,7 @@ import { SAMPLE_REPORT_ID } from "@/lib/shared"
 export const metadata: Metadata = { title: "Reports" }
 
 export default async function ReportsPage() {
-  const qr = await QRCode.toString(SAMPLE_REPORT_ID ? `/verify/${SAMPLE_REPORT_ID}` : "/checkpoints", { type: "svg", margin: 0, color: { dark: "#1F261A", light: "#FFFFFF" } })
+  const qr = await QRCode.toString(SAMPLE_REPORT_ID ? `/verify/${SAMPLE_REPORT_ID}` : "/checkpoints", { type: "svg", margin: 0, color: { dark: "#171123", light: "#FBFBFB" } })
   return (
     <>
       <PublicIntro eyebrow="Reports" title="The Collection Evidence Report.">
@@ -29,7 +29,7 @@ export default async function ReportsPage() {
           ))}
           {SAMPLE_REPORT_ID && <Button asChild size="lg"><Link href={`/verify/${SAMPLE_REPORT_ID}`}>Verify sample report</Link></Button>}
         </div>
-        <figure className="skeu-raised rounded-card p-6 shadow-pop lg:col-span-6 lg:p-8" aria-label="Sample report preview">
+        <figure className="glass rounded-card p-6 shadow-pop lg:col-span-6 lg:p-8" aria-label="Sample report preview">
           <div className="flex items-start justify-between gap-6 border-b border-line pb-5">
             <div>
               <p className="eyebrow text-dim">Collection Evidence Report</p>

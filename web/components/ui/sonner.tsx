@@ -11,9 +11,9 @@ const Toaster = (props: ToasterProps) => (
     mobileOffset={{ bottom: 16 }}
     style={
       {
-        "--normal-bg": "#313b29",
-        "--normal-text": "#f5f7ef",
-        "--normal-border": "#4a543d",
+        "--normal-bg": "#171123",
+        "--normal-text": "#FBFBFB",
+        "--normal-border": "rgba(166,99,204,0.45)",
         "--border-radius": "14px",
         zIndex: 70,
       } as React.CSSProperties
