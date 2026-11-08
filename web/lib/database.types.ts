@@ -504,6 +504,11 @@ isOneToOne: false
               "category": Database["public"]['Enums']["epr_category"],"collected_kg": number,"month": string,"scan_count": number
             }[]
                            },
+"admin_scan_counts":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "id": string,"kind": string,"scans": number
+            }[]
+                           },
 "erase_company":
 { Args: { "p_company_id": string,"p_confirm_name": string,"p_reason": string }; Returns: Json
                            },

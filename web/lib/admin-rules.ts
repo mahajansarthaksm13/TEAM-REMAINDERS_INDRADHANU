@@ -4,6 +4,10 @@
 
 type Rules = { canDelete: boolean; deleteBlocked: string | null; canArchive: boolean; canRestore: boolean }
 
+// What the Manage page promises, kept beside the rules it describes (tested together).
+export const MANAGE_INTRO =
+  "Add, edit, hide or remove companies, products, bins and people. Archive hides a record from everyone except admins and keeps its history. A company with signed scans can be erased completely after you type its name, and every erasure is logged; products and bins with signed scans can only be archived, because they are evidence."
+
 const n = (v: number) => v.toLocaleString("en-IN")
 const scansWord = (v: number) => `${n(v)} signed scan${v === 1 ? "" : "s"}`
 

@@ -1,6 +1,6 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
-import { binRules, companyRules, dbErrorMessage, nameMatches, productRules, userRules } from "../lib/admin-rules.ts"
+import { MANAGE_INTRO, binRules, companyRules, dbErrorMessage, nameMatches, productRules, userRules } from "../lib/admin-rules.ts"
 
 test("a company with no scans and no users can be deleted", () => {
   const r = companyRules({ is_demo: false, archived: false, scans: 0, users: 0 })
@@ -87,4 +87,10 @@ test("database refusals become plain sentences", () => {
   assert.equal(dbErrorMessage({ code: "42501" }), "Only an admin can do that.")
   assert.equal(dbErrorMessage({ code: "22023" }), "Check the company name and the reason, then try again.")
   assert.equal(dbErrorMessage({ code: "XX000" }), "That didn't work. Try again.")
+})
+
+test("the Manage intro matches the rules: companies with scans can be erased, other scanned records only archived", () => {
+  assert.doesNotMatch(MANAGE_INTRO, /Anything with signed scans can't be deleted/)
+  assert.match(MANAGE_INTRO, /erase/i)
+  assert.match(MANAGE_INTRO, /products and bins with signed scans can only be archived/i)
 })

@@ -1,11 +1,8 @@
 // Everything the Manage page lists, read as the admin (RLS lets an admin see every row, archived
-// ones included). Scan counts decide what may be deleted, so they are shown next to each record.
+// ones included). Scan counts decide what may be deleted or erased, so they are shown next to each record.
 import type { Sb } from "./data"
 import { serviceDb } from "./supabase"
 import type { Category, Role } from "./shared"
-
-const PAGE = 1000
-const MAX_PAGES = 25
 
 export type AdminCompany = { id: string; name: string; is_demo: boolean; archived_at: string | null; created_at: string; scans: number; users: number; bins: number; products: number }
 export type AdminProduct = { id: string; name: string; product_code: string; company_id: string; category: Category; unit_weight_g: number; approved: boolean; archived_at: string | null; scans: number }
@@ -13,35 +10,20 @@ export type AdminBin = { id: string; company_id: string; city: string; status: s
 export type AdminUser = { user_id: string; email: string; name: string; role: Role; company_id: string | null; assigned: string[]; last_sign_in_at: string | null }
 
 export async function adminInventory(sb: Sb) {
-  const [co, pr, bi, pf, aa] = await Promise.all([
+  const [co, pr, bi, pf, aa, sc] = await Promise.all([
     sb.from("companies").select("id, name, is_demo, archived_at, created_at").order("name"),
     sb.from("products").select("id, name, product_code, company_id, category, unit_weight_g, approved, archived_at").order("name"),
     sb.from("bins").select("id, company_id, city, status, is_demo, archived_at, last_seen").order("id"),
     sb.from("profiles").select("user_id, role, company_id, full_name"),
     sb.from("auditor_assignments").select("auditor_id, company_id"),
+    sb.rpc("admin_scan_counts"), // signed scans per company, bin and product in one grouped call (migration 20261109130000)
   ])
-  for (const r of [co, pr, bi, pf, aa]) if (r.error) throw new Error(`admin inventory: ${r.error.message}`)
+  for (const r of [co, pr, bi, pf, aa, sc]) if (r.error) throw new Error(`admin inventory: ${r.error.message}`)
 
-  // Signed scans per company and per bin, from the daily totals (paged past max_rows).
-  const byCompany = new Map<string, number>()
-  const byBin = new Map<string, number>()
-  for (let page = 0; page < MAX_PAGES; page++) {
-    const { data, error } = await sb.from("daily_totals").select("company_id, bin_id, scan_count").order("day").order("company_id").order("category").order("bin_id").range(page * PAGE, (page + 1) * PAGE - 1)
-    if (error) throw new Error(`admin inventory: ${error.message}`)
-    for (const r of data ?? []) {
-      byCompany.set(r.company_id, (byCompany.get(r.company_id) ?? 0) + Number(r.scan_count))
-      byBin.set(r.bin_id, (byBin.get(r.bin_id) ?? 0) + Number(r.scan_count))
-    }
-    if ((data ?? []).length < PAGE) break
-  }
-  // ponytail: one count per product; fine for a catalogue of tens, a grouped RPC if it grows to hundreds.
-  const productScans = await Promise.all(
-    (pr.data ?? []).map(async (p) => {
-      const { count } = await sb.from("scans").select("id", { count: "exact", head: true }).eq("product_id", p.id)
-      return [p.id, count ?? 0] as const
-    })
-  )
-  const byProduct = new Map(productScans)
+  const scansOf = (kind: string) => new Map((sc.data ?? []).filter((r) => r.kind === kind).map((r) => [r.id, Number(r.scans)]))
+  const byCompany = scansOf("company")
+  const byBin = scansOf("bin")
+  const byProduct = scansOf("product")
 
   // Emails live in Supabase Auth, which only the service role can list. The page is admin-only.
   const emails = new Map<string, { email: string; last_sign_in_at: string | null }>()

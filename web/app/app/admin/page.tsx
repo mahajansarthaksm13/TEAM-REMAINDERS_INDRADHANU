@@ -5,7 +5,7 @@ import { Badge, Card, CardHead, CategorySwatch, DataTable, EmptyState, Notice, P
 import { AdminButton, AuditorAssignments, CreateCompanyForm, EraseCompany, RenameCompany, UserAccess } from "@/components/vb/admin-controls"
 import { InviteDialog } from "@/components/vb/invite-dialog"
 import { adminInventory } from "@/lib/admin-data"
-import { binRules, companyRules, productRules, userRules } from "@/lib/admin-rules"
+import { MANAGE_INTRO, binRules, companyRules, productRules, userRules } from "@/lib/admin-rules"
 import {
   deleteBin,
   deleteCompany,
@@ -59,7 +59,7 @@ export default async function ManagePage({ searchParams }: { searchParams: Promi
       <PageHeader
         eyebrow="Admin"
         title="Manage the platform"
-        desc="Add, edit, hide or remove companies, products, bins and people. Archive hides a record from everyone except admins and keeps its history. Anything with signed scans can't be deleted, because it is evidence."
+        desc={MANAGE_INTRO}
       />
 
       {/* Tabs: deep-linkable, so an admin can share "the bins list, archived only". */}
