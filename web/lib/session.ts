@@ -19,7 +19,9 @@ export const getSession = cache(async () => {
   const { data: profile } = await sb.from("profiles").select("role, company_id, full_name").eq("user_id", user.id).maybeSingle()
   if (!profile) return { sb, user: null, companies: [] as CompanyRef[] }
   // RLS returns exactly the companies this user may see.
-  const { data: companies } = await sb.from("companies").select("id, name").eq("is_demo", false).order("name")
+  // Archived companies only come back for admins (can_see_company); mark them in the name.
+  const { data: rows } = await sb.from("companies").select("id, name, archived_at").eq("is_demo", false).order("name")
+  const companies: CompanyRef[] = (rows ?? []).map((c) => ({ id: c.id, name: c.archived_at ? `${c.name} (archived)` : c.name }))
   const viewer: Viewer = {
     id: user.id,
     email: user.email ?? "",
@@ -27,7 +29,7 @@ export const getSession = cache(async () => {
     role: profile.role,
     company_id: profile.company_id,
   }
-  return { sb, user: viewer, companies: companies ?? [] }
+  return { sb, user: viewer, companies }
 })
 
 export async function requireSession() {

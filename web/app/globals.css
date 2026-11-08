@@ -411,16 +411,9 @@
   animation: rise 900ms var(--ease-out) both;
 }
 
-/* Scroll reveal, as on the reference: blocks fade up out of a soft blur as they enter the
-   viewport. components/vb/smooth-scroll.tsx adds html.fx once JavaScript runs and marks each
-   block .is-in when it is seen, so without JavaScript nothing is ever hidden. "backwards" fill
-   only: once played, the block's own hover transforms work untouched. */
-html.fx :where(.stagger > *, [data-reveal]):not(.is-in) {
-  opacity: 0;
-}
-html.fx :where(.stagger > *, [data-reveal]).is-in {
-  animation: rise 800ms var(--ease-out) var(--d, 0ms) backwards;
-}
+/* Scroll reveal (.stagger > *, [data-reveal]): blocks fade up out of a soft blur as they enter
+   the viewport. components/vb/smooth-scroll.tsx runs it with the Web Animations API, so without
+   JavaScript nothing is ever hidden and the server HTML is never edited before hydration. */
 
 /* ── Login flow ─────────────────────────────────────────────
    Photo stage: three duotone photographs cross-fade with a slow Ken Burns push.
@@ -596,7 +589,7 @@ html.fx :where(.stagger > *, [data-reveal]).is-in {
 @media print {
   .no-print { display: none !important; }
   /* blocks not yet scrolled into view must still print */
-  html.fx :where(.stagger > *, [data-reveal]) { opacity: 1 !important; animation: none !important; }
+  :where(.stagger > *, [data-reveal]) { opacity: 1 !important; transform: none !important; filter: none !important; }
   body { background: var(--snow); color: var(--night); }
   .neu { background: var(--snow); box-shadow: none; }
 }

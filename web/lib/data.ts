@@ -127,11 +127,15 @@ export type BinRow = {
 }
 
 export async function binList(sb: Sb, companyId: string | null) {
-  const { data, error } = await sb.rpc("get_bin_list")
+  const [{ data, error }, { data: archived }] = await Promise.all([
+    sb.rpc("get_bin_list"),
+    sb.from("bins").select("id").not("archived_at", "is", null), // retired by an admin (Manage → Bins)
+  ])
   fail("get_bin_list", error)
+  const retired = new Set((archived ?? []).map((b) => b.id))
   const now = Date.now()
   return (data ?? [])
-    .filter((b) => !b.is_demo && (!companyId || b.company_id === companyId))
+    .filter((b) => !b.is_demo && !retired.has(b.bin_id) && (!companyId || b.company_id === companyId))
     .map(
       (b): BinRow => ({
         bin_id: b.bin_id,

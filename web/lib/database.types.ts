@@ -97,14 +97,14 @@ isOneToOne: false
                   ]
                 },"bins": {
                   Row: {
-                    "allow_backfill": boolean,"chain_head": string,"city": string,"company_id": string,"created_at": string,"id": string,"is_demo": boolean,"last_seen": string | null,"last_sequence": number,"public_key": string,"status": Database["public"]['Enums']["bin_status"]
+                    "archived_at": string | null,"allow_backfill": boolean,"chain_head": string,"city": string,"company_id": string,"created_at": string,"id": string,"is_demo": boolean,"last_seen": string | null,"last_sequence": number,"public_key": string,"status": Database["public"]['Enums']["bin_status"]
                   }
                   ComputedFields: never
                   Insert: {
-                    "allow_backfill"?: boolean,"chain_head": string,"city": string,"company_id": string,"created_at"?: string,"id": string,"is_demo"?: boolean,"last_seen"?: string | null,"last_sequence"?: number,"public_key": string,"status"?: Database["public"]['Enums']["bin_status"]
+                    "archived_at"?: string | null,"allow_backfill"?: boolean,"chain_head": string,"city": string,"company_id": string,"created_at"?: string,"id": string,"is_demo"?: boolean,"last_seen"?: string | null,"last_sequence"?: number,"public_key": string,"status"?: Database["public"]['Enums']["bin_status"]
                   }
                   Update: {
-                    "allow_backfill"?: boolean,"chain_head"?: string,"city"?: string,"company_id"?: string,"created_at"?: string,"id"?: string,"is_demo"?: boolean,"last_seen"?: string | null,"last_sequence"?: number,"public_key"?: string,"status"?: Database["public"]['Enums']["bin_status"]
+                    "archived_at"?: string | null,"allow_backfill"?: boolean,"chain_head"?: string,"city"?: string,"company_id"?: string,"created_at"?: string,"id"?: string,"is_demo"?: boolean,"last_seen"?: string | null,"last_sequence"?: number,"public_key"?: string,"status"?: Database["public"]['Enums']["bin_status"]
                   }
                   Relationships: [
                     {
@@ -131,14 +131,14 @@ isOneToOne: false
                   ]
                 },"companies": {
                   Row: {
-                    "created_at": string,"id": string,"is_demo": boolean,"name": string
+                    "archived_at": string | null,"created_at": string,"id": string,"is_demo": boolean,"name": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"id"?: string,"is_demo"?: boolean,"name": string
+                    "archived_at"?: string | null,"created_at"?: string,"id"?: string,"is_demo"?: boolean,"name": string
                   }
                   Update: {
-                    "created_at"?: string,"id"?: string,"is_demo"?: boolean,"name"?: string
+                    "archived_at"?: string | null,"created_at"?: string,"id"?: string,"is_demo"?: boolean,"name"?: string
                   }
                   Relationships: [
                     
@@ -211,14 +211,14 @@ isOneToOne: false
                   ]
                 },"products": {
                   Row: {
-                    "approved": boolean,"barcode": string | null,"category": Database["public"]['Enums']["epr_category"],"company_id": string,"created_at": string,"id": string,"name": string,"product_code": string,"unit_weight_g": number
+                    "archived_at": string | null,"approved": boolean,"barcode": string | null,"category": Database["public"]['Enums']["epr_category"],"company_id": string,"created_at": string,"id": string,"name": string,"product_code": string,"unit_weight_g": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "approved"?: boolean,"barcode"?: string | null,"category": Database["public"]['Enums']["epr_category"],"company_id": string,"created_at"?: string,"id"?: string,"name": string,"product_code"?: string,"unit_weight_g": number
+                    "archived_at"?: string | null,"approved"?: boolean,"barcode"?: string | null,"category": Database["public"]['Enums']["epr_category"],"company_id": string,"created_at"?: string,"id"?: string,"name": string,"product_code"?: string,"unit_weight_g": number
                   }
                   Update: {
-                    "approved"?: boolean,"barcode"?: string | null,"category"?: Database["public"]['Enums']["epr_category"],"company_id"?: string,"created_at"?: string,"id"?: string,"name"?: string,"product_code"?: string,"unit_weight_g"?: number
+                    "archived_at"?: string | null,"approved"?: boolean,"barcode"?: string | null,"category"?: Database["public"]['Enums']["epr_category"],"company_id"?: string,"created_at"?: string,"id"?: string,"name"?: string,"product_code"?: string,"unit_weight_g"?: number
                   }
                   Relationships: [
                     {
