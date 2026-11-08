@@ -7,6 +7,7 @@ import { cn } from "cn"
 import { browserDb } from "@/lib/supabase-browser"
 import { cityName, type Category, type FeedRow, type Tier } from "@/lib/shared"
 import { fmtTime } from "@/lib/format"
+import { mergeFeed } from "@/lib/ui-state"
 import { Badge, CategorySwatch, TierBadge } from "./ui"
 
 type Status = "live" | "reconnecting" | "polling"
@@ -19,6 +20,14 @@ const COLS = "id, bin_id, category, weight_g, weight_ok, code_type, scanned_at, 
 export function LiveFeed({ initial, companyId, scanHref }: { initial: FeedRow[]; companyId: string | null; scanHref: string }) {
   const router = useRouter()
   const [rows, setRows] = useState(initial)
+  // A server refresh (the 60 s poll, or a realtime bump) brings a new `initial`: merge it in,
+  // otherwise the list would keep its first rows forever. Adjusting state during render is
+  // React's pattern for "prop changed"; the scope switch itself remounts this (key on the page).
+  const [seen, setSeen] = useState(initial)
+  if (seen !== initial) {
+    setSeen(initial)
+    setRows((cur) => mergeFeed(initial, cur))
+  }
   const [fresh, setFresh] = useState<string | null>(null)
   const [status, setStatus] = useState<Status>(companyId ? "reconnecting" : "polling")
 

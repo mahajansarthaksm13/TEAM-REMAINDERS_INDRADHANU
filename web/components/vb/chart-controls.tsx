@@ -1,9 +1,9 @@
 "use client"
 
-import { useState } from "react"
 import { cn } from "cn"
 import { CATEGORIES, CATEGORY_LABEL, type Category } from "@/lib/shared"
 import { CategorySwatch } from "./ui"
+import { toggleHidden, visibleItems } from "@/lib/ui-state"
 
 // Filter controls shared by every chart. Toggle buttons (aria-pressed) in a labelled group, sized
 // for touch (36px+), on the neumorphic ground: the chosen option sits raised in Violet.
@@ -31,12 +31,10 @@ export function Segmented<T extends string>({ label, value, options, onChange }:
   )
 }
 
-// Multi-select on/off chips. One option always stays on, so a chart is never empty by accident.
-export function Chips<T extends string>({ label, all, on, onChange, render }: { label: string; all: readonly T[]; on: T[]; onChange: (v: T[]) => void; render: (v: T) => React.ReactNode }) {
-  const toggle = (v: T) => {
-    const next = on.includes(v) ? on.filter((x) => x !== v) : all.filter((x) => on.includes(x) || x === v)
-    if (next.length > 0) onChange(next)
-  }
+// Multi-select on/off chips. State is what the user HID (see lib/ui-state): anything not hidden
+// shows, so items that appear with new data are visible, and one option always stays on.
+export function Chips<T extends string>({ label, all, hidden, onChange, render }: { label: string; all: readonly T[]; hidden: T[]; onChange: (hidden: T[]) => void; render: (v: T) => React.ReactNode }) {
+  const on = visibleItems(all, hidden)
   return (
     <div role="group" aria-label={label} className="flex flex-wrap items-center gap-2">
       {all.map((v) => {
@@ -46,7 +44,7 @@ export function Chips<T extends string>({ label, all, on, onChange, render }: { 
             key={v}
             type="button"
             aria-pressed={active}
-            onClick={() => toggle(v)}
+            onClick={() => onChange(toggleHidden(all, hidden, v))}
             className={cn(
               "inline-flex h-9 items-center gap-2 rounded-full px-3 text-xs font-semibold transition-[box-shadow,color,opacity] duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
               active ? "neu-pill text-ink" : "neu-press text-dim opacity-70 hover:opacity-100"
@@ -57,7 +55,7 @@ export function Chips<T extends string>({ label, all, on, onChange, render }: { 
         )
       })}
       {on.length < all.length && (
-        <button type="button" onClick={() => onChange([...all])} className="h-9 px-2 text-xs font-semibold text-lit underline decoration-lit/40 decoration-2 underline-offset-4 hover:decoration-lit">
+        <button type="button" onClick={() => onChange([])} className="h-9 px-2 text-xs font-semibold text-lit underline decoration-lit/40 decoration-2 underline-offset-4 hover:decoration-lit">
           Show all
         </button>
       )}
@@ -65,16 +63,12 @@ export function Chips<T extends string>({ label, all, on, onChange, render }: { 
   )
 }
 
-export function useCategories(initial: Category[] = CATEGORIES) {
-  return useState<Category[]>(initial)
-}
-
-export function CategoryChips({ on, onChange, available = CATEGORIES }: { on: Category[]; onChange: (v: Category[]) => void; available?: Category[] }) {
+export function CategoryChips({ hidden, onChange, available = CATEGORIES }: { hidden: Category[]; onChange: (hidden: Category[]) => void; available?: Category[] }) {
   return (
     <Chips
       label="Show categories"
       all={available}
-      on={on}
+      hidden={hidden}
       onChange={onChange}
       render={(c) => (
         <>

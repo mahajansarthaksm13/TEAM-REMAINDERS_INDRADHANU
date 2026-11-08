@@ -38,6 +38,7 @@ import { cityCounts, cumulativePace, pctDelta, sankeyFlow, scoreBuckets, shares 
 import { CategorySwatch, DeltaChip } from "./ui"
 import { CountUp } from "./count-up"
 import { CategoryChips, Chips, FilterBar, Segmented } from "./chart-controls"
+import { pickOr, visibleItems } from "@/lib/ui-state"
 
 const SNOW = "#FBFBFB"
 const VIOLET = "#6F2DBD"
@@ -111,7 +112,8 @@ export function Legend({ cats = CATEGORIES }: { cats?: Category[] }) {
 // ── Monthly stacked bars ──────────────────────────────────────
 export function TrendChart({ data }: { data: ({ month: string } & Record<Category, number>)[] }) {
   const h = useHatch()
-  const [cats, setCats] = useState<Category[]>(CATEGORIES)
+  const [hidden, setHidden] = useState<Category[]>([])
+  const cats = visibleItems(CATEGORIES, hidden)
   const [view, setView] = useState<"kg" | "share">("kg")
   const rows = data.map((d) => {
     const tot = sumBy(cats, (c) => d[c])
@@ -123,7 +125,7 @@ export function TrendChart({ data }: { data: ({ month: string } & Record<Categor
     <div>
       <FilterBar>
         <Segmented label="Show as" value={view} onChange={setView} options={[{ value: "kg", label: "Kilograms" }, { value: "share", label: "% of month" }]} />
-        <CategoryChips on={cats} onChange={setCats} />
+        <CategoryChips hidden={hidden} onChange={setHidden} />
       </FilterBar>
       <Plot swap={`${view}${cats}`} label={`${view === "kg" ? "Kilograms" : "Share of each month"} collected per month for ${cats.map((c) => CATEGORY_LABEL[c]).join(", ")}.`} className="h-60 lg:h-72">
         <ResponsiveContainer width="100%" height="100%">
@@ -153,7 +155,8 @@ export function TrendChart({ data }: { data: ({ month: string } & Record<Categor
 // ── Category mix donut ────────────────────────────────────────
 export function ShareDonut({ data, caption }: { data: { category: Category; kg: number }[]; caption?: string }) {
   const h = useHatch()
-  const [cats, setCats] = useState<Category[]>(CATEGORIES)
+  const [hidden, setHidden] = useState<Category[]>([])
+  const cats = visibleItems(CATEGORIES, hidden)
   const s = shares(data.filter((d) => cats.includes(d.category)).map((d) => ({ key: d.category, kg: d.kg })))
   const slices = s.filter((r) => r.kg > 0)
   const total = sumBy(s, (r) => r.kg)
@@ -162,7 +165,7 @@ export function ShareDonut({ data, caption }: { data: { category: Category; kg: 
   return (
     <div>
       <FilterBar>
-        <CategoryChips on={cats} onChange={setCats} />
+        <CategoryChips hidden={hidden} onChange={setHidden} />
       </FilterBar>
       <div className="@container">
       <div className="grid items-center gap-5 @lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
@@ -319,7 +322,8 @@ export function TargetRings({ rows }: { rows: { category: Category; collected_kg
 // ── Trust-score distribution ──────────────────────────────────
 export function ScoreHistogram({ bins, threshold = 60 }: { bins: { city: string; status: string; score: number | null }[]; threshold?: number }) {
   const cities = [...new Set(bins.map((b) => b.city))].sort()
-  const [city, setCity] = useState("all")
+  const [chosenCity, setCity] = useState("all")
+  const city = pickOr(chosenCity, ["all", ...cities], "all") // a city from an earlier scope may be gone
   const [status, setStatus] = useState<"all" | "active" | "revoked">("all")
   const pick = bins.filter((b) => (city === "all" || b.city === city) && (status === "all" || b.status === status))
   const b = scoreBuckets(pick.map((x) => x.score), threshold)
@@ -476,8 +480,10 @@ export function FlowSankey({ rows }: { rows: FlowIn[] }) {
   const h = useHatch()
   const companies = [...new Map(rows.map((r) => [r.company_id, r.company])).entries()]
   const presentCats = CATEGORIES.filter((c) => rows.some((r) => r.category === c && r.kg > 0))
-  const [cos, setCos] = useState<string[]>(companies.map(([id]) => id))
-  const [cats, setCats] = useState<Category[]>(presentCats)
+  const [hiddenCos, setHiddenCos] = useState<string[]>([])
+  const [hiddenCats, setHiddenCats] = useState<Category[]>([])
+  const cos = visibleItems(companies.map(([id]) => id), hiddenCos)
+  const cats = visibleItems(presentCats, hiddenCats)
   const picked = rows.filter((r) => cos.includes(r.company_id) && cats.includes(r.category))
   const g = sankeyFlow(picked, { category: (c) => CATEGORY_LABEL[c as Category] ?? c, city: (c) => cityName(c) })
   const perColumn = [0, 1, 2].map((c) => g.nodes.filter((n) => n.column === c).length)
@@ -493,9 +499,9 @@ export function FlowSankey({ rows }: { rows: FlowIn[] }) {
     <div>
       <FilterBar>
         {companies.length > 1 && (
-          <Chips label="Companies" all={companies.map(([id]) => id)} on={cos} onChange={setCos} render={(id) => companies.find(([c]) => c === id)?.[1] ?? id} />
+          <Chips label="Companies" all={companies.map(([id]) => id)} hidden={hiddenCos} onChange={setHiddenCos} render={(id) => companies.find(([c]) => c === id)?.[1] ?? id} />
         )}
-        {presentCats.length > 1 && <CategoryChips on={cats} onChange={setCats} available={presentCats} />}
+        {presentCats.length > 1 && <CategoryChips hidden={hiddenCats} onChange={setHiddenCats} available={presentCats} />}
       </FilterBar>
       <div className="mb-2 grid grid-cols-3 text-xs font-semibold tracking-[0.12em] text-dim uppercase">
         <span>Produced by</span>
@@ -565,7 +571,8 @@ const PLURAL = { company: "companies", city: "cities" } as const
 
 export function CategoryStack({ data, label, subject }: { data: ({ key: string; name: string; total: number } & Record<string, number | string>)[]; label: string; subject: keyof typeof PLURAL }) {
   const h = useHatch()
-  const [cats, setCats] = useState<Category[]>(CATEGORIES)
+  const [hidden, setHidden] = useState<Category[]>([])
+  const cats = visibleItems(CATEGORIES, hidden)
   const [sort, setSort] = useState<"size" | "name">("size")
   const rows = data
     .map((d) => ({ ...d, shown: sumBy(cats, (c) => Number(d[c] ?? 0)) }))
@@ -576,7 +583,7 @@ export function CategoryStack({ data, label, subject }: { data: ({ key: string; 
     <div>
       <FilterBar>
         <Segmented label="Sort" value={sort} onChange={setSort} options={[{ value: "size", label: "Largest first" }, { value: "name", label: "A–Z" }]} />
-        <CategoryChips on={cats} onChange={setCats} />
+        <CategoryChips hidden={hidden} onChange={setHidden} />
       </FilterBar>
       <Plot swap={`${sort}${cats}`} label={`${label}: ${rows.map((d) => `${d.name} ${kgFmt(d.shown)}`).join(", ")}.`} style={{ height: Math.max(140, rows.length * 52) }}>
         <ResponsiveContainer width="100%" height="100%">
@@ -604,7 +611,8 @@ export function ProductBars({ products }: { products: { name: string; company?: 
   const h = useHatch()
   const [n, setN] = useState<"5" | "10" | "20">("10")
   const present = CATEGORIES.filter((c) => products.some((p) => p.category === c))
-  const [cats, setCats] = useState<Category[]>(present)
+  const [hidden, setHidden] = useState<Category[]>([])
+  const cats = visibleItems(present, hidden)
   const pool = products.filter((p) => cats.includes(p.category))
   const data = pool.slice(0, Number(n)).map((p) => ({ ...p, label: p.name.length > 22 ? `${p.name.slice(0, 21)}…` : p.name }))
   const total = sumBy(pool, (p) => p.kg)
@@ -614,7 +622,7 @@ export function ProductBars({ products }: { products: { name: string; company?: 
     <div>
       <FilterBar>
         <Segmented label="How many" value={n} onChange={setN} options={[{ value: "5", label: "Top 5" }, { value: "10", label: "Top 10" }, { value: "20", label: "Top 20" }]} />
-        {present.length > 1 && <CategoryChips on={cats} onChange={setCats} available={present} />}
+        {present.length > 1 && <CategoryChips hidden={hidden} onChange={setHidden} available={present} />}
       </FilterBar>
       <Plot swap={`${n}${cats}`} label={`Top ${data.length} products by collected weight.${top ? ` ${top.name} leads with ${kgFmt(top.kg)}.` : ""}`} style={{ height: Math.max(140, data.length * 40) }}>
         <ResponsiveContainer width="100%" height="100%">
@@ -808,7 +816,8 @@ export function Momentum({ rows, monthLabel }: { rows: { key: Category; current:
 export function StackedPills({ days }: { days: ({ day: string } & Record<Category, number>)[] }) {
   const h = useHatch()
   const [win, setWin] = useState<"7" | "14">(days.length >= 14 ? "14" : "7")
-  const [cats, setCats] = useState<Category[]>(CATEGORIES)
+  const [hidden, setHidden] = useState<Category[]>([])
+  const cats = visibleItems(CATEGORIES, hidden)
   const rows = days.slice(-Number(win)).map((d) => ({ ...d, label: shortDate(d.day), total: sumBy(cats, (c) => d[c]) }))
   const peak = rows.reduce((a, b) => (b.total > a.total ? b : a), rows[0] ?? { label: "", total: 0 })
   const avg = rows.length ? sumBy(rows, (r) => r.total) / rows.length : 0
@@ -816,7 +825,7 @@ export function StackedPills({ days }: { days: ({ day: string } & Record<Categor
     <div>
       <FilterBar>
         {days.length > 7 && <Segmented label="Window" value={win} onChange={setWin} options={[{ value: "7", label: "7 days" }, { value: "14", label: "14 days" }]} />}
-        <CategoryChips on={cats} onChange={setCats} />
+        <CategoryChips hidden={hidden} onChange={setHidden} />
       </FilterBar>
       <Plot swap={`${win}${cats}`} label={`Daily collection over ${rows.length} days for ${cats.map((c) => CATEGORY_LABEL[c]).join(", ")}. Peak ${peak.label}, ${kgFmt(peak.total)}.`} className="h-56">
         <ResponsiveContainer width="100%" height="100%">

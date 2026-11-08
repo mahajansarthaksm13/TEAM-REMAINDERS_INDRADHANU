@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { previewReport } from "@/lib/actions"
 import { CATEGORIES, CATEGORY_DESC, CATEGORY_LABEL } from "@/lib/shared"
 import { periodOptions } from "@/lib/period"
+import { forSelection, selectionKey } from "@/lib/ui-state"
 import { fmtDay, kg, num } from "@/lib/format"
 import { HashChip, ProofField } from "./client"
 import { Card, CardHead, Notice } from "./ui"
@@ -23,12 +24,16 @@ export function ReportBuilder({ fy, defaultPeriod }: { fy: number; defaultPeriod
   const opts = periodOptions(fy)
   const [category, setCategory] = useState("cat1_rigid")
   const [period, setPeriod] = useState(defaultPeriod)
-  const [snap, setSnap] = useState<Snap | null | undefined>(undefined)
-  const [range, setRange] = useState<{ from: string; to: string } | null>(null)
+  // A preview is tagged with the category + period it was asked for; it only shows (and only feeds
+  // Generate) while that is still the selection, so a slow response can't mislabel a report.
+  const [result, setResult] = useState<{ key: string; snapshot: Snap | null; note: string; range: { from: string; to: string } | null }>()
+  const current = forSelection(result, selectionKey(category, period))
+  const snap = current ? current.snapshot : undefined
+  const note = current?.note ?? ""
+  const range = current?.range ?? null
   const [gen, setGen] = useState<Generated | null>(null)
   const [qr, setQr] = useState("")
   const [err, setErr] = useState("")
-  const [note, setNote] = useState("")
   const [previewing, startPreview] = useTransition()
   const [generating, setGenerating] = useState(false)
 
@@ -37,18 +42,17 @@ export function ReportBuilder({ fy, defaultPeriod }: { fy: number; defaultPeriod
   }, [gen])
 
   function reset() {
-    setSnap(undefined)
     setGen(null)
+    setQr("") // never show the previous report's QR next to a new one
     setErr("")
   }
 
   function preview() {
+    const key = selectionKey(category, period)
     startPreview(async () => {
       const r = await previewReport(category, period)
       if ("error" in r && r.error) return setErr(r.error)
-      setSnap(r.snapshot ?? null)
-      setNote(("note" in r && r.note) || "")
-      if (r.period) setRange({ from: r.period.from, to: r.period.to })
+      setResult({ key, snapshot: r.snapshot ?? null, note: ("note" in r && r.note) || "", range: r.period ? { from: r.period.from, to: r.period.to } : null })
     })
   }
 

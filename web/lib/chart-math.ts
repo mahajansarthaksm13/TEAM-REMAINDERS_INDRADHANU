@@ -1,6 +1,6 @@
 // Pure helpers behind the analysis charts: each returns the series plus the one-line takeaway the
 // chart prints under itself, so a reader gets the conclusion without decoding the picture.
-// Self-check: node lib/chart-math.check.mjs
+// Tests: npm test (tests/chart-math.test.mjs)
 
 export type Share<K extends string> = { key: K; kg: number; pct: number }
 

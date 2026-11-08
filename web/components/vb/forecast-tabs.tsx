@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { cn } from "cn"
 import { CATEGORY_LABEL, type Category } from "@/lib/shared"
+import { pickOr } from "@/lib/ui-state"
 import { kg } from "@/lib/format"
 import { ForecastChart, type ForecastPoint } from "./charts"
 import { Badge, CategorySwatch } from "./ui"
@@ -11,8 +12,12 @@ import { Badge, CategorySwatch } from "./ui"
 export type ForecastData = { category: Category; target_kg: number; projected_kg: number; low_kg: number; high_kg: number; collected_kg: number; at_risk: boolean; points: ForecastPoint[] }
 
 export function ForecastTabs({ data }: { data: ForecastData[] }) {
-  const [cat, setCat] = useState<Category>(data.find((d) => d.at_risk)?.category ?? data[0].category)
-  const d = data.find((x) => x.category === cat)!
+  const fallback = data.find((d) => d.at_risk)?.category ?? data[0]?.category
+  const [chosen, setCat] = useState<Category | undefined>(fallback)
+  // The remembered tab may not exist in newer data (another period or scope): fall back.
+  const cat = pickOr(chosen, data.map((x) => x.category), fallback)
+  const d = data.find((x) => x.category === cat)
+  if (!d || !cat) return <p className="text-sm text-dim">No forecast for this period yet. Forecasts run nightly once there is enough collection data.</p>
   return (
     <div>
       <div role="tablist" aria-label="Forecast category" className="mb-4 flex flex-wrap gap-2">

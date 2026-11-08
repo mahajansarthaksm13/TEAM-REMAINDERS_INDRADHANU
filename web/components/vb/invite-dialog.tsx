@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { isEmail, normalizeEmail } from "@/lib/validate"
 import { Loader2, UserPlus } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -24,15 +25,16 @@ export function InviteDialog({ companies }: { companies: { id: string; name: str
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return setErrs({ email: "Enter a valid email address." })
+    const address = normalizeEmail(email) // same as the server: pasted spaces or capitals are fine
+    if (!isEmail(address)) return setErrs({ email: "Enter a valid email address." })
     setPending(true)
     setErrs({})
     try {
-      const r = await fetch("/api/admin/invite", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, role, company_id: role === "company" || role === "auditor" ? company : undefined }) })
+      const r = await fetch("/api/admin/invite", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: address, role, company_id: role === "company" || role === "auditor" ? company : undefined }) })
       if (r.status === 409) return setErrs({ email: "This email already has an account." })
       if (r.status === 422) return setErrs({ email: "Enter a valid email address." })
       if (!r.ok) return setErrs({ form: "Invite couldn't be sent. Try again." })
-      toast.success(`Invite sent to ${email}.`)
+      toast.success(`Invite sent to ${address}.`)
       setOpen(false)
       setEmail("")
       router.refresh()

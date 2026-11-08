@@ -1,6 +1,6 @@
-// Run: node lib/chart-math.check.mjs  (Node 24 strips the types from the imported .ts)
+// Run: npm test  (node --test; Node 24 strips the types from the imported .ts)
 import assert from "node:assert/strict"
-import { cityCounts, cumulativePace, scoreBuckets, shares } from "./chart-math.ts"
+import { cityCounts, cumulativePace, scoreBuckets, shares } from "../lib/chart-math.ts"
 
 const s = shares([{ key: "a", kg: 1 }, { key: "b", kg: 1 }, { key: "c", kg: 1 }])
 assert.equal(s.reduce((x, r) => x + r.pct, 0), 100) // 33.3 x3 rounds to 100, not 99
@@ -25,7 +25,7 @@ assert.deepEqual(cityCounts([{ city: "PUN", status: "active" }, { city: "MUM", s
 console.log("chart-math ok")
 
 // where waste goes
-import { flowInsights, sankeyFlow, stackBy } from "./chart-math.ts"
+import { flowInsights, sankeyFlow, stackBy } from "../lib/chart-math.ts"
 const rows = [
   { company_id: "a", company: "A", category: "cat1_rigid", city: "PUN", kg: 3 },
   { company_id: "a", company: "A", category: "cat1_rigid", city: "MUM", kg: 1 },
@@ -46,7 +46,7 @@ assert.deepEqual(flowInsights({ total: 0, byCompany: [], byCity: [], byCategory:
 console.log("flow math ok")
 
 // recent-window comparisons
-import { momentum, pctDelta, windowValues } from "./chart-math.ts"
+import { momentum, pctDelta, windowValues } from "../lib/chart-math.ts"
 assert.equal(pctDelta(110, 100), 10)
 assert.equal(pctDelta(96.92, 100), -3.1)
 assert.equal(pctDelta(5, 0), null)

@@ -114,7 +114,7 @@ export default async function LivePage({ searchParams }: { searchParams: Promise
 
       <div className="mt-6 grid gap-6 lg:grid-cols-12">
         <Card className="lg:col-span-8">
-          <LiveFeed initial={feed} companyId={cid} scanHref={href("", sp)} />
+          <LiveFeed key={cid ?? "all"} initial={feed} companyId={cid} scanHref={href("", sp)} />
         </Card>
         <Card className="lg:col-span-4">
           <CardHead eyebrow={`Bins · ${num(activeBins)} active`} title="Recently seen" action={<Link href={href("/app/bins", sp)} className="text-sm font-semibold text-dim underline-offset-4 hover:underline">All bins</Link>} />
