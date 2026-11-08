@@ -353,17 +353,32 @@ export function ScoreChart({ data }: { data: { day: string; score: number }[] })
 type FlowIn = { company_id: string; company: string; category: Category; city: string; kg: number }
 type NodeP = { x: number; y: number; width: number; height: number; index: number; payload: { id: string; name: string; column: number; kg: number } }
 
+type LinkP = {
+  sourceX: number
+  sourceY: number
+  sourceControlX: number
+  targetX: number
+  targetY: number
+  targetControlX: number
+  linkWidth: number
+  payload: { source: { id: string; column: number }; target: { id: string; column: number }; value: number }
+}
+
 export function FlowSankey({ rows }: { rows: FlowIn[] }) {
   const h = useHatch()
   const g = sankeyFlow(rows, { category: (c) => CATEGORY_LABEL[c as Category] ?? c, city: (c) => cityName(c) })
   const perColumn = [0, 1, 2].map((c) => g.nodes.filter((n) => n.column === c).length)
-  const height = Math.max(300, Math.max(...perColumn) * 64)
+  // Every node gets room for its two-line label (name + kg); small streams never collide or clip.
+  const height = Math.max(320, Math.max(...perColumn) * 84)
   const total = g.nodes.filter((n) => n.column === 0).reduce((a, n) => a + n.kg, 0)
   const fill = (n: NodeP["payload"]) => (n.column === 0 ? VIOLET : n.column === 2 ? NIGHT : h.fill(n.id.slice(4) as Category))
+  // Each band carries the colour of its EPR category, so a stream can be followed end to end.
+  const bandCategory = (l: LinkP["payload"]) => (l.source.column === 1 ? l.source.id : l.target.id).slice(4) as Category
   if (g.links.length === 0) return <p className="text-sm text-dim">Nothing collected in this period, so there is no flow to show.</p>
   return (
     <div role="img" aria-label={`Flow of ${kgFmt(total)} collected waste from ${perColumn[0]} companies through ${perColumn[1]} categories to ${perColumn[2]} cities.`}>
-      <div className="mb-3 grid grid-cols-3 text-xs font-semibold tracking-[0.12em] text-dim uppercase">
+      <Legend />
+      <div className="mb-2 grid grid-cols-3 text-xs font-semibold tracking-[0.12em] text-dim uppercase">
         <span>Produced by</span>
         <span className="text-center">EPR category</span>
         <span className="text-right">Collected in</span>
@@ -374,27 +389,39 @@ export function FlowSankey({ rows }: { rows: FlowIn[] }) {
             <Sankey
               data={{ nodes: g.nodes, links: g.links }}
               nodeWidth={14}
-              nodePadding={28}
-              margin={{ top: 8, right: 132, bottom: 8, left: 132 }}
-              link={{ stroke: "rgba(111,45,189,0.22)" }}
+              nodePadding={40}
+              margin={{ top: 24, right: 136, bottom: 24, left: 136 }}
+              link={(raw) => {
+                const l = raw as unknown as LinkP
+                const c = bandCategory(l.payload)
+                return (
+                  <path
+                    d={`M${l.sourceX},${l.sourceY} C${l.sourceControlX},${l.sourceY} ${l.targetControlX},${l.targetY} ${l.targetX},${l.targetY}`}
+                    fill="none"
+                    stroke={c === "cat4_compostable" ? VIOLET : CATEGORY_COLOR[c]}
+                    strokeOpacity={c === "cat4_compostable" ? 0.18 : 0.28}
+                    strokeDasharray={c === "cat4_compostable" ? "6 3" : undefined}
+                    strokeWidth={Math.max(1.5, l.linkWidth)}
+                    className="transition-[stroke-opacity] duration-200 hover:[stroke-opacity:0.55]"
+                  />
+                )
+              }}
               node={(raw) => {
                 const p = raw as unknown as NodeP
+                const lx = p.payload.column === 0 ? p.x - 10 : p.x + p.width + 10
+                const cy = p.y + p.height / 2
                 return (
-                <g>
-                  {p.index === 0 && h.def}
-                  <rect x={p.x} y={p.y} width={p.width} height={Math.max(2, p.height)} rx={4} fill={fill(p.payload)} stroke={p.payload.column === 1 ? VIOLET : "none"} strokeWidth={p.payload.column === 1 ? 1 : 0} />
-                  <text
-                    x={p.payload.column === 0 ? p.x - 8 : p.x + p.width + 8}
-                    y={p.y + p.height / 2}
-                    textAnchor={p.payload.column === 0 ? "end" : "start"}
-                    dominantBaseline="middle"
-                    fontSize={12}
-                    fill={NIGHT}
-                  >
-                    <tspan fontWeight={600}>{p.payload.name}</tspan>
-                    <tspan x={p.payload.column === 0 ? p.x - 8 : p.x + p.width + 8} dy={15} fill={DIM}>{kgFmt(p.payload.kg)}</tspan>
-                  </text>
-                </g>
+                  <g>
+                    {p.index === 0 && h.def}
+                    <rect x={p.x} y={p.y} width={p.width} height={Math.max(4, p.height)} rx={4} fill={fill(p.payload)} stroke={p.payload.column === 1 ? VIOLET : "none"} strokeWidth={p.payload.column === 1 ? 1 : 0} />
+                    {/* two-line label centred on the node: name above the middle, weight below */}
+                    <text x={lx} y={cy - 8} textAnchor={p.payload.column === 0 ? "end" : "start"} dominantBaseline="middle" fontSize={12.5} fontWeight={600} fill={NIGHT}>
+                      {p.payload.name}
+                    </text>
+                    <text x={lx} y={cy + 9} textAnchor={p.payload.column === 0 ? "end" : "start"} dominantBaseline="middle" fontSize={12} fill={DIM} className="tnum">
+                      {kgFmt(p.payload.kg)}
+                    </text>
+                  </g>
                 )
               }}
             >
@@ -403,7 +430,7 @@ export function FlowSankey({ rows }: { rows: FlowIn[] }) {
           </ResponsiveContainer>
         </div>
       </div>
-      <Takeaway>Read left to right: who produced the waste, which EPR category it falls in, and which city&apos;s bins collected it. Band width is weight.</Takeaway>
+      <Takeaway>Read left to right: who produced the waste, which EPR category it falls in, and which city&apos;s bins collected it. Band width is weight; band colour is the category.</Takeaway>
     </div>
   )
 }

@@ -159,6 +159,13 @@
   h1, h2, h3, .font-display {
     letter-spacing: -0.02em;
   }
+  /* No orphaned last words on headings; tidier rag on running text. */
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+  p, li, dd, figcaption {
+    text-wrap: pretty;
+  }
   button:not(:disabled),
   [role="button"]:not(:disabled) {
     cursor: pointer;
@@ -531,6 +538,8 @@ html.fx :where(.stagger > *, [data-reveal]).is-in {
 /* ── Print (QR sheets): plain ink on white ─────────────────── */
 @media print {
   .no-print { display: none !important; }
+  /* blocks not yet scrolled into view must still print */
+  html.fx :where(.stagger > *, [data-reveal]) { opacity: 1 !important; animation: none !important; }
   body { background: var(--snow); color: var(--night); }
   .neu { background: var(--snow); box-shadow: none; }
 }

@@ -44,7 +44,7 @@ function Stage({ compact }: { compact?: boolean }) {
 
 export function AuthShell({ eyebrow, title, desc, children }: { eyebrow: string; title: string; desc: React.ReactNode; children: React.ReactNode }) {
   return (
-    <main className="grid min-h-dvh gap-6 p-4 sm:p-6 lg:grid-cols-12 lg:gap-10 lg:p-8">
+    <main id="main" className="grid min-h-dvh gap-6 p-4 sm:p-6 lg:grid-cols-12 lg:gap-10 lg:p-8">
       {/* Desktop: the photo sits in a raised frame cut from the page. */}
       <aside className="neu hidden rounded-[28px] p-3 lg:col-span-7 lg:block">
         <div className="relative isolate flex h-full min-h-[560px] flex-col justify-between overflow-hidden rounded-[22px] p-10 text-snow">
