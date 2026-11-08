@@ -61,6 +61,33 @@ export type FeedRow = {
 // Trust-score reason written by the AI job: {code, points, detail}
 export type ScoreReason = { code: string; points: number; detail: string }
 
+// ai/veribin_ai/thresholds.json -> anomaly_alert_threshold
+export const ANOMALY_THRESHOLD = 60
+
+// Codes from ai/veribin_ai/thresholds.json (bin scores) and scoring.py (scan flags)
+const REASON_LABEL: Record<string, string> = {
+  REPEAT_SCANS: "Rapid repeat scans",
+  REPEAT_SCAN: "Rapid repeat scan",
+  WEIGHT_MISMATCH: "Weight off catalogue",
+  VERY_LOW_WEIGHT: "Very low weight",
+  WRONG_CATEGORY_WEIGHT: "Far too heavy",
+  ODD_HOURS: "Night-time scans",
+  SCRIPTED_REPEAT: "Scripted repeats",
+  HIGH_BARCODE_SHARE: "Mostly barcode",
+  HIGH_REJECTIONS: "Many rejections",
+  NOT_ENOUGH_DATA: "Not enough data",
+}
+export const reasonLabel = (code: string) => REASON_LABEL[code] ?? code.replaceAll("_", " ").toLowerCase()
+
+// alerts.kind enum (core_schema)
+export const ALERT_LABEL: Record<string, string> = {
+  bin_offline: "Bin offline",
+  sequence_gap: "Sequence gap",
+  anomaly: "Anomaly",
+  target_at_risk: "Target at risk",
+  chain_break: "Chain break",
+}
+
 export const CHECKPOINTS_REPO = process.env.NEXT_PUBLIC_CHECKPOINTS_REPO || "mahajansarthaksm13/veribin-checkpoints"
 export const checkpointUrl = (day: string) =>
   `https://github.com/${CHECKPOINTS_REPO}/blob/main/checkpoints/${day}.json`
@@ -83,4 +110,4 @@ export const hasSessionCookie = (c: { getAll(): { name: string }[] }) => c.getAl
 
 // AI sentences carry raw codes (cat1_rigid, PUN); show them as labels.
 export const humanize = (text: string) =>
-  text.replace(/cat[1-4]_[a-z]+/g, (m) => (isCategory(m) ? CATEGORY_LABEL[m] : m)).replace(/(PUN|MUM|NAG)/g, (m) => cityName(m))
+  text.replace(/\bcat[1-4]_[a-z]+\b/g, (m) => (isCategory(m) ? CATEGORY_LABEL[m] : m)).replace(/\b(PUN|MUM|NAG)\b/g, (m) => cityName(m))

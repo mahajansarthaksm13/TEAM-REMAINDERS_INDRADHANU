@@ -6,7 +6,7 @@ import { AutoSubmit } from "@/components/vb/client"
 import { Badge, CategorySwatch, DataTable, EmptyState, PageHeader, Pagination, TierBadge, WeightBadge } from "@/components/vb/ui"
 import { binList, listScans, PAGE } from "@/lib/data"
 import { href, one, pageCtx } from "@/lib/session"
-import { CATEGORIES, CATEGORY_LABEL, cityName, type FeedRow } from "@/lib/shared"
+import { CATEGORIES, CATEGORY_LABEL, UUID_RE, cityName, isCategory, type FeedRow } from "@/lib/shared"
 import { fmtDateTime, num } from "@/lib/format"
 
 export const metadata: Metadata = { title: "Scans" }
@@ -15,14 +15,18 @@ const field = "h-10 w-full rounded-input border border-sage-600 bg-surface px-3 
 
 export default async function ScansPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { sb, scope, period, sp } = await pageCtx(searchParams)
+  // URL values go straight into typed columns (enum, uuid, date): drop anything malformed instead of erroring.
+  const day = (v?: string) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v)) ? v : undefined)
+  const cat = one(sp.category)
+  const prod = one(sp.product)
   const f = {
-    category: one(sp.category),
-    product: one(sp.product),
+    category: isCategory(cat) ? cat : undefined,
+    product: prod && UUID_RE.test(prod) ? prod : undefined,
     bin: one(sp.bin),
     city: one(sp.city),
-    from: one(sp.from) ?? period.from,
-    to: one(sp.to) ?? period.to,
-    page: Math.max(1, Number(one(sp.page)) || 1),
+    from: day(one(sp.from)) ?? period.from,
+    to: day(one(sp.to)) ?? period.to,
+    page: Math.min(10_000, Math.max(1, Number(one(sp.page)) || 1)),
   }
   let prodQ = sb.from("products").select("id, name").order("name")
   if (scope.companyId) prodQ = prodQ.eq("company_id", scope.companyId)

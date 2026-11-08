@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 import { Badge, Card, CardHead, CategorySwatch, EmptyState, KV, PageHeader, TierBadge, WeightBadge } from "@/components/vb/ui"
 import { ProofField, VerifySignature } from "@/components/vb/client"
 import { href, pageCtx } from "@/lib/session"
-import { CATEGORY_DESC, CATEGORY_LABEL, UUID_RE, cityName, type Category, type Tier } from "@/lib/shared"
+import { CATEGORY_DESC, CATEGORY_LABEL, UUID_RE, cityName, reasonLabel, type Category, type Tier } from "@/lib/shared"
 import { fmtDateTime } from "@/lib/format"
 
 export const metadata: Metadata = { title: "Scan detail" }
@@ -83,7 +83,7 @@ export default async function ScanDetailPage({ params, searchParams }: { params:
               <ul className="space-y-3">
                 {flags.map((f) => (
                   <li key={f.reason} className="flex items-start justify-between gap-3 rounded-[14px] border border-sage-200 p-3 text-sm">
-                    <span>{f.reason}</span>
+                    <span>{reasonLabel(f.reason)}</span>
                     <Badge kind={f.severity === "high" ? "flagged" : "warning"}>{f.severity}</Badge>
                   </li>
                 ))}

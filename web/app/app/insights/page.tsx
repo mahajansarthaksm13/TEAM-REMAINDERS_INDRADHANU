@@ -1,6 +1,6 @@
 import Link from "next/link"
 import type { Metadata } from "next"
-import { Card, CardHead, DataTable, EmptyState, Notice, PageHeader, ScoreText } from "@/components/vb/ui"
+import { Card, CardHead, DataTable, EmptyState, Notice, PageHeader, ReasonList, ScoreText } from "@/components/vb/ui"
 import { ForecastTabs, type ForecastData } from "@/components/vb/forecast-tabs"
 import { binList, latestForecasts, monthlyTrend, targetsByCategory, type BinRow } from "@/lib/data"
 import { href, pageCtx } from "@/lib/session"
@@ -124,7 +124,7 @@ export default async function InsightsPage({ searchParams }: { searchParams: Pro
                 { key: "bin", label: "Bin", cell: (r) => <span className="font-mono font-semibold">{r.bin_id}</span>, hideMobile: true },
                 { key: "city", label: "City", cell: (r) => cityName(r.city) },
                 { key: "score", label: "Trust score", align: "right", cell: (r) => <ScoreText score={r.trust_score} /> },
-                { key: "why", label: "Main reasons", cell: (r) => (r.trust_reasons.length ? r.trust_reasons[0].detail : <span className="text-olive-700">—</span>) },
+                { key: "why", label: "Main deductions", cell: (r) => <ReasonList reasons={r.trust_reasons} /> },
               ]}
             />
           )}

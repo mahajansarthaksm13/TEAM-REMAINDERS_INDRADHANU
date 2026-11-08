@@ -5,7 +5,7 @@ import { HashChip } from "@/components/vb/client"
 import { ScoreChart } from "@/components/vb/charts"
 import { VerifyChain } from "@/components/vb/verify-chain"
 import { binList, openAlerts } from "@/lib/data"
-import { cityName, type ScoreReason } from "@/lib/shared"
+import { ALERT_LABEL, cityName, humanize, reasonLabel, type ScoreReason } from "@/lib/shared"
 import { href, pageCtx } from "@/lib/session"
 import { fmtDateTime, fmtDay, num, timeAgo } from "@/lib/format"
 
@@ -72,7 +72,7 @@ export default async function BinDetailPage({ params, searchParams }: { params: 
                       <span className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
                         {s.reasons.map((r) => (
                           <Link key={r.code} href={href("/app/scans", sp, { bin: b.bin_id, from: daysBefore(s.day, 90), to: s.day })} title={r.detail} className="text-olive-700 underline-offset-4 hover:underline">
-                            {r.code.replaceAll("_", " ").toLowerCase()} (−{r.points})
+                            {reasonLabel(r.code)} (−{Math.round(r.points)})
                           </Link>
                         ))}
                       </span>
@@ -91,7 +91,8 @@ export default async function BinDetailPage({ params, searchParams }: { params: 
             <ul className="space-y-3">
               {alerts.map((a) => (
                 <li key={a.id} className="rounded-[14px] border border-sage-200 p-3 text-sm">
-                  <p className={a.kind === "chain_break" ? "font-semibold text-error" : "font-semibold text-warning"}>{a.kind === "chain_break" ? "✗" : "⚠"} {a.message}</p>
+                  <p className={a.kind === "chain_break" ? "eyebrow text-error" : "eyebrow text-warning"}>{a.kind === "chain_break" ? "✗" : "⚠"} {ALERT_LABEL[a.kind] ?? a.kind}</p>
+                  <p className="mt-1 font-semibold">{humanize(a.message)}</p>
                   <p className="mt-1 text-xs text-olive-700">{fmtDateTime(a.opened_at)}</p>
                 </li>
               ))}

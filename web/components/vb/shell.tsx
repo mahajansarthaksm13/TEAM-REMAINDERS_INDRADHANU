@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectSepa
 import { closeAlert, logout } from "@/lib/actions"
 import { parsePeriod, periodOptions } from "@/lib/period"
 import { timeAgo } from "@/lib/format"
-import { ROLE_LABEL, type Role } from "@/lib/shared"
+import { ALERT_LABEL, ROLE_LABEL, humanize, type Role } from "@/lib/shared"
 import { Wordmark } from "./brand"
 import { Badge } from "./ui"
 
@@ -176,10 +176,11 @@ export function TopBar({ user, scope, alerts }: { user: { name: string; email: s
                   {alerts.map((a) => (
                     <li key={a.id} className="flex items-start gap-1 pr-2 hover:bg-garden-50">
                       <Link href={keep(a.href)} className="flex min-w-0 flex-1 flex-col gap-0.5 px-4 py-3 text-sm">
-                        <span className={cn("font-semibold", a.type === "chain_break" ? "text-error" : a.type === "bin_offline" ? "" : "text-warning")}>
+                        <span className={cn("eyebrow", a.type === "chain_break" ? "text-error" : a.type === "bin_offline" ? "text-olive-700" : "text-warning")}>
                           {a.type === "chain_break" ? "✗ " : a.type === "bin_offline" ? "" : "⚠ "}
-                          {a.message}
+                          {ALERT_LABEL[a.type] ?? a.type}
                         </span>
+                        <span className="font-semibold">{humanize(a.message)}</span>
                         <span className="text-xs text-olive-700">{timeAgo(a.created_at)}</span>
                       </Link>
                       {a.canClose && (

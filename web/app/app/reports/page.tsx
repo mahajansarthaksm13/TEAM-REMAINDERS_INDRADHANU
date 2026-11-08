@@ -6,7 +6,7 @@ import { ReportBuilder } from "@/components/vb/report-builder"
 import type { ReportRow } from "@/lib/report-pdf"
 import { pageCtx } from "@/lib/session"
 import { CATEGORY_LABEL } from "@/lib/shared"
-import { fmtDateTime, fmtDay } from "@/lib/format"
+import { fmtDateTime, fmtDay, kg, num } from "@/lib/format"
 
 export const metadata: Metadata = { title: "Reports" }
 
@@ -42,6 +42,8 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
               ...(scope.current === "all" ? [{ key: "co", label: "Company", cell: (r: ReportRow) => companyName(r.company_id) }] : []),
               { key: "cat", label: "Category", cell: (r) => <span className="inline-flex items-center gap-1.5 whitespace-nowrap"><CategorySwatch category={r.category} />{CATEGORY_LABEL[r.category]}</span> },
               { key: "period", label: "Period", cell: (r) => <span className="whitespace-nowrap">{fmtDay(r.period_start)} – {fmtDay(r.period_end)}</span> },
+              { key: "kg", label: "Collected", align: "right", cell: (r) => <span className="whitespace-nowrap">{kg(Number(r.qr_kg ?? 0) + Number(r.barcode_kg ?? 0))}</span> },
+              { key: "n", label: "Scans", align: "right", cell: (r) => num(Number(r.scan_count ?? 0)) },
               { key: "at", label: "Generated", cell: (r) => <span className="whitespace-nowrap">{fmtDateTime(r.created_at)}</span> },
               { key: "fp", label: "Fingerprint", cell: (r) => <HashChip value={r.fingerprint} label="Fingerprint" /> },
               {
