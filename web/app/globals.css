@@ -1,0 +1,186 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* Moss Ledger — see files/02_VeriBin_Design_Brief.md §2 and 03 Frontend Spec §A1 */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-olive-950: #1f261a;
+  --color-olive-700: #4a543d;
+  --color-sage-600: #879273;
+  --color-sage-500: #8b9678;
+  --color-sage-200: #d7dec8;
+  --color-garden-50: #f5f7ef;
+  --color-surface: #ffffff;
+  --color-success: #3f6b34;
+  --color-warning: #8a6414;
+  --color-error: #9b3b2e;
+
+  /* Anola slot: swap --font-display-face for Anola via next/font/local when licensed */
+  --font-display: var(--font-display-face), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-sans-face), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-mono-face), ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --font-heading: var(--font-display);
+
+  --radius-card: 20px;
+  --radius-input: 10px;
+  --radius-badge: 6px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  --shadow-pop: 0 4px 16px rgba(31, 38, 26, 0.08);
+  --shadow-dialog: 0 16px 48px rgba(31, 38, 26, 0.16);
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+:root {
+  --background: #f5f7ef;
+  --foreground: #1f261a;
+  --card: #ffffff;
+  --card-foreground: #1f261a;
+  --popover: #ffffff;
+  --popover-foreground: #1f261a;
+  --primary: #4a543d;
+  --primary-foreground: #f5f7ef;
+  --secondary: #d7dec8;
+  --secondary-foreground: #1f261a;
+  --muted: #d7dec8;
+  --muted-foreground: #4a543d; /* never sage-500 on light */
+  --accent: #d7dec8;
+  --accent-foreground: #1f261a;
+  --destructive: #9b3b2e;
+  --border: #d7dec8;
+  --input: #879273;
+  --ring: #1f261a;
+  --radius: 1.25rem;
+}
+
+/* public dark sections + sidebar */
+.dark-band {
+  --background: #1f261a;
+  --foreground: #f5f7ef;
+  --muted-foreground: #8b9678;
+  --primary: #d7dec8;
+  --primary-foreground: #1f261a;
+  --border: #4a543d;
+  --ring: #d7dec8;
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+@utility eyebrow {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+@utility tnum {
+  font-variant-numeric: tabular-nums;
+}
+@utility hatch {
+  background-image: repeating-linear-gradient(45deg, #4a543d 0 2px, transparent 2px 8px);
+  background-color: #d7dec8;
+}
+
+/* type scale (Frontend Spec §A2) */
+@utility t-display {
+  font-family: var(--font-display);
+  font-size: 40px;
+  line-height: 44px;
+  @variant lg { font-size: 64px; line-height: 68px; }
+}
+@utility t-h1 {
+  font-family: var(--font-display);
+  font-size: 34px;
+  line-height: 38px;
+  @variant lg { font-size: 48px; line-height: 52px; }
+}
+@utility t-h2 {
+  font-family: var(--font-display);
+  font-size: 28px;
+  line-height: 32px;
+  @variant lg { font-size: 36px; line-height: 40px; }
+}
+@utility t-h3 {
+  font-family: var(--font-display);
+  font-size: 24px;
+  line-height: 30px;
+}
+@utility t-kpi {
+  font-size: 28px;
+  line-height: 32px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  @variant lg { font-size: 36px; line-height: 40px; }
+}
+
+/* feed row: slide 200ms + hold sage highlight 1.2s */
+@keyframes feed-in {
+  0% { transform: translateY(-8px); opacity: 0; background-color: #d7dec8; }
+  15% { transform: none; opacity: 1; background-color: #d7dec8; }
+  100% { background-color: transparent; }
+}
+.feed-in { animation: feed-in 1400ms var(--ease-out); }
+
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+.reveal { animation: reveal 700ms var(--ease-out) both; }
+
+@keyframes soft-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(74, 84, 61, 0.35); }
+  50% { box-shadow: 0 0 0 6px rgba(74, 84, 61, 0); }
+}
+.soft-pulse { animation: soft-pulse 1.4s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media print {
+  .no-print { display: none !important; }
+  body { background: #fff; }
+}
