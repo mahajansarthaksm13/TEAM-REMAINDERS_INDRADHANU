@@ -1,0 +1,53 @@
+"use client"
+
+import { useState } from "react"
+import { cn } from "cn"
+import { CATEGORY_LABEL, type Category } from "@/lib/shared"
+import { pickOr } from "@/lib/ui-state"
+import { kg } from "@/lib/format"
+import { ForecastChart, type ForecastPoint } from "./charts"
+import { Badge, CategorySwatch } from "./ui"
+
+// All values in kg (backend units).
+export type ForecastData = { category: Category; target_kg: number; projected_kg: number; low_kg: number; high_kg: number; collected_kg: number; at_risk: boolean; points: ForecastPoint[] }
+
+export function ForecastTabs({ data }: { data: ForecastData[] }) {
+  const fallback = data.find((d) => d.at_risk)?.category ?? data[0]?.category
+  const [chosen, setCat] = useState<Category | undefined>(fallback)
+  // The remembered tab may not exist in newer data (another period or scope): fall back.
+  const cat = pickOr(chosen, data.map((x) => x.category), fallback)
+  const d = data.find((x) => x.category === cat)
+  if (!d || !cat) return <p className="text-sm text-dim">No forecast for this period yet. Forecasts run nightly once there is enough collection data.</p>
+  return (
+    <div>
+      <div role="tablist" aria-label="Forecast category" className="mb-4 flex flex-wrap gap-2">
+        {data.map((x) => (
+          <button
+            key={x.category}
+            role="tab"
+            aria-selected={x.category === cat}
+            onClick={() => setCat(x.category)}
+            className={cn(
+              "inline-flex h-10 items-center gap-2 rounded-full border px-4 text-sm font-semibold transition-colors",
+              x.category === cat ? "border-lit bg-lit text-on-lit" : "border-line-strong text-ink hover:bg-panel-hi"
+            )}
+          >
+            <CategorySwatch category={x.category} className="ring-1 ring-ink/30" />
+            {CATEGORY_LABEL[x.category]}
+            {x.at_risk && <span aria-label="at risk">⚠</span>}
+          </button>
+        ))}
+      </div>
+      <div role="tabpanel" aria-label={`${CATEGORY_LABEL[cat]} forecast`}>
+        <div className="mb-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+          <span>Collected <strong className="tnum">{kg(d.collected_kg)}</strong></span>
+          <span>Projected <strong className="tnum">{kg(d.projected_kg)}</strong> <span className="text-dim">({kg(d.low_kg)} – {kg(d.high_kg)})</span></span>
+          <span>Target <strong className="tnum">{kg(d.target_kg)}</strong></span>
+          {d.at_risk ? <Badge kind="warning">⚠ At risk</Badge> : <Badge kind="ok">✓ On track</Badge>}
+        </div>
+        <ForecastChart data={d.points} target={d.target_kg} atRisk={d.at_risk} />
+        <p className="mt-3 text-xs text-dim">Solid: collected (kg, cumulative). Dashed: projection at the last 8 weeks&apos; pace. Band: likely range. Dotted: FY target.</p>
+      </div>
+    </div>
+  )
+}

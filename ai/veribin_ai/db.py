@@ -123,6 +123,7 @@ def open_alert(conn: psycopg.Connection, kind: str, bin_id: str | None,
 
 
 def replace_insights(conn: psycopg.Connection, week_start, cards: list[dict]) -> None:
+    # default=str: company_id comes back from psycopg as uuid.UUID
     with conn.cursor() as cur:
         cur.execute("delete from public.insights where week_start = %s", (week_start,))
         for c in cards:
@@ -130,8 +131,8 @@ def replace_insights(conn: psycopg.Connection, week_start, cards: list[dict]) ->
                 insert into public.insights
                   (company_id, week_start, kind, payload, sentence, scan_filter)
                 values (%s, %s, %s, %s, %s, %s)
-            """, (c["company_id"], week_start, c["kind"], json.dumps(c["payload"]),
-                  c["sentence"], json.dumps(c["scan_filter"])))
+            """, (c["company_id"], week_start, c["kind"], json.dumps(c["payload"], default=str),
+                  c["sentence"], json.dumps(c["scan_filter"], default=str)))
 
 
 def save_forecasts(conn: psycopg.Connection, as_of, fy: str, rows: list[dict]) -> None:
