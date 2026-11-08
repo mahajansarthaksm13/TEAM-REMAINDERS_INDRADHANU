@@ -220,3 +220,77 @@ export async function batchCodes(sb: Sb, batchId: string, limit = 10_000) {
     payloads: serials.slice(0, limit).map((s) => `VBQ1.${product.product_code}.${s}`),
   }
 }
+
+// ---------- where waste goes ----------
+// PostgREST returns at most 1000 rows per request (config max_rows), so these page through.
+// ponytail: client-side aggregation, capped at FLOW_MAX_PAGES x 1000 rows; past that the page says
+// "partial" and a server-side RPC (group by company/category/bin, product) is the upgrade path.
+const FLOW_PAGE = 1000
+const FLOW_MAX_PAGES = 25
+
+export type FlowRow = { company_id: string; company: string; category: Category; bin_id: string; city: string; kg: number; scans: number }
+
+// daily_totals = day x company x category x bin (the same table the KPI function sums), so the
+// flows add up to the dashboard totals exactly. Demo companies and bins are excluded, as in the KPIs.
+export async function flowTotals(sb: Sb, from: string, to: string, companyId: string | null) {
+  const acc = new Map<string, FlowRow>()
+  let truncated = false
+  for (let page = 0; page < FLOW_MAX_PAGES; page++) {
+    let q = sb
+      .from("daily_totals")
+      .select("company_id, category, bin_id, scan_count, weight_g, companies!inner(name, is_demo), bins!inner(city, is_demo)")
+      .gte("day", from)
+      .lte("day", to)
+      .eq("companies.is_demo", false)
+      .eq("bins.is_demo", false)
+      .order("day")
+      .order("company_id")
+      .order("category")
+      .order("bin_id")
+      .range(page * FLOW_PAGE, (page + 1) * FLOW_PAGE - 1)
+    if (companyId) q = q.eq("company_id", companyId)
+    const { data, error } = await q
+    fail("daily_totals", error)
+    for (const r of data ?? []) {
+      const key = `${r.company_id}|${r.category}|${r.bin_id}`
+      const row = acc.get(key) ?? { company_id: r.company_id, company: r.companies.name, category: r.category as Category, bin_id: r.bin_id, city: r.bins.city, kg: 0, scans: 0 }
+      row.kg += Number(r.weight_g) / 1000
+      row.scans += Number(r.scan_count)
+      acc.set(key, row)
+    }
+    if ((data ?? []).length < FLOW_PAGE) break
+    if (page === FLOW_MAX_PAGES - 1) truncated = true
+  }
+  return { rows: [...acc.values()], truncated }
+}
+
+export type ProductTotal = { product_id: string; name: string; company_id: string; category: Category; scans: number; kg: number }
+
+// Accepted scans per product, weighed at the catalogue weight (the rule every total uses).
+export async function productTotals(sb: Sb, from: string, to: string, companyId: string | null) {
+  const acc = new Map<string, ProductTotal>()
+  let truncated = false
+  for (let page = 0; page < FLOW_MAX_PAGES; page++) {
+    let q = sb
+      .from("scans")
+      .select("id, product_id, products!inner(name, unit_weight_g, category, company_id), bins!inner(is_demo)")
+      .eq("bins.is_demo", false)
+      .gte("scanned_at", istStart(from))
+      .lt("scanned_at", istEndExclusive(to))
+      .order("id")
+      .range(page * FLOW_PAGE, (page + 1) * FLOW_PAGE - 1)
+    if (companyId) q = q.eq("company_id", companyId)
+    const { data, error } = await q
+    fail("product totals", error)
+    for (const r of data ?? []) {
+      if (!r.product_id) continue
+      const row = acc.get(r.product_id) ?? { product_id: r.product_id, name: r.products.name, company_id: r.products.company_id, category: r.products.category as Category, scans: 0, kg: 0 }
+      row.scans += 1
+      row.kg += Number(r.products.unit_weight_g) / 1000
+      acc.set(r.product_id, row)
+    }
+    if ((data ?? []).length < FLOW_PAGE) break
+    if (page === FLOW_MAX_PAGES - 1) truncated = true
+  }
+  return { rows: [...acc.values()].sort((a, b) => b.kg - a.kg), truncated }
+}

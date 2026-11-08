@@ -11,7 +11,7 @@ export default async function PublicLayout({ children }: { children: React.React
     <>
       <PublicHeader loggedIn={loggedIn} />
       <main id="main">{children}</main>
-      <footer className="no-print border-t border-line bg-deep/70">
+      <footer className="no-print neu-bar border-t">
         <div className="mx-auto grid max-w-[1200px] gap-8 px-4 py-12 sm:px-6 md:grid-cols-12">
           <div className="md:col-span-5">
             <Wordmark />

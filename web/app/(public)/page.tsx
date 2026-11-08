@@ -4,7 +4,6 @@ import { hasSessionCookie } from "@/lib/shared"
 import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Cta } from "@/components/vb/magnetic"
-import { GlowBackdrop } from "@/components/vb/brand"
 import { SAMPLE_REPORT_ID, STEPS } from "@/lib/shared"
 
 export default async function Home() {
@@ -12,7 +11,6 @@ export default async function Home() {
   return (
     <>
       <section className="relative isolate flex min-h-[72vh] items-center lg:min-h-[86vh]">
-        <GlowBackdrop />
         <div className="relative mx-auto flex w-full max-w-[1200px] flex-col items-center px-4 pt-20 pb-16 text-center sm:px-6 lg:pb-24">
           <p className="neu-pill reveal mb-7 rounded-full px-4 py-1.5 text-sm text-ink"><span aria-hidden className="mr-2 inline-block size-1.5 rounded-full bg-orchid align-middle" />Verifiable plastic collection for EPR</p>
           <h1 className="t-display reveal max-w-4xl" style={{ animationDelay: "120ms" }}>
@@ -49,7 +47,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="border-y border-line bg-deep/40 py-16 lg:py-24" aria-labelledby="evidence">
+      <section className="py-16 lg:py-24" aria-labelledby="evidence">
         <div className="mx-auto grid max-w-[1200px] gap-12 px-4 sm:px-6 lg:grid-cols-12 lg:items-center">
           <div data-reveal className="lg:col-span-7">
             <p className="eyebrow mb-3 text-dim">Why evidence matters</p>
@@ -105,7 +103,6 @@ export default async function Home() {
       <section className="pb-16 lg:pb-24">
         <div className="mx-auto max-w-[1200px] px-4 sm:px-6">
           <div data-reveal className="neu relative isolate overflow-hidden rounded-card px-6 py-12 lg:px-12 lg:py-16">
-            <GlowBackdrop className="opacity-70" />
             <div className="relative grid gap-6 lg:grid-cols-12 lg:items-end">
               <h2 className="t-h2 lg:col-span-7">See the proof yourself. It takes ten seconds.</h2>
               <div className="flex flex-wrap gap-3 lg:col-span-5 lg:justify-end">

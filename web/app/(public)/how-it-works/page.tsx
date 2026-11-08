@@ -47,7 +47,7 @@ export default async function HowItWorksPage() {
           ))}
         </ol>
       </Section>
-      <section id="simulator" className="scroll-mt-16 bg-deep/40">
+      <section id="simulator" className="scroll-mt-16">
         <div className="mx-auto max-w-[1200px] px-4 py-16 sm:px-6 lg:py-24">
           <p className="eyebrow mb-3 text-dim">Website simulator</p>
           <h2 className="t-h2 max-w-2xl">Scan a sample packet. It goes through the real pipeline.</h2>

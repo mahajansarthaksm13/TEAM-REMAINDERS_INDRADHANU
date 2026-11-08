@@ -169,7 +169,7 @@ export function Simulator({ initialFeed }: { initialFeed: FeedItem[] }) {
               </div>
             )}
             {state.kind === "success" && (
-              <div className="rounded-[14px] bg-deep/60 p-4">
+              <div className="neu-inset rounded-[14px] p-4">
                 <p className="mb-3 text-sm text-dim">Check the signature yourself, on your device, with the demo bin&apos;s public key.</p>
                 <VerifySignature recordText={res.record} signature={res.signature} publicKey={res.public_key} />
               </div>

@@ -21,13 +21,13 @@ export const CATEGORY_DESC: Record<Category, string> = {
 }
 
 // Same palette, tonal order flipped for the dark ground (lightest = Category I):
-// Lightest first so Category I reads strongest: I Snow, II Orchid, III Violet,
-// IV Violet with a Snow hatch (never colour alone).
+// Darkest first so Category I reads strongest on the light ground: I Night, II Violet, III Orchid,
+// IV Snow with a Violet hatch (never colour alone).
 export const CATEGORY_COLOR: Record<Category, string> = {
-  cat1_rigid: "#FBFBFB",
-  cat2_flexible: "#A663CC",
-  cat3_multilayer: "#6F2DBD",
-  cat4_compostable: "#6F2DBD",
+  cat1_rigid: "#171123",
+  cat2_flexible: "#6F2DBD",
+  cat3_multilayer: "#A663CC",
+  cat4_compostable: "#FBFBFB",
 }
 
 export const isCategory = (v: unknown): v is Category => CATEGORIES.includes(v as Category)

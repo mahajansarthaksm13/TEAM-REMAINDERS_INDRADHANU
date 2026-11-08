@@ -34,7 +34,7 @@ export function PublicHeader({ loggedIn }: { loggedIn: boolean }) {
               key={href}
               href={href}
               aria-current={path.startsWith(href) ? "page" : undefined}
-              className={cn("rounded-full px-3.5 py-1.5 text-sm text-ink/75 transition-colors duration-200 hover:bg-snow/5 hover:text-ink", path.startsWith(href) && "bg-violet text-snow shadow-[inset_0_1px_0_rgba(251,251,251,0.2)] hover:bg-violet")}
+              className={cn("rounded-full px-3.5 py-1.5 text-sm text-ink/75 transition-colors duration-200 hover:bg-panel-hi hover:text-ink", path.startsWith(href) && "bg-violet text-snow shadow-[inset_0_1px_0_rgba(251,251,251,0.2)] hover:bg-violet")}
             >
               {label}
             </Link>

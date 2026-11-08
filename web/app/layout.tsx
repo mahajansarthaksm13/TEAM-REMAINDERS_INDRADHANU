@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Inter_Tight, JetBrains_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
-import { Backdrop } from "@/components/vb/backdrop";
 import { SmoothScroll } from "@/components/vb/smooth-scroll";
 import "./globals.css";
 
@@ -22,8 +21,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en-IN" className={`${display.variable} ${body.variable} ${mono.variable}`}>
       <body className="min-h-dvh">
-        {/* Mounted once so neither remounts across navigation. */}
-        <Backdrop />
+        {/* Mounted once so it never remounts across navigation. */}
         <SmoothScroll />
         {children}
         <Toaster />

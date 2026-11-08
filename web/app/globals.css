@@ -4,20 +4,19 @@
 @import "lenis/dist/lenis.css";
 
 /* ─────────────────────────────────────────────────────────────
-   VeriBin, Soft Night. Single fixed DARK theme, fully neumorphic.
+   VeriBin, Soft Light. One LIGHT theme, strictly neumorphic.
 
    Strictly four colours. Every value below is one of them, either solid or
    as a see-through tint of itself; nothing else appears anywhere:
-     Night    #171123   60  the ground (lifted 4% by Snow) and every shadow
-     Snow     #FBFBFB   30  running text and the highlight edge of every surface
-     Violet   #6F2DBD   10  primary action, active state
-     Orchid   #A663CC   10  focus, highlights, status marks, the selected item
+     Snow     #FBFBFB   60  the ground (veiled 4.5% Violet) and every highlight
+     Night    #171123   30  text and every cast shadow
+     Violet   #6F2DBD   10  primary action, links, active state, focus (6.6:1 as text)
+     Orchid   #A663CC   10  chart series, marks, warning borders (never small text: 3:1)
 
    Neumorphism: every surface is cut from the ground itself. Raised things catch
-   a Snow highlight top-left and cast a Night shadow bottom-right; pressed
-   things do the inverse. Nothing floats on a different colour.
-   Status never relies on colour: ✓ ⚠ ✗ icons and words carry the meaning, and
-   small status text stays Snow so it always reads at 4.5:1 or better.
+   a Snow highlight top-left and cast a soft Night shadow bottom-right; pressed
+   things do the inverse. No glass, no blur, no glows, no gradient lettering.
+   Status never relies on colour: ✓ ⚠ ✗ icons and words carry the meaning.
    ───────────────────────────────────────────────────────────── */
 :root {
   /* palette */
@@ -26,29 +25,29 @@
   --violet: #6f2dbd;
   --orchid: #a663cc;
 
-  /* the neumorphic ground: Night lifted by a 4% Snow veil, so a Night shadow can fall on it */
-  --veil: rgba(251, 251, 251, 0.04);
-  --surface: linear-gradient(var(--veil), var(--veil)), var(--night);
-  --neu-hi: rgba(251, 251, 251, 0.07); /* highlight edge */
-  --neu-lo: var(--night); /* cast shadow */
+  /* the neumorphic ground: Snow under a 4.5% Violet veil, so a pure Snow highlight can sit on it */
+  --veil: rgba(111, 45, 189, 0.045);
+  --surface: linear-gradient(var(--veil), var(--veil)), var(--snow);
+  --neu-hi: var(--snow); /* highlight edge */
+  --neu-lo: rgba(23, 17, 35, 0.13); /* cast shadow */
 
   /* roles: palette colours, solid or as alpha tints of themselves */
-  --ground: var(--night);
-  --deep: var(--night);
-  --panel: var(--night); /* solid surfaces: popovers, select lists, toasts (lifted by rim + shadow) */
-  --panel-hi: rgba(251, 251, 251, 0.07); /* hover / active row */
-  --chip: rgba(111, 45, 189, 0.42); /* badges, chips */
-  --line: rgba(251, 251, 251, 0.1); /* hairlines, table rules */
-  --line-strong: rgba(166, 99, 204, 0.5);
-  --ink: var(--snow); /* running text: 15:1 on the lifted ground */
-  --dim: rgba(251, 251, 251, 0.7); /* secondary text: 7.6:1 on the lifted ground */
-  --lit: var(--orchid); /* focus rings, marks, fills: non-text (3:1+) or large text only */
-  --on-lit: var(--night); /* text on an Orchid fill: 4.6:1 */
+  --ground: var(--snow);
+  --deep: var(--night); /* overlays only */
+  --panel: var(--snow); /* solid surfaces: popovers, select lists, toasts */
+  --panel-hi: rgba(111, 45, 189, 0.07); /* hover / active row */
+  --chip: rgba(111, 45, 189, 0.1); /* badges, chips */
+  --line: rgba(23, 17, 35, 0.1); /* hairlines, table rules */
+  --line-strong: rgba(111, 45, 189, 0.35);
+  --ink: var(--night); /* running text: 16:1 on the ground */
+  --dim: rgba(23, 17, 35, 0.68); /* secondary text: 6.2:1 on the ground */
+  --lit: var(--violet); /* focus, links, active nav: 6.6:1 on the ground */
+  --on-lit: var(--snow); /* text on a Violet fill: 7.5:1 */
 
   /* status: palette only, always paired with an icon and words */
-  --success: var(--snow);
-  --warning: var(--orchid); /* warnings draw the eye; errors add a solid fill + ✗ */
-  --error: var(--orchid);
+  --success: var(--night);
+  --warning: var(--orchid); /* borders and fills only; warning text stays Night */
+  --error: var(--violet); /* filled error badges: Snow on Violet, 7.5:1 */
 
   /* shadcn semantic tokens */
   --background: var(--ground);
@@ -128,12 +127,12 @@
   --radius-lg: 14px;
   --radius-xl: 20px;
 
-  --shadow-pop: 0 24px 48px -16px rgba(23, 17, 35, 0.9), 0 0 0 1px rgba(166, 99, 204, 0.35);
-  --shadow-dialog: 0 40px 80px -24px rgba(23, 17, 35, 0.95);
-  /* Tailwind's stock shadows, re-cast in Night so no off-palette black slips in. */
-  --shadow-sm: 0 1px 2px rgba(23, 17, 35, 0.6);
-  --shadow-md: 0 6px 14px -4px rgba(23, 17, 35, 0.8);
-  --shadow-lg: 0 18px 40px -12px rgba(23, 17, 35, 0.9);
+  --shadow-pop: -6px -6px 16px var(--snow), 10px 10px 28px rgba(23, 17, 35, 0.16);
+  --shadow-dialog: -10px -10px 24px var(--snow), 16px 16px 40px rgba(23, 17, 35, 0.2);
+  /* Tailwind's stock shadows, re-cast as soft neumorphic pairs in palette colours. */
+  --shadow-sm: -2px -2px 5px var(--snow), 2px 2px 5px rgba(23, 17, 35, 0.1);
+  --shadow-md: -4px -4px 10px var(--snow), 5px 5px 12px rgba(23, 17, 35, 0.12);
+  --shadow-lg: -8px -8px 20px var(--snow), 10px 10px 24px rgba(23, 17, 35, 0.14);
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -145,7 +144,7 @@
   html {
     @apply font-sans;
     -webkit-text-size-adjust: 100%;
-    color-scheme: dark;
+    color-scheme: light;
     /* also paints the overscroll area, so a bounce never flashes an off-palette colour */
     background: var(--surface);
     color: var(--ink);
@@ -166,11 +165,11 @@
   }
   select,
   input {
-    color-scheme: dark;
+    color-scheme: light;
   }
   ::selection {
-    background: rgba(166, 99, 204, 0.45);
-    color: var(--snow);
+    background: rgba(166, 99, 204, 0.35);
+    color: var(--night);
   }
   /* Native <select> lists. The popup paints each option with the option's own colours and falls
      back to white when the select has no solid background, which left light text on white.
@@ -192,7 +191,7 @@
     color: var(--dim);
   }
 
-  /* Keyboard focus: one 2px Orchid ring, offset clear of the control's own rim. Kept in the
+  /* Keyboard focus: one 2px Violet ring, offset clear of the control's own rim. Kept in the
      base layer so a control's own focus utilities (ring-2 + outline-none) replace it, not stack. */
   :focus-visible {
     outline: 2px solid var(--lit);
@@ -212,17 +211,14 @@
 @utility tnum {
   font-variant-numeric: tabular-nums;
 }
-/* Hero headline: Snow falling into Orchid, the reference's lit-from-above lettering. */
+/* Hero headline: solid Night lettering (no gradient text). */
 @utility t-display {
   font-family: var(--font-display);
   font-weight: 600;
   letter-spacing: -0.035em;
   font-size: 42px;
   line-height: 46px;
-  background: linear-gradient(180deg, var(--snow) 35%, var(--orchid) 110%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--ink);
   @variant lg { font-size: 72px; line-height: 76px; }
 }
 @utility t-h1 {
@@ -258,18 +254,19 @@
   @variant lg { font-size: 36px; line-height: 40px; }
 }
 
-/* Category IV pattern: Violet with a Snow diagonal, so it never depends on colour alone. */
+/* Category IV pattern: Snow with a Violet diagonal, so it never depends on colour alone. */
 @utility hatch {
-  background-image: repeating-linear-gradient(45deg, var(--snow) 0 2px, transparent 2px 7px);
-  background-color: var(--violet);
+  background-image: repeating-linear-gradient(45deg, var(--violet) 0 2px, transparent 2px 6px);
+  background-color: var(--snow);
+  box-shadow: inset 0 0 0 1px var(--violet);
 }
 
 /* ── Neumorphic materials ────────────────────────────────────
    Light falls from the top-left. Raised: Snow highlight up-left, Night shadow
    down-right. Pressed: the same two, inside. Every surface is the ground. */
 .neu {
-  background: linear-gradient(145deg, rgba(251, 251, 251, 0.035), rgba(251, 251, 251, 0)), var(--surface);
-  border: 1px solid rgba(251, 251, 251, 0.035);
+  background: linear-gradient(145deg, rgba(251, 251, 251, 0.75), rgba(251, 251, 251, 0)), var(--surface);
+  border: 1px solid rgba(251, 251, 251, 0.8);
   box-shadow:
     -8px -8px 20px var(--neu-hi),
     10px 10px 24px var(--neu-lo),
@@ -285,7 +282,7 @@
   transition: box-shadow 200ms, border-color 200ms;
 }
 .neu-inset:hover {
-  border-color: rgba(251, 251, 251, 0.06);
+  border-color: rgba(111, 45, 189, 0.2);
 }
 .neu-inset:focus,
 .neu-inset:focus-visible {
@@ -298,13 +295,13 @@
 /* Sticky header and sidebar: the same ground, lifted, with a soft shadow edge. */
 .neu-bar {
   background: var(--surface);
-  border-color: rgba(251, 251, 251, 0.04);
-  box-shadow: 0 8px 24px -10px var(--neu-lo);
+  border-color: rgba(251, 251, 251, 0.8);
+  box-shadow: 0 8px 22px -12px var(--neu-lo);
 }
 /* Small raised pill (tags, nav group, back links). */
 .neu-pill {
   background: var(--surface);
-  border: 1px solid rgba(251, 251, 251, 0.035);
+  border: 1px solid rgba(251, 251, 251, 0.8);
   box-shadow:
     -3px -3px 8px var(--neu-hi),
     4px 4px 10px var(--neu-lo);
@@ -316,15 +313,15 @@
     inset -3px -3px 7px var(--neu-hi);
 }
 .btn-neu {
-  background: linear-gradient(145deg, rgba(251, 251, 251, 0.05), rgba(251, 251, 251, 0)), var(--surface);
-  border: 1px solid rgba(251, 251, 251, 0.04);
+  background: linear-gradient(145deg, rgba(251, 251, 251, 0.75), rgba(251, 251, 251, 0)), var(--surface);
+  border: 1px solid rgba(251, 251, 251, 0.8);
   box-shadow:
     -4px -4px 10px var(--neu-hi),
     6px 6px 14px var(--neu-lo);
 }
 /* The 10%: one Violet control per view, convex, catching Orchid light on its top-left. */
 .btn-lit {
-  background: linear-gradient(145deg, rgba(166, 99, 204, 0.6) 0%, rgba(166, 99, 204, 0) 62%), var(--violet);
+  background: linear-gradient(145deg, rgba(166, 99, 204, 0.55) 0%, rgba(166, 99, 204, 0) 62%), var(--violet);
   border: 1px solid rgba(166, 99, 204, 0.55);
   box-shadow:
     -4px -4px 10px var(--neu-hi),
@@ -351,7 +348,7 @@
    An oversized circle parked off the bottom-right corner slides over the face
    on hover and flips the label. Hover only, never :focus-visible, so a
    focused control is never left covered; keyboard focus shows the ring.
-     .flow-btn          raised control -> sweeps Orchid, label goes Night
+     .flow-btn          raised control -> sweeps Violet, label goes Snow
      .flow-btn-invert   Violet fill    -> sweeps Snow, label goes Violet */
 .flow-btn {
   position: relative;
@@ -395,37 +392,6 @@
 .flow-btn-invert:hover:not(:disabled),
 .flow-btn-invert[data-played="true"] {
   color: var(--violet);
-}
-
-/* ── Backdrop ────────────────────────────────────────────────
-   The lifted ground with two very soft Violet / Orchid lights drifting on long
-   periods, kept faint so raised surfaces still read as cut from the ground.
-   Fixed, never scrolls, never clicks. */
-.vb-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  overflow: hidden;
-  background: var(--surface);
-}
-.vb-glow {
-  position: absolute;
-  border-radius: 9999px;
-  filter: blur(110px);
-  will-change: transform;
-  animation: vb-drift var(--dur, 28s) ease-in-out infinite alternate;
-}
-@keyframes vb-drift {
-  to { transform: translate(var(--dx, 6vw), var(--dy, 4vh)) scale(1.08); }
-}
-.vb-grid {
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(rgba(251, 251, 251, 0.09) 1px, transparent 1.4px);
-  background-size: 28px 28px;
-  -webkit-mask-image: radial-gradient(80% 60% at 50% 0%, #171123 0%, transparent 75%);
-  mask-image: radial-gradient(80% 60% at 50% 0%, #171123 0%, transparent 75%);
 }
 
 /* ── Motion ───────────────────────────────────────────────── */
@@ -564,7 +530,7 @@ html.fx :where(.stagger > *, [data-reveal]).is-in {
 
 /* ── Print (QR sheets): plain ink on white ─────────────────── */
 @media print {
-  .no-print, .vb-backdrop { display: none !important; }
+  .no-print { display: none !important; }
   body { background: var(--snow); color: var(--night); }
   .neu { background: var(--snow); box-shadow: none; }
 }

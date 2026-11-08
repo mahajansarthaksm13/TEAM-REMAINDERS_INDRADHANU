@@ -117,7 +117,7 @@ export function ReportBuilder({ fy, defaultPeriod }: { fy: number; defaultPeriod
                 ["Scans included", num(snap.scan_count)],
                 ["Under review", num(snap.under_review_count)],
               ].map(([k, v]) => (
-                <div key={k} className="rounded-[14px] bg-deep/60 p-4">
+                <div key={k} className="neu-inset rounded-[14px] p-4">
                   <dt className="eyebrow text-dim">{k}</dt>
                   <dd className="t-kpi mt-1 text-2xl lg:text-[28px]">{v}</dd>
                 </div>

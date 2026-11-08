@@ -282,7 +282,7 @@ export function ReasonList({ reasons, max = 2 }: { reasons: ScoreReason[]; max?:
   return (
     <span className="flex flex-wrap gap-1.5">
       {shown.map((r) => (
-        <span key={r.code} title={r.detail} className="inline-flex items-center gap-1 rounded-badge bg-deep/60 px-2 py-0.5 text-xs whitespace-nowrap ring-1 ring-line">
+        <span key={r.code} title={r.detail} className="inline-flex items-center gap-1 rounded-badge bg-chip px-2 py-0.5 text-xs whitespace-nowrap ring-1 ring-line">
           {reasonLabel(r.code)}
           <span className="tnum font-semibold text-dim">−{Math.round(r.points)}</span>
         </span>

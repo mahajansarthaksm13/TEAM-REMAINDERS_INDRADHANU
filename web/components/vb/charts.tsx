@@ -1,7 +1,7 @@
 "use client"
 
-// Charts on the neumorphic Night ground. Four colours only: Snow, Orchid, Violet (+ a hatched Violet
-// for Category IV, so no series depends on colour alone). Every chart carries a plain-language
+// Charts on the light neumorphic ground. Four colours only: Night, Violet, Orchid (+ a Violet-hatched
+// Snow for Category IV, so no series depends on colour alone). Every chart carries a plain-language
 // takeaway under it and an aria-label summary, so the conclusion is readable without the picture.
 import { useId } from "react"
 import {
@@ -21,31 +21,33 @@ import {
   RadialBarChart,
   ReferenceLine,
   ResponsiveContainer,
+  Sankey,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts"
 import { CATEGORIES, CATEGORY_COLOR, CATEGORY_LABEL, cityName, type Category } from "@/lib/shared"
-import { cityCounts, cumulativePace, scoreBuckets, shares } from "@/lib/chart-math"
+import { cityCounts, cumulativePace, sankeyFlow, scoreBuckets, shares } from "@/lib/chart-math"
 import { CategorySwatch } from "./ui"
 
 const SNOW = "#FBFBFB"
 const VIOLET = "#6F2DBD"
 const ORCHID = "#A663CC"
-const DIM = "rgba(251,251,251,0.7)"
-const GRID = "rgba(251,251,251,0.08)"
+const NIGHT = "#171123"
+const DIM = "rgba(23,17,35,0.68)"
+const GRID = "rgba(23,17,35,0.08)"
 const axis = { stroke: DIM, fontSize: 12, tickLine: false, axisLine: false } as const
 const tooltipStyle = {
   contentStyle: {
     borderRadius: 14,
-    background: "#171123",
-    border: "1px solid rgba(166,99,204,0.45)",
-    boxShadow: "-4px -4px 10px rgba(251,251,251,0.06), 6px 6px 16px #171123",
+    background: SNOW,
+    border: "1px solid rgba(111,45,189,0.25)",
+    boxShadow: "-4px -4px 10px #FBFBFB, 6px 6px 16px rgba(23,17,35,0.16)",
     fontSize: 13,
-    color: SNOW,
+    color: NIGHT,
   },
   labelStyle: { color: DIM },
-  itemStyle: { color: SNOW },
+  itemStyle: { color: NIGHT },
 }
 const kgFmt = (v: number) => `${v.toLocaleString("en-IN", { maximumFractionDigits: 1 })} kg`
 
@@ -55,8 +57,8 @@ function useHatch() {
   const def = (
     <defs>
       <pattern id={id} patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(45)">
-        <rect width="8" height="8" fill={VIOLET} />
-        <line x1="0" y1="0" x2="0" y2="8" stroke={SNOW} strokeWidth="2" />
+        <rect width="8" height="8" fill={SNOW} />
+        <line x1="0" y1="0" x2="0" y2="8" stroke={VIOLET} strokeWidth="3" />
       </pattern>
     </defs>
   )
@@ -99,7 +101,7 @@ export function TrendChart({ data }: { data: ({ month: string } & Record<Categor
             <CartesianGrid vertical={false} stroke={GRID} />
             <XAxis dataKey="month" {...axis} />
             <YAxis {...axis} width={48} />
-            <Tooltip {...tooltipStyle} cursor={{ fill: "rgba(166,99,204,0.1)" }} formatter={(v, n) => [kgFmt(Number(v)), CATEGORY_LABEL[n as Category]]} />
+            <Tooltip {...tooltipStyle} cursor={{ fill: "rgba(111,45,189,0.08)" }} formatter={(v, n) => [kgFmt(Number(v)), CATEGORY_LABEL[n as Category]]} />
             {CATEGORIES.map((c, i) => (
               <Bar key={c} dataKey={c} stackId="a" fill={h.fill(c)} radius={i === 3 ? [4, 4, 0, 0] : 0} animationDuration={700} />
             ))}
@@ -166,7 +168,7 @@ export function PaceChart({ monthly, target, elapsed }: { monthly: { month: stri
   return (
     <div role="img" aria-label={`Cumulative collection against an even pace to the ${kgFmt(target)} target. ${ahead ? "Ahead" : "Behind"} by ${kgFmt(Math.abs(p.gap))} as of ${p.asOf ?? "now"}.`}>
       <ul className="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-dim">
-        <li className="flex items-center gap-1.5"><span aria-hidden className="inline-block h-0.5 w-4 bg-snow" /> Collected so far</li>
+        <li className="flex items-center gap-1.5"><span aria-hidden className="inline-block h-0.5 w-4 bg-ink" /> Collected so far</li>
         <li className="flex items-center gap-1.5"><span aria-hidden className="inline-block w-4 border-t-2 border-dashed border-orchid" /> Even pace to target</li>
       </ul>
       <div className="h-56 lg:h-64">
@@ -183,7 +185,7 @@ export function PaceChart({ monthly, target, elapsed }: { monthly: { month: stri
             <YAxis {...axis} width={52} />
             <Tooltip {...tooltipStyle} formatter={(v, n) => [kgFmt(Number(v)), n === "actual" ? "Collected so far" : "Even pace"]} />
             <Area dataKey="pace" stroke={ORCHID} strokeDasharray="6 4" strokeWidth={2} fill="none" animationDuration={800} />
-            <Area dataKey="actual" stroke={SNOW} strokeWidth={2.5} fill={`url(#${fillId})`} connectNulls={false} animationDuration={900} />
+            <Area dataKey="actual" stroke={NIGHT} strokeWidth={2.5} fill={`url(#${fillId})`} connectNulls={false} animationDuration={900} />
           </AreaChart>
         </ResponsiveContainer>
       </div>
@@ -214,7 +216,7 @@ export function TargetRings({ rows }: { rows: { category: Category; collected_kg
             <RadialBarChart data={rings} innerRadius="28%" outerRadius="100%" startAngle={90} endAngle={-270} barSize={12}>
               {h.def}
               <PolarAngleAxis type="number" domain={[0, 100]} tick={false} axisLine={false} />
-              <RadialBar dataKey="pct" cornerRadius={8} background={{ fill: "rgba(251,251,251,0.06)" }} animationDuration={900}>
+              <RadialBar dataKey="pct" cornerRadius={8} background={{ fill: "rgba(23,17,35,0.06)" }} animationDuration={900}>
                 {rings.map((d) => <Cell key={d.category} fill={h.fill(d.category)} />)}
               </RadialBar>
             </RadialBarChart>
@@ -244,7 +246,7 @@ export function ScoreHistogram({ scores, threshold = 60 }: { scores: (number | n
     <div role="img" aria-label={`Trust scores of ${b.scored} bins in five bands. ${b.low} below the anomaly threshold of ${threshold}.`}>
       <ul className="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-dim">
         <li className="flex items-center gap-1.5"><span aria-hidden className="inline-block size-3 rounded-[3px] bg-orchid" /> Below {threshold} (anomaly)</li>
-        <li className="flex items-center gap-1.5"><span aria-hidden className="inline-block size-3 rounded-[3px] bg-snow" /> {threshold} and above</li>
+        <li className="flex items-center gap-1.5"><span aria-hidden className="inline-block size-3 rounded-[3px] bg-violet" /> {threshold} and above</li>
       </ul>
       <div className="h-52">
         <ResponsiveContainer width="100%" height="100%">
@@ -252,9 +254,9 @@ export function ScoreHistogram({ scores, threshold = 60 }: { scores: (number | n
             <CartesianGrid vertical={false} stroke={GRID} />
             <XAxis dataKey="band" {...axis} />
             <YAxis {...axis} allowDecimals={false} width={40} />
-            <Tooltip {...tooltipStyle} cursor={{ fill: "rgba(166,99,204,0.1)" }} formatter={(v) => [`${v} bins`, "Bins"]} labelFormatter={(l) => `Score ${l}`} />
+            <Tooltip {...tooltipStyle} cursor={{ fill: "rgba(111,45,189,0.08)" }} formatter={(v) => [`${v} bins`, "Bins"]} labelFormatter={(l) => `Score ${l}`} />
             <Bar dataKey="bins" radius={[6, 6, 0, 0]} animationDuration={800}>
-              {b.bands.map((x) => <Cell key={x.band} fill={x.lo < threshold ? ORCHID : SNOW} />)}
+              {b.bands.map((x) => <Cell key={x.band} fill={x.lo < threshold ? ORCHID : VIOLET} />)}
             </Bar>
           </BarChart>
         </ResponsiveContainer>
@@ -286,7 +288,7 @@ export function CityBins({ bins }: { bins: { city: string; status: string }[] })
             <CartesianGrid horizontal={false} stroke={GRID} />
             <XAxis type="number" {...axis} allowDecimals={false} />
             <YAxis type="category" dataKey="name" {...axis} width={72} />
-            <Tooltip {...tooltipStyle} cursor={{ fill: "rgba(166,99,204,0.1)" }} formatter={(v, n) => [`${v} bins`, n === "active" ? "Active" : "Revoked"]} />
+            <Tooltip {...tooltipStyle} cursor={{ fill: "rgba(111,45,189,0.08)" }} formatter={(v, n) => [`${v} bins`, n === "active" ? "Active" : "Revoked"]} />
             <Bar dataKey="active" stackId="s" fill={VIOLET} animationDuration={800} />
             <Bar dataKey="revoked" stackId="s" fill={ORCHID} radius={[0, 6, 6, 0]} animationDuration={800} />
           </BarChart>
@@ -315,14 +317,14 @@ export function ForecastChart({ data, target, atRisk }: { data: ForecastPoint[];
             }}
           />
           <Area dataKey="band" stroke="none" fill={ORCHID} fillOpacity={0.18} animationDuration={700} connectNulls />
-          <Line dataKey="actual" stroke={SNOW} strokeWidth={2} dot={false} animationDuration={700} />
-          <Line dataKey="projected" stroke={ORCHID} strokeWidth={2} strokeDasharray="6 4" dot={false} animationDuration={700} connectNulls />
+          <Line dataKey="actual" stroke={NIGHT} strokeWidth={2} dot={false} animationDuration={700} />
+          <Line dataKey="projected" stroke={VIOLET} strokeWidth={2} strokeDasharray="6 4" dot={false} animationDuration={700} connectNulls />
           <ReferenceLine
             y={target}
-            stroke={atRisk ? ORCHID : DIM}
+            stroke={atRisk ? VIOLET : DIM}
             strokeDasharray="2 3"
             strokeWidth={1.5}
-            label={{ value: `Target ${kgFmt(target)}`, position: "insideTopRight", fill: atRisk ? ORCHID : DIM, fontSize: 12, fontWeight: 600 }}
+            label={{ value: `Target ${kgFmt(target)}`, position: "insideTopRight", fill: atRisk ? VIOLET : DIM, fontSize: 12, fontWeight: 600 }}
           />
         </ComposedChart>
       </ResponsiveContainer>
@@ -339,10 +341,128 @@ export function ScoreChart({ data }: { data: { day: string; score: number }[] })
           <XAxis dataKey="day" {...axis} tickFormatter={(d: string) => d.slice(5)} minTickGap={24} />
           <YAxis {...axis} domain={[0, 100]} width={44} />
           <Tooltip {...tooltipStyle} formatter={(v) => [v, "Trust score"]} />
-          <ReferenceLine y={60} stroke={ORCHID} strokeDasharray="2 3" label={{ value: "Anomaly threshold", position: "insideBottomRight", fill: ORCHID, fontSize: 11 }} />
-          <Line dataKey="score" stroke={SNOW} strokeWidth={2} dot={false} animationDuration={700} />
+          <ReferenceLine y={60} stroke={VIOLET} strokeDasharray="2 3" label={{ value: "Anomaly threshold", position: "insideBottomRight", fill: VIOLET, fontSize: 11 }} />
+          <Line dataKey="score" stroke={NIGHT} strokeWidth={2} dot={false} animationDuration={700} />
         </LineChart>
       </ResponsiveContainer>
+    </div>
+  )
+}
+
+// ── Where waste goes: company -> category -> city ─────────────
+type FlowIn = { company_id: string; company: string; category: Category; city: string; kg: number }
+type NodeP = { x: number; y: number; width: number; height: number; index: number; payload: { id: string; name: string; column: number; kg: number } }
+
+export function FlowSankey({ rows }: { rows: FlowIn[] }) {
+  const h = useHatch()
+  const g = sankeyFlow(rows, { category: (c) => CATEGORY_LABEL[c as Category] ?? c, city: (c) => cityName(c) })
+  const perColumn = [0, 1, 2].map((c) => g.nodes.filter((n) => n.column === c).length)
+  const height = Math.max(300, Math.max(...perColumn) * 64)
+  const total = g.nodes.filter((n) => n.column === 0).reduce((a, n) => a + n.kg, 0)
+  const fill = (n: NodeP["payload"]) => (n.column === 0 ? VIOLET : n.column === 2 ? NIGHT : h.fill(n.id.slice(4) as Category))
+  if (g.links.length === 0) return <p className="text-sm text-dim">Nothing collected in this period, so there is no flow to show.</p>
+  return (
+    <div role="img" aria-label={`Flow of ${kgFmt(total)} collected waste from ${perColumn[0]} companies through ${perColumn[1]} categories to ${perColumn[2]} cities.`}>
+      <div className="mb-3 grid grid-cols-3 text-xs font-semibold tracking-[0.12em] text-dim uppercase">
+        <span>Produced by</span>
+        <span className="text-center">EPR category</span>
+        <span className="text-right">Collected in</span>
+      </div>
+      <div className="-mx-2 overflow-x-auto px-2">
+        <div className="min-w-[620px]" style={{ height }}>
+          <ResponsiveContainer width="100%" height="100%">
+            <Sankey
+              data={{ nodes: g.nodes, links: g.links }}
+              nodeWidth={14}
+              nodePadding={28}
+              margin={{ top: 8, right: 132, bottom: 8, left: 132 }}
+              link={{ stroke: "rgba(111,45,189,0.22)" }}
+              node={(raw) => {
+                const p = raw as unknown as NodeP
+                return (
+                <g>
+                  {p.index === 0 && h.def}
+                  <rect x={p.x} y={p.y} width={p.width} height={Math.max(2, p.height)} rx={4} fill={fill(p.payload)} stroke={p.payload.column === 1 ? VIOLET : "none"} strokeWidth={p.payload.column === 1 ? 1 : 0} />
+                  <text
+                    x={p.payload.column === 0 ? p.x - 8 : p.x + p.width + 8}
+                    y={p.y + p.height / 2}
+                    textAnchor={p.payload.column === 0 ? "end" : "start"}
+                    dominantBaseline="middle"
+                    fontSize={12}
+                    fill={NIGHT}
+                  >
+                    <tspan fontWeight={600}>{p.payload.name}</tspan>
+                    <tspan x={p.payload.column === 0 ? p.x - 8 : p.x + p.width + 8} dy={15} fill={DIM}>{kgFmt(p.payload.kg)}</tspan>
+                  </text>
+                </g>
+                )
+              }}
+            >
+              <Tooltip {...tooltipStyle} formatter={(v) => [kgFmt(Number(v)), "Collected"]} />
+            </Sankey>
+          </ResponsiveContainer>
+        </div>
+      </div>
+      <Takeaway>Read left to right: who produced the waste, which EPR category it falls in, and which city&apos;s bins collected it. Band width is weight.</Takeaway>
+    </div>
+  )
+}
+
+// ── One stacked bar per company / city / anything, split by category ──
+export function CategoryStack({ data, takeaway, label }: { data: ({ key: string; name: string; total: number } & Record<string, number | string>)[]; takeaway: React.ReactNode; label: string }) {
+  const h = useHatch()
+  return (
+    <div role="img" aria-label={`${label}: ${data.map((d) => `${d.name} ${kgFmt(Number(d.total))}`).join(", ")}.`}>
+      <Legend />
+      <div style={{ height: Math.max(140, data.length * 52) }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data} layout="vertical" margin={{ top: 0, right: 12, bottom: 0, left: 8 }}>
+            {h.def}
+            <CartesianGrid horizontal={false} stroke={GRID} />
+            <XAxis type="number" {...axis} />
+            <YAxis type="category" dataKey="name" {...axis} width={128} />
+            <Tooltip {...tooltipStyle} cursor={{ fill: "rgba(111,45,189,0.08)" }} formatter={(v, n) => [kgFmt(Number(v)), CATEGORY_LABEL[n as Category]]} />
+            {CATEGORIES.map((c, i) => (
+              <Bar key={c} dataKey={c} stackId="s" fill={h.fill(c)} stroke={c === "cat4_compostable" ? VIOLET : undefined} radius={i === 3 ? [0, 6, 6, 0] : 0} animationDuration={800} />
+            ))}
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+      <Takeaway>{takeaway}</Takeaway>
+    </div>
+  )
+}
+
+// ── Top products by collected weight ──────────────────────────
+export function ProductBars({ products }: { products: { name: string; company?: string; category: Category; kg: number; scans: number }[] }) {
+  const h = useHatch()
+  const data = products.slice(0, 10).map((p) => ({ ...p, label: p.name.length > 22 ? `${p.name.slice(0, 21)}…` : p.name }))
+  const total = products.reduce((a, p) => a + p.kg, 0)
+  const top = data[0]
+  return (
+    <div role="img" aria-label={`Top ${data.length} products by collected weight. ${top ? `${top.name} leads with ${kgFmt(top.kg)}.` : ""}`}>
+      <Legend />
+      <div style={{ height: Math.max(140, data.length * 40) }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data} layout="vertical" margin={{ top: 0, right: 12, bottom: 0, left: 8 }}>
+            {h.def}
+            <CartesianGrid horizontal={false} stroke={GRID} />
+            <XAxis type="number" {...axis} />
+            <YAxis type="category" dataKey="label" {...axis} width={150} />
+            <Tooltip
+              {...tooltipStyle}
+              cursor={{ fill: "rgba(111,45,189,0.08)" }}
+              formatter={(v, _n, item) => [`${kgFmt(Number(v))} · ${(item.payload as { scans: number }).scans.toLocaleString("en-IN")} scans`, (item.payload as { company?: string }).company ?? CATEGORY_LABEL[(item.payload as { category: Category }).category]]}
+            />
+            <Bar dataKey="kg" radius={[0, 6, 6, 0]} animationDuration={800}>
+              {data.map((p) => <Cell key={p.name + (p.company ?? "")} fill={h.fill(p.category)} stroke={p.category === "cat4_compostable" ? VIOLET : undefined} />)}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+      <Takeaway>
+        {top ? <><strong>{top.name}</strong> is the most-collected product: {kgFmt(top.kg)}, {total > 0 ? Math.round((top.kg / total) * 100) : 0}% of product-level waste.</> : "No product scans in this period."}
+      </Takeaway>
     </div>
   )
 }

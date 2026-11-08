@@ -61,7 +61,7 @@ export function QrIssuer({ products, printBase }: { products: { id: string; name
       </div>
       {err && <Notice kind="error">{err}</Notice>}
       {batch && (
-        <div className="rounded-[14px] bg-deep/60 p-4">
+        <div className="neu-inset rounded-[14px] p-4">
           <p className="eyebrow text-dim">Batch created</p>
           <p className="mt-2 flex flex-wrap items-center gap-2 text-sm">Batch <HashChip value={batch.batch_id} label="Batch ID" /> · <strong className="tnum">{batch.count.toLocaleString("en-IN")}</strong> codes</p>
           <div className="mt-3 flex flex-wrap gap-2">

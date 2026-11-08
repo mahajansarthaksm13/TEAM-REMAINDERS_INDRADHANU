@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { Activity, Bell, Box, ChevronDown, FileCheck2, LogOut, Menu, Package, Settings, Sparkles, Target } from "lucide-react"
+import { Activity, Bell, Box, ChevronDown, FileCheck2, LogOut, Menu, Package, Route, Settings, Sparkles, Target } from "lucide-react"
 import { cn } from "cn"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
@@ -18,6 +18,7 @@ import { Badge } from "./ui"
 
 const NAV = [
   { href: "/app/live", label: "Live Data", icon: Activity },
+  { href: "/app/flow", label: "Where waste goes", icon: Route },
   { href: "/app/insights", label: "AI Insights", icon: Sparkles },
   { href: "/app/reports", label: "Reports", icon: FileCheck2 },
   { href: "/app/bins", label: "Bins", icon: Box },
@@ -163,7 +164,7 @@ export function TopBar({ user, scope, alerts }: { user: { name: string; email: s
               <Button variant="ghost" size="icon" aria-label={`Notifications, ${alerts.length} open`} className="relative">
                 <Bell />
                 {alerts.length > 0 && (
-                  <span className="tnum absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-deep px-1 text-[10px] font-semibold text-ink">{alerts.length}</span>
+                  <span className="tnum absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-violet px-1 text-[10px] font-semibold text-snow">{alerts.length}</span>
                 )}
               </Button>
             </PopoverTrigger>

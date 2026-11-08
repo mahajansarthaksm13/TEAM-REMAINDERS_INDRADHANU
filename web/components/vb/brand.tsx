@@ -17,7 +17,6 @@ export function Wordmark({ className, href = "/" }: { className?: string; href?:
 export function PublicIntro({ eyebrow, title, children }: { eyebrow: string; title: string; children?: React.ReactNode }) {
   return (
     <section className="relative isolate overflow-hidden border-b border-line">
-      <GlowBackdrop className="opacity-60" />
       <div className="relative mx-auto max-w-[1200px] px-4 pt-20 pb-14 sm:px-6 lg:pt-28 lg:pb-20">
         <p className="neu-pill reveal mb-5 inline-block rounded-full px-3.5 py-1 text-xs font-semibold tracking-[0.12em] text-ink uppercase"><span aria-hidden className="mr-2 inline-block size-1.5 rounded-full bg-orchid align-middle" />{eyebrow}</p>
         <h1 className="t-h1 reveal max-w-3xl" style={{ animationDelay: "100ms" }}>{title}</h1>
@@ -30,19 +29,3 @@ export function PublicIntro({ eyebrow, title, children }: { eyebrow: string; tit
 export const Section = ({ children, className }: { children: React.ReactNode; className?: string }) => (
   <section data-reveal className={cn("mx-auto max-w-[1200px] px-4 py-16 sm:px-6 lg:py-24", className)}>{children}</section>
 )
-
-// Local Violet / Orchid glow behind a hero, layered over the global backdrop.
-export function GlowBackdrop({ className }: { className?: string }) {
-  return (
-    <div aria-hidden className={cn("pointer-events-none absolute inset-0 overflow-hidden", className)}>
-      <div
-        className="absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(55% 45% at 78% 28%, rgba(111,45,189,0.32), transparent 70%), radial-gradient(40% 35% at 18% 78%, rgba(166,99,204,0.16), transparent 70%)",
-        }}
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-ground/80 to-transparent" />
-    </div>
-  )
-}
