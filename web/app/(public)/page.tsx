@@ -83,7 +83,7 @@ export default async function Home() {
             VeriBin bins sign every packet they collect. The records chain together and are sealed in public each day, so a producer&apos;s recycling claim can be checked by any auditor, regulator or citizen, without trusting anyone&apos;s spreadsheet.
           </p>
           <div className="reveal mt-9 flex flex-wrap items-center gap-3" style={{ animationDelay: "360ms" }}>
-            <Cta asChild size="lg" playOnLoad><Link href="/how-it-works#simulator">Try the simulator</Link></Cta>
+            <Cta asChild size="lg" playOnLoad><Link href="/simulator">Try the simulator</Link></Cta>
             <Button asChild variant="secondary" size="lg"><Link href={loggedIn ? "/app/live" : "/login"}>{loggedIn ? "Open dashboard" : "Log in"}</Link></Button>
             <Link href="/live-data" className={`${textLink} h-12 px-2`}>
               See live national data <ArrowRight className="size-4" aria-hidden />
@@ -251,7 +251,7 @@ export default async function Home() {
             <p className="mt-3 max-w-[48ch] text-dim">Send one sample packet through the simulator and verify its signature in your own browser.</p>
           </div>
           <div className="flex flex-wrap gap-3 lg:col-span-5 lg:justify-end">
-            <Cta asChild size="lg"><Link href="/how-it-works#simulator">Try the simulator</Link></Cta>
+            <Cta asChild size="lg"><Link href="/simulator">Try the simulator</Link></Cta>
             <Button asChild variant="secondary" size="lg">
               <Link href={SAMPLE_REPORT_ID ? `/verify/${SAMPLE_REPORT_ID}` : "/reports"}>
                 <FileCheck2 aria-hidden />

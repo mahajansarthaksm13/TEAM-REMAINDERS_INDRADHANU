@@ -19,7 +19,7 @@ export default async function PublicLayout({ children }: { children: React.React
             <p className="mt-3 text-xs text-dim">Team REMAINDERS · PCCoE International Grand Challenge 2026 · AI for Climate Change</p>
           </div>
           <nav aria-label="Footer" className="grid grid-cols-2 gap-2 text-sm md:col-span-7 md:grid-cols-3">
-            {[["/live-data", "Live Data"], ["/ai-insights", "AI Insights"], ["/reports", "Reports"], ["/how-it-works", "How it works"], ["/checkpoints", "Checkpoints"], ["/about", "About"]].map(([h, l]) => (
+            {[["/live-data", "Live Data"], ["/simulator", "Simulator"], ["/ai-insights", "AI Insights"], ["/reports", "Reports"], ["/how-it-works", "How it works"], ["/checkpoints", "Checkpoints"], ["/about", "About"]].map(([h, l]) => (
               <Link key={h} href={h} className="py-1 text-ink/80 hover:text-ink">{l}</Link>
             ))}
             <a href={`https://github.com/${CHECKPOINTS_REPO}`} target="_blank" rel="noreferrer" className="py-1 text-ink/80 hover:text-ink">Checkpoints on GitHub ↗</a>

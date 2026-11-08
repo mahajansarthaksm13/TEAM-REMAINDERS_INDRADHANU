@@ -10,6 +10,7 @@ import { Wordmark } from "./brand"
 
 const LINKS = [
   ["/live-data", "Live Data"],
+  ["/simulator", "Simulator"],
   ["/ai-insights", "AI Insights"],
   ["/reports", "Reports"],
   ["/how-it-works", "How it works"],
@@ -28,22 +29,22 @@ export function PublicHeader({ loggedIn }: { loggedIn: boolean }) {
     <header className="sticky top-0 z-40 border-b neu-bar no-print">
       <div className="mx-auto flex h-16 max-w-[1200px] items-center justify-between gap-6 px-4 sm:px-6">
         <Wordmark />
-        <nav aria-label="Main" className="neu-pill hidden items-center gap-0.5 rounded-full p-1 lg:flex">
+        <nav aria-label="Main" className="neu-pill hidden items-center gap-0.5 rounded-full p-1 xl:flex">
           {LINKS.map(([href, label]) => (
             <Link
               key={href}
               href={href}
               aria-current={path.startsWith(href) ? "page" : undefined}
-              className={cn("rounded-full px-3.5 py-1.5 text-sm text-ink/75 transition-colors duration-200 hover:bg-panel-hi hover:text-ink", path.startsWith(href) && "bg-violet text-snow shadow-[inset_0_1px_0_rgba(251,251,251,0.2)] hover:bg-violet")}
+              className={cn("rounded-full px-3.5 py-1.5 text-sm whitespace-nowrap text-ink/75 transition-colors duration-200 hover:bg-panel-hi hover:text-ink", path.startsWith(href) && "bg-violet text-snow shadow-[inset_0_1px_0_rgba(251,251,251,0.2)] hover:bg-violet")}
             >
               {label}
             </Link>
           ))}
         </nav>
-        <div className="hidden lg:block">{cta}</div>
+        <div className="hidden xl:block">{cta}</div>
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="darkGhost" size="icon" className="border-0 lg:hidden" aria-label="Open menu">
+            <Button variant="darkGhost" size="icon" className="border-0 xl:hidden" aria-label="Open menu">
               <Menu />
             </Button>
           </SheetTrigger>

@@ -169,6 +169,20 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"deposit_sessions": {
+                  Row: {
+                    "bin_id": string,"camera_seen": boolean | null,"code": string,"decided_at": string | null,"expires_at": string,"id": string,"opened_at": string,"product_id": string,"reason": string | null,"scan_id": string | null,"simulated": boolean,"source": string,"status": string,"weight_g": number | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "bin_id": string,"camera_seen"?: boolean | null,"code": string,"decided_at"?: string | null,"expires_at"?: string,"id"?: string,"opened_at"?: string,"product_id": string,"reason"?: string | null,"scan_id"?: string | null,"simulated"?: boolean,"source"?: string,"status"?: string,"weight_g"?: number | null
+                  }
+                  Update: {
+                    "bin_id"?: string,"camera_seen"?: boolean | null,"code"?: string,"decided_at"?: string | null,"expires_at"?: string,"id"?: string,"opened_at"?: string,"product_id"?: string,"reason"?: string | null,"scan_id"?: string | null,"simulated"?: boolean,"source"?: string,"status"?: string,"weight_g"?: number | null
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"erasures": {
                   Row: {
                     "bin_ids": string[],"company_id": string,"company_name": string,"erased_at": string,"erased_by": string | null,"id": string,"product_count": number,"reason": string,"report_count": number,"scan_count": number,"user_count": number
@@ -508,6 +522,23 @@ isOneToOne: false
 { Args: Record<PropertyKey, never>; Returns: {
               "id": string,"kind": string,"scans": number
             }[]
+                           },
+"decide_deposit":
+{ Args: { "p_camera_seen": boolean,"p_session": string,"p_weight_g": number }; Returns: Json
+                           },
+"ensure_demo_catalogue":
+{ Args: Record<PropertyKey, never>; Returns: undefined
+                           },
+"issue_demo_qr":
+{ Args: { "p_product_id": string,"p_quantity"?: number }; Returns: {
+              "qr_payload": string
+            }[]
+                           },
+"open_deposit_session":
+{ Args: { "p_bin_id": string,"p_code": string }; Returns: Json
+                           },
+"record_deposit_result":
+{ Args: { "p_result": Json,"p_session": string }; Returns: Json
                            },
 "erase_company":
 { Args: { "p_company_id": string,"p_confirm_name": string,"p_reason": string }; Returns: Json
