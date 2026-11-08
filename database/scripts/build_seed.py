@@ -87,11 +87,13 @@ def main() -> None:
         out.append(bin_row(b["id"], b["company_id"], b["city"], keys[b["id"]], "active", False))
 
     # Test bins all share VB-PUN-0900's key, so ONE secret (TEST_BIN_PRIVATE_KEY)
-    # can test the active, revoked and two-bins-at-once cases.
+    # can test the active, revoked and two-bins-at-once cases. They are marked
+    # is_demo so CI traffic stays out of reports, public stats, offline alerts
+    # and the company's bin list (the web app hides is_demo bins).
     if "VB-PUN-0900" in keys:
         for bin_id, status in TEST_BINS.items():
             out.append(bin_row(bin_id, first_product["company_id"], "PUN", keys["VB-PUN-0900"],
-                               status, False))
+                               status, True))
     else:
         missing.append("VB-PUN-0900")
 
