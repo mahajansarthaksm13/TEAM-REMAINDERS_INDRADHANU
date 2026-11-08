@@ -160,12 +160,32 @@
   input {
     color-scheme: dark;
   }
-}
+  /* Native <select> lists. The popup paints each option with the option's own colours and falls
+     back to white when the select itself has a gradient background (skeu-inset), which left
+     Garden White text on white. Set once here so every select, now and later, is readable. */
+  select option,
+  select optgroup {
+    background-color: var(--panel);
+    color: var(--ink);
+  }
+  select optgroup {
+    color: var(--dim);
+    font-weight: 700;
+  }
+  select option:checked {
+    background-color: var(--chip);
+    color: var(--lit);
+  }
+  select option:disabled {
+    color: var(--dim);
+  }
 
-/* Keyboard focus: one 2px Sage Mist ring, offset clear of the control's own rim. */
-:focus-visible {
-  outline: 2px solid var(--lit);
-  outline-offset: 3px;
+  /* Keyboard focus: one 2px Sage Mist ring, offset clear of the control's own rim. Kept in the
+     base layer so a control's own focus utilities (ring-2 + outline-none) replace it, not stack. */
+  :focus-visible {
+    outline: 2px solid var(--lit);
+    outline-offset: 3px;
+  }
 }
 
 /* ── Type ──────────────────────────────────────────────────── */
