@@ -57,6 +57,24 @@ export async function deleteCompany(id: string): Promise<AdminResult> {
   if (!s || !UUID_RE.test(id)) return denied
   return changed(s.sb.from("companies").delete().eq("id", id).select("id"), "Company deleted.")
 }
+// Remove a company with everything it recorded, scans included (erase_company, migration
+// 20261109120000). The database checks the typed name and the reason and logs the erasure.
+export async function eraseCompany(id: string, confirmName: string, reason: string): Promise<AdminResult> {
+  const s = await admin()
+  if (!s || !UUID_RE.test(id)) return denied
+  const { data, error } = await s.sb.rpc("erase_company", { p_company_id: id, p_confirm_name: confirmName, p_reason: reason.trim() })
+  if (error) return { ok: false, error: dbErrorMessage(error) }
+  const r = (data ?? {}) as { scans?: number; report_paths?: string[] }
+  // The report PDFs live in Storage, outside the database transaction. Best effort: the rows are gone already.
+  if (r.report_paths?.length) {
+    try {
+      await serviceDb().storage.from("reports").remove(r.report_paths)
+    } catch {
+      // without the service key the files stay, unreachable: their report rows no longer exist
+    }
+  }
+  return done(`Company erased with ${(r.scans ?? 0).toLocaleString("en-IN")} signed scans. The erasure is logged.`)
+}
 
 // ── Products ───────────────────────────────────────────────────
 export async function setProductArchived(id: string, archived: boolean): Promise<AdminResult> {

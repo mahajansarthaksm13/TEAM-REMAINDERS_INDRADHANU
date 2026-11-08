@@ -5,11 +5,15 @@
 // (no pop-up), and a blocked action stays visible but disabled with its reason.
 import { useEffect, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { Check, Loader2, Pencil, X } from "lucide-react"
+import { Check, Loader2, Pencil, TriangleAlert, X } from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "cn"
 import { Button } from "@/components/ui/button"
-import { createCompany, renameCompany, setAuditorAssignment, setUserAccess, type AdminResult } from "@/lib/admin-actions"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { createCompany, eraseCompany, renameCompany, setAuditorAssignment, setUserAccess, type AdminResult } from "@/lib/admin-actions"
+import { nameMatches } from "@/lib/admin-rules"
 import { ROLE_LABEL, type Role } from "@/lib/shared"
 
 function useRun() {
@@ -189,5 +193,66 @@ export function AuditorAssignments({ auditorId, assigned, companies }: { auditor
         )
       })}
     </div>
+  )
+}
+
+// Remove a company that has signed scans or users. Everything it recorded goes with it, so the
+// admin sees what will be removed, gives a reason (kept in the erasure log) and types the name.
+export function EraseCompany({ id, name, scans, users, bins, products }: { id: string; name: string; scans: number; users: number; bins: number; products: number }) {
+  const { run, pending } = useRun()
+  const [open, setOpen] = useState(false)
+  const [typed, setTyped] = useState("")
+  const [reason, setReason] = useState("")
+  const ready = nameMatches(typed, name) && reason.trim().length >= 10
+  const fmt = (v: number, word: string) => `${v.toLocaleString("en-IN")} ${word}${v === 1 ? "" : "s"}`
+  return (
+    <Dialog open={open} onOpenChange={(o) => {
+        if (pending) return
+        setOpen(o)
+        setTyped("")
+        setReason("")
+      }}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="destructive">Delete</Button>
+      </DialogTrigger>
+      <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto" onInteractOutside={(e) => pending && e.preventDefault()} onEscapeKeyDown={(e) => pending && e.preventDefault()}>
+        <DialogHeader>
+          <DialogTitle>Erase {name} permanently?</DialogTitle>
+          <DialogDescription>This removes the company and everything it recorded. It can&apos;t be undone.</DialogDescription>
+        </DialogHeader>
+        <form
+          className="flex flex-col gap-4"
+          onSubmit={(e) => {
+            e.preventDefault()
+            if (ready) run(() => eraseCompany(id, typed, reason), () => setOpen(false))
+          }}
+        >
+          <ul className="neu-inset grid grid-cols-2 gap-x-4 gap-y-1 rounded-input p-3 text-sm">
+            <li><b className="tabular-nums">{fmt(scans, "signed scan")}</b></li>
+            <li><b className="tabular-nums">{fmt(bins, "bin")}</b></li>
+            <li><b className="tabular-nums">{fmt(products, "product")}</b></li>
+            <li><b className="tabular-nums">{fmt(users, "user")}</b> (can&apos;t sign in)</li>
+          </ul>
+          <p className="flex gap-2 text-sm text-dim">
+            <TriangleAlert className="mt-0.5 size-4 shrink-0 text-ink" aria-hidden />
+            Its reports and their public verify links stop working, and checkpoints published before today can no longer be recomputed for its bins. The erasure is logged on the public checkpoints page. To keep the history, archive it instead.
+          </p>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="erase-reason">Reason (kept in the erasure log)</Label>
+            <Input id="erase-reason" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="e.g. Company left the EPR scheme" maxLength={300} />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="erase-name">Type <b className="font-semibold">{name}</b> to confirm</Label>
+            <Input id="erase-name" value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" spellCheck={false} />
+          </div>
+          <DialogFooter className="mt-2 flex-row justify-end gap-2">
+            <Button type="button" variant="secondary" disabled={pending} onClick={() => setOpen(false)}>Cancel</Button>
+            <Button type="submit" variant="destructive" disabled={pending || !ready}>
+              {pending && <Loader2 className="animate-spin" />}Erase permanently
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   )
 }

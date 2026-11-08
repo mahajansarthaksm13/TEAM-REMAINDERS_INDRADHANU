@@ -169,6 +169,20 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"erasures": {
+                  Row: {
+                    "bin_ids": string[],"company_id": string,"company_name": string,"erased_at": string,"erased_by": string | null,"id": string,"product_count": number,"reason": string,"report_count": number,"scan_count": number,"user_count": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "bin_ids"?: string[],"company_id": string,"company_name": string,"erased_at"?: string,"erased_by"?: string | null,"id"?: string,"product_count"?: number,"reason": string,"report_count"?: number,"scan_count"?: number,"user_count"?: number
+                  }
+                  Update: {
+                    "bin_ids"?: string[],"company_id"?: string,"company_name"?: string,"erased_at"?: string,"erased_by"?: string | null,"id"?: string,"product_count"?: number,"reason"?: string,"report_count"?: number,"scan_count"?: number,"user_count"?: number
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"forecasts": {
                   Row: {
                     "as_of": string,"category": Database["public"]['Enums']["epr_category"],"company_id": string,"created_at": string,"financial_year": string,"high_kg": number,"low_kg": number,"projected_kg": number
@@ -488,6 +502,14 @@ isOneToOne: false
 "get_monthly_trend":
 { Args: { "p_company_id"?: string,"p_from": string,"p_to": string }; Returns: {
               "category": Database["public"]['Enums']["epr_category"],"collected_kg": number,"month": string,"scan_count": number
+            }[]
+                           },
+"erase_company":
+{ Args: { "p_company_id": string,"p_confirm_name": string,"p_reason": string }; Returns: Json
+                           },
+"get_public_erasures":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "bin_ids": string[],"company_name": string,"erased_at": string,"scan_count": number
             }[]
                            },
 "get_public_stats":

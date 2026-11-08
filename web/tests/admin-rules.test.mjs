@@ -1,6 +1,6 @@
 import { test } from "node:test"
 import assert from "node:assert/strict"
-import { binRules, companyRules, dbErrorMessage, productRules, userRules } from "../lib/admin-rules.ts"
+import { binRules, companyRules, dbErrorMessage, nameMatches, productRules, userRules } from "../lib/admin-rules.ts"
 
 test("a company with no scans and no users can be deleted", () => {
   const r = companyRules({ is_demo: false, archived: false, scans: 0, users: 0 })
@@ -8,15 +8,35 @@ test("a company with no scans and no users can be deleted", () => {
   assert.equal(r.deleteBlocked, null)
 })
 
-test("a company with signed scans can only be archived, and says why", () => {
+test("a company with signed scans is erased (scans and all), not plainly deleted", () => {
   const r = companyRules({ is_demo: false, archived: false, scans: 1477, users: 0 })
   assert.equal(r.canDelete, false)
-  assert.equal(r.deleteBlocked, "Has 1,477 signed scans. Archive it to hide it instead.")
+  assert.equal(r.canErase, true)
+  assert.equal(r.deleteBlocked, null)
   assert.equal(r.canArchive, true)
 })
 
-test("a company that still has users must have them removed or moved first", () => {
-  assert.equal(companyRules({ is_demo: false, archived: false, scans: 0, users: 2 }).deleteBlocked, "Has 2 users. Remove or move them first.")
+test("a company that still has users is erased too, which removes them", () => {
+  const r = companyRules({ is_demo: false, archived: false, scans: 0, users: 2 })
+  assert.equal(r.canDelete, false)
+  assert.equal(r.canErase, true)
+})
+
+test("an empty company is deleted plainly, no erase needed", () => {
+  assert.equal(companyRules({ is_demo: false, archived: false, scans: 0, users: 0 }).canErase, false)
+})
+
+test("the demo company can be neither erased nor deleted", () => {
+  const r = companyRules({ is_demo: true, archived: false, scans: 40, users: 1 })
+  assert.equal(r.canErase, false)
+  assert.equal(r.canDelete, false)
+})
+
+test("the typed company name must match, ignoring extra spaces only", () => {
+  assert.equal(nameMatches("  EcoFoods   India Ltd ", "EcoFoods India Ltd"), true)
+  assert.equal(nameMatches("ecofoods india ltd", "EcoFoods India Ltd"), false)
+  assert.equal(nameMatches("EcoFoods India", "EcoFoods India Ltd"), false)
+  assert.equal(nameMatches("", "EcoFoods India Ltd"), false)
 })
 
 test("the demo company is protected from delete and archive", () => {
@@ -65,5 +85,6 @@ test("database refusals become plain sentences", () => {
   assert.equal(dbErrorMessage({ code: "23514" }), "It still has users. Remove or move them first.")
   assert.equal(dbErrorMessage({ code: "23505" }), "That name or code is already in use.")
   assert.equal(dbErrorMessage({ code: "42501" }), "Only an admin can do that.")
+  assert.equal(dbErrorMessage({ code: "22023" }), "Check the company name and the reason, then try again.")
   assert.equal(dbErrorMessage({ code: "XX000" }), "That didn't work. Try again.")
 })

@@ -1,5 +1,5 @@
 // What an admin may do with each record, and the plain reason when an action is blocked.
-// The database enforces the same rules (migration 20261109090000_admin_controls); these let the
+// The database enforces the same rules (migrations 20261109090000_admin_controls, 20261109120000_company_erasure); these let the
 // Manage page explain them before the admin clicks. Tests: tests/admin-rules.test.mjs
 
 type Rules = { canDelete: boolean; deleteBlocked: string | null; canArchive: boolean; canRestore: boolean }
@@ -7,15 +7,23 @@ type Rules = { canDelete: boolean; deleteBlocked: string | null; canArchive: boo
 const n = (v: number) => v.toLocaleString("en-IN")
 const scansWord = (v: number) => `${n(v)} signed scan${v === 1 ? "" : "s"}`
 
-export function companyRules(c: { is_demo: boolean; archived: boolean; scans: number; users: number }): Rules {
-  const deleteBlocked = c.is_demo
-    ? "The demo company runs the website's simulator."
-    : c.scans > 0
-      ? `Has ${scansWord(c.scans)}. Archive it to hide it instead.`
-      : c.users > 0
-        ? `Has ${n(c.users)} user${c.users === 1 ? "" : "s"}. Remove or move them first.`
-        : null
-  return { canDelete: deleteBlocked === null, deleteBlocked, canArchive: !c.archived && !c.is_demo, canRestore: c.archived }
+// A company with evidence or users is erased (erase_company, migration 20261109120000): scans,
+// bins, products and users go with it, and the erasure is logged. An empty one is deleted plainly.
+export function companyRules(c: { is_demo: boolean; archived: boolean; scans: number; users: number }): Rules & { canErase: boolean } {
+  const hasData = c.scans > 0 || c.users > 0
+  return {
+    canDelete: !c.is_demo && !hasData,
+    canErase: !c.is_demo && hasData,
+    deleteBlocked: c.is_demo ? "The demo company runs the website's simulator." : null,
+    canArchive: !c.archived && !c.is_demo,
+    canRestore: c.archived,
+  }
+}
+
+// The erase dialog asks for the company's exact name; only spacing may differ (same as the database).
+const squash = (v: string) => v.replace(/\s+/g, " ").trim()
+export function nameMatches(typed: string, name: string): boolean {
+  return squash(typed) !== "" && squash(typed) === squash(name)
 }
 
 export function productRules(p: { archived: boolean; scans: number; approved: boolean }): Rules {
@@ -55,6 +63,8 @@ export function dbErrorMessage(e: { code?: string } | null | undefined): string 
       return "That name or code is already in use."
     case "42501":
       return "Only an admin can do that."
+    case "22023":
+      return "Check the company name and the reason, then try again."
     default:
       return "That didn't work. Try again."
   }

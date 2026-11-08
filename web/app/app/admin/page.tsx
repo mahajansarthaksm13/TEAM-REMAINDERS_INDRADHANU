@@ -2,7 +2,7 @@ import Link from "next/link"
 import type { Metadata } from "next"
 import { cn } from "cn"
 import { Badge, Card, CardHead, CategorySwatch, DataTable, EmptyState, Notice, PageHeader } from "@/components/vb/ui"
-import { AdminButton, AuditorAssignments, CreateCompanyForm, RenameCompany, UserAccess } from "@/components/vb/admin-controls"
+import { AdminButton, AuditorAssignments, CreateCompanyForm, EraseCompany, RenameCompany, UserAccess } from "@/components/vb/admin-controls"
 import { InviteDialog } from "@/components/vb/invite-dialog"
 import { adminInventory } from "@/lib/admin-data"
 import { binRules, companyRules, productRules, userRules } from "@/lib/admin-rules"
@@ -114,13 +114,15 @@ export default async function ManagePage({ searchParams }: { searchParams: Promi
                   <span className="flex flex-wrap gap-2">
                     {r.canRestore && <AdminButton action={setCompanyArchived.bind(null, c.id, false)} label="Restore" />}
                     {r.canArchive && <AdminButton action={setCompanyArchived.bind(null, c.id, true)} label="Archive" confirmLabel="Yes, hide it" />}
-                    <AdminButton action={deleteCompany.bind(null, c.id)} label="Delete" confirmLabel="Yes, delete" tone="danger" blocked={r.deleteBlocked} />
+                    {r.canErase
+                      ? <EraseCompany id={c.id} name={c.name} scans={c.scans} users={c.users} bins={c.bins} products={c.products} />
+                      : <AdminButton action={deleteCompany.bind(null, c.id)} label="Delete" confirmLabel="Yes, delete" tone="danger" blocked={r.deleteBlocked} />}
                   </span>
                 )
               } },
             ]}
           />
-          <p className="mt-4 text-xs text-dim">Archived companies disappear for their own users, auditors and regulators, and leave public totals; admins still see them, marked Archived. Hover a greyed-out Delete to see why it is blocked.</p>
+          <p className="mt-4 text-xs text-dim">Archived companies disappear for their own users, auditors and regulators, and leave public totals; admins still see them, marked Archived. Delete on a company with signed scans or users erases it completely, scans included, after you type its name; every erasure is logged on the public checkpoints page. Only the demo company can&apos;t be deleted, because it runs the website&apos;s simulator.</p>
         </Card>
       )}
 
