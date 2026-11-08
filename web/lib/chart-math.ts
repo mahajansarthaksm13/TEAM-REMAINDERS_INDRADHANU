@@ -143,3 +143,30 @@ export function flowInsights(input: {
   }
   return out
 }
+
+// ---------- recent-window comparisons ----------
+// Percentage change, one decimal; null when there is no base to compare with.
+export function pctDelta(curr: number, prev: number) {
+  if (!(prev > 0)) return null
+  return Math.round(((curr - prev) / prev) * 1000) / 10
+}
+
+// Pick one value per calendar day for a window, with zero for days that had no collection.
+export function windowValues<T extends { day: string }>(rows: T[], days: string[], value: (r: T) => number) {
+  const m = new Map(rows.map((r) => [r.day, r]))
+  return days.map((day) => {
+    const r = m.get(day)
+    return { day, value: r ? value(r) : 0 }
+  })
+}
+
+// Month-on-month movement per series: the latest started month against the one before it.
+export function momentum<K extends string>(months: ({ month: string } & Record<K, number>)[], keys: readonly K[], elapsed: number) {
+  const upto = months.slice(0, Math.max(0, Math.min(elapsed, months.length)))
+  return keys.map((key) => {
+    const series = upto.map((m) => +Number(m[key]).toFixed(3))
+    const current = series.at(-1) ?? 0
+    const prev = series.at(-2) ?? 0
+    return { key, current, prev, delta: pctDelta(current, prev), series }
+  })
+}

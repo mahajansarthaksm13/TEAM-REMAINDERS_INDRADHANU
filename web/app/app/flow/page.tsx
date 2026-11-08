@@ -1,10 +1,11 @@
 import Link from "next/link"
 import type { Metadata } from "next"
 import { Card, CardHead, CategorySwatch, DataTable, EmptyState, KpiCard, Notice, PageHeader } from "@/components/vb/ui"
-import { CategoryStack, FlowSankey, ProductBars, ShareDonut } from "@/components/vb/charts"
+import { CategoryStack, FlowSankey, LabeledLine, ProductBars, ShareDonut, StackedPills } from "@/components/vb/charts"
 import { flowTotals, productTotals } from "@/lib/data"
-import { flowInsights, stackBy } from "@/lib/chart-math"
+import { flowInsights, stackBy, windowValues } from "@/lib/chart-math"
 import { href, pageCtx } from "@/lib/session"
+import { completeDays } from "@/lib/period"
 import { kg, num } from "@/lib/format"
 import { CATEGORIES, CATEGORY_LABEL, cityName } from "@/lib/shared"
 
@@ -34,6 +35,11 @@ export default async function FlowPage({ searchParams }: { searchParams: Promise
   })
   const productTotal = products.reduce((a, p) => a + p.kg, 0)
   const multi = byCompany.length > 1
+  // The last 14 / 7 complete days that fall inside the selected period, for the daily charts.
+  const inPeriod = completeDays(14).days.filter((d) => d >= period.from && d <= period.to)
+  const dayMap = new Map(flow.days.map((d) => [d.day, d]))
+  const daily = inPeriod.map((day) => dayMap.get(day) ?? { day, scans: 0, kg: 0, cat1_rigid: 0, cat2_flexible: 0, cat3_multilayer: 0, cat4_compostable: 0 })
+  const week = windowValues(flow.days, inPeriod.slice(-7), (d) => +d.kg.toFixed(2))
   const scans = (extra: Record<string, string> = {}) => href("/app/scans", sp, extra)
 
   return (
@@ -79,6 +85,19 @@ export default async function FlowPage({ searchParams }: { searchParams: Promise
               <FlowSankey rows={rows} />
             </Card>
           </div>
+
+          {daily.length > 0 && (
+            <div className="mt-6 grid gap-6 lg:grid-cols-12">
+              <Card className="lg:col-span-7">
+                <CardHead eyebrow="Day by day" title={`Daily collection by category · last ${daily.length} full days`} />
+                <StackedPills days={daily} />
+              </Card>
+              <Card className="lg:col-span-5">
+                <CardHead eyebrow="This week" title="Kilograms collected per day" />
+                <LabeledLine data={week} unit="kg" decimals={1} />
+              </Card>
+            </div>
+          )}
 
           <div className="mt-6 grid gap-6 lg:grid-cols-12">
             {multi ? (

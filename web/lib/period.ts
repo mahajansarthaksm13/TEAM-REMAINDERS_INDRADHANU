@@ -61,3 +61,16 @@ export const monthsElapsed = (fy: number, now = Date.now()) => {
   const month = new Date(now + 5.5 * 3_600_000).toISOString().slice(0, 7)
   return fyMonths(fy).filter((m) => m <= month).length
 }
+
+// The n IST calendar days ending today (oldest first), plus the n days before them, for
+// "last 7 days vs the 7 before" comparisons.
+export function recentDays(n: number, now = Date.now()) {
+  const day = (offset: number) => new Date(now + 5.5 * 3_600_000 - offset * 86_400_000).toISOString().slice(0, 10)
+  const days = Array.from({ length: n }, (_, i) => day(n - 1 - i))
+  const prev = Array.from({ length: n }, (_, i) => day(2 * n - 1 - i))
+  return { days, prev, from: prev[0], to: days[n - 1] }
+}
+
+// Same as recentDays, but ending yesterday: only complete days, so a half-finished today never
+// reads as a drop in trends or week-on-week changes.
+export const completeDays = (n: number, now = Date.now()) => recentDays(n, now - 86_400_000)

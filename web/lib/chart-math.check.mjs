@@ -44,3 +44,13 @@ assert.equal(ins[0], "A produced the most collected waste: 67% of the total.")
 assert.equal(ins[1], "Pune collects the most: 83% of all waste ends up in its bins.")
 assert.deepEqual(flowInsights({ total: 0, byCompany: [], byCity: [], byCategory: [], products: [] }), ["Nothing was collected in this period."])
 console.log("flow math ok")
+
+// recent-window comparisons
+import { momentum, pctDelta, windowValues } from "./chart-math.ts"
+assert.equal(pctDelta(110, 100), 10)
+assert.equal(pctDelta(96.92, 100), -3.1)
+assert.equal(pctDelta(5, 0), null)
+assert.deepEqual(windowValues([{ day: "2026-11-02", kg: 3 }], ["2026-11-01", "2026-11-02"], (r) => r.kg), [{ day: "2026-11-01", value: 0 }, { day: "2026-11-02", value: 3 }])
+const mo = momentum([{ month: "Apr", a: 2 }, { month: "May", a: 4 }, { month: "Jun", a: 9 }], ["a"], 2)
+assert.deepEqual(mo[0], { key: "a", current: 4, prev: 2, delta: 100, series: [2, 4] }) // June has not started
+console.log("window math ok")

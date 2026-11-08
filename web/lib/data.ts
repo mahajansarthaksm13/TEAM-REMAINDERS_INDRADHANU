@@ -229,16 +229,18 @@ const FLOW_PAGE = 1000
 const FLOW_MAX_PAGES = 25
 
 export type FlowRow = { company_id: string; company: string; category: Category; bin_id: string; city: string; kg: number; scans: number }
+export type DayRow = { day: string; scans: number; kg: number } & Record<Category, number>
 
 // daily_totals = day x company x category x bin (the same table the KPI function sums), so the
 // flows add up to the dashboard totals exactly. Demo companies and bins are excluded, as in the KPIs.
 export async function flowTotals(sb: Sb, from: string, to: string, companyId: string | null) {
   const acc = new Map<string, FlowRow>()
+  const byDay = new Map<string, DayRow>()
   let truncated = false
   for (let page = 0; page < FLOW_MAX_PAGES; page++) {
     let q = sb
       .from("daily_totals")
-      .select("company_id, category, bin_id, scan_count, weight_g, companies!inner(name, is_demo), bins!inner(city, is_demo)")
+      .select("day, company_id, category, bin_id, scan_count, weight_g, companies!inner(name, is_demo), bins!inner(city, is_demo)")
       .gte("day", from)
       .lte("day", to)
       .eq("companies.is_demo", false)
@@ -257,11 +259,16 @@ export async function flowTotals(sb: Sb, from: string, to: string, companyId: st
       row.kg += Number(r.weight_g) / 1000
       row.scans += Number(r.scan_count)
       acc.set(key, row)
+      const d = byDay.get(r.day) ?? { day: r.day, scans: 0, kg: 0, cat1_rigid: 0, cat2_flexible: 0, cat3_multilayer: 0, cat4_compostable: 0 }
+      d[r.category as Category] += Number(r.weight_g) / 1000
+      d.kg += Number(r.weight_g) / 1000
+      d.scans += Number(r.scan_count)
+      byDay.set(r.day, d)
     }
     if ((data ?? []).length < FLOW_PAGE) break
     if (page === FLOW_MAX_PAGES - 1) truncated = true
   }
-  return { rows: [...acc.values()], truncated }
+  return { rows: [...acc.values()], days: [...byDay.values()].sort((a, b) => a.day.localeCompare(b.day)), truncated }
 }
 
 export type ProductTotal = { product_id: string; name: string; company_id: string; category: Category; scans: number; kg: number }
@@ -293,4 +300,23 @@ export async function productTotals(sb: Sb, from: string, to: string, companyId:
     if (page === FLOW_MAX_PAGES - 1) truncated = true
   }
   return { rows: [...acc.values()].sort((a, b) => b.kg - a.kg), truncated }
+}
+
+// QR vs barcode scans in a window (QR codes are one-time serials: the stronger evidence tier).
+export async function codeMix(sb: Sb, from: string, to: string, companyId: string | null) {
+  const count = async (type: "qr" | "barcode") => {
+    let q = sb
+      .from("scans")
+      .select("id, bins!inner(is_demo)", { count: "exact", head: true })
+      .eq("bins.is_demo", false)
+      .eq("code_type", type)
+      .gte("scanned_at", istStart(from))
+      .lt("scanned_at", istEndExclusive(to))
+    if (companyId) q = q.eq("company_id", companyId)
+    const { count: n, error } = await q
+    fail("scan mix", error)
+    return n ?? 0
+  }
+  const [qr, barcode] = await Promise.all([count("qr"), count("barcode")])
+  return { qr, barcode }
 }

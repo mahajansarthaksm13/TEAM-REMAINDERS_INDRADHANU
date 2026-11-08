@@ -510,6 +510,53 @@ html.fx :where(.stagger > *, [data-reveal]).is-in {
 }
 @keyframes draw { to { stroke-dashoffset: 0; } }
 
+/* ── Loading ─────────────────────────────────────────────────
+   Skeletons are pressed-in wells the shape of the content that is coming, with a
+   soft Snow highlight sweeping across them; a thin Violet bar runs along the top. */
+.skel {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow:
+    inset 3px 3px 8px var(--neu-lo),
+    inset -3px -3px 8px var(--neu-hi);
+}
+.skel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(100deg, rgba(251, 251, 251, 0) 20%, rgba(251, 251, 251, 0.85) 50%, rgba(251, 251, 251, 0) 80%);
+  animation: skel-sweep 1.4s ease-in-out infinite;
+}
+@keyframes skel-sweep { to { transform: translateX(100%); } }
+.load-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 70;
+  height: 3px;
+  overflow: hidden;
+}
+.load-bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, var(--orchid), var(--violet));
+  animation: load-run 1.1s var(--ease-out) infinite;
+}
+@keyframes load-run {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(260%); }
+}
+/* Slow drift for decorative circles on the headline card. */
+.float-slow { animation: float-slow 9s ease-in-out infinite alternate; }
+@keyframes float-slow { to { transform: translate(-14px, 10px) scale(1.06); } }
+
 /* Live feed row: slide in and hold an Orchid wash for 1.2 s. */
 @keyframes feed-in {
   0% { transform: translateY(-8px); opacity: 0; background-color: rgba(166, 99, 204, 0.22); }

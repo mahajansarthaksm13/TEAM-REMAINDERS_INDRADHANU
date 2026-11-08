@@ -4,6 +4,7 @@
 // Snow for Category IV, so no series depends on colour alone). Every chart carries a plain-language
 // takeaway under it and an aria-label summary, so the conclusion is readable without the picture.
 import { useId } from "react"
+import { cn } from "cn"
 import {
   Area,
   AreaChart,
@@ -11,6 +12,7 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  LabelList,
   ComposedChart,
   Line,
   LineChart,
@@ -28,7 +30,8 @@ import {
 } from "recharts"
 import { CATEGORIES, CATEGORY_COLOR, CATEGORY_LABEL, cityName, type Category } from "@/lib/shared"
 import { cityCounts, cumulativePace, sankeyFlow, scoreBuckets, shares } from "@/lib/chart-math"
-import { CategorySwatch } from "./ui"
+import { CategorySwatch, DeltaChip } from "./ui"
+import { CountUp } from "./count-up"
 
 const SNOW = "#FBFBFB"
 const VIOLET = "#6F2DBD"
@@ -127,7 +130,7 @@ export function ShareDonut({ data, caption }: { data: { category: Category; kg: 
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               {h.def}
-              <Pie data={slices} dataKey="kg" nameKey="key" innerRadius="62%" outerRadius="100%" paddingAngle={2} cornerRadius={6} stroke="none" animationDuration={800}>
+              <Pie data={slices} dataKey="kg" nameKey="key" innerRadius="74%" outerRadius="100%" paddingAngle={3} cornerRadius={8} stroke="none" animationDuration={800}>
                 {slices.map((r) => <Cell key={r.key} fill={h.fill(r.key)} />)}
               </Pie>
               <Tooltip {...tooltipStyle} formatter={(v, n) => [kgFmt(Number(v)), CATEGORY_LABEL[n as Category]]} />
@@ -135,7 +138,7 @@ export function ShareDonut({ data, caption }: { data: { category: Category; kg: 
           </ResponsiveContainer>
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
             <span className="eyebrow text-dim">Total</span>
-            <span className="tnum font-display text-xl font-semibold">{kgFmt(total)}</span>
+            <CountUp value={kgFmt(total)} className="tnum font-display text-xl font-semibold" />
           </div>
         </div>
         <ul className="space-y-2.5">
@@ -168,7 +171,7 @@ export function PaceChart({ monthly, target, elapsed }: { monthly: { month: stri
   return (
     <div role="img" aria-label={`Cumulative collection against an even pace to the ${kgFmt(target)} target. ${ahead ? "Ahead" : "Behind"} by ${kgFmt(Math.abs(p.gap))} as of ${p.asOf ?? "now"}.`}>
       <ul className="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-dim">
-        <li className="flex items-center gap-1.5"><span aria-hidden className="inline-block h-0.5 w-4 bg-ink" /> Collected so far</li>
+        <li className="flex items-center gap-1.5"><span aria-hidden className="inline-block h-0.5 w-4 bg-violet" /> Collected so far</li>
         <li className="flex items-center gap-1.5"><span aria-hidden className="inline-block w-4 border-t-2 border-dashed border-orchid" /> Even pace to target</li>
       </ul>
       <div className="h-56 lg:h-64">
@@ -184,8 +187,8 @@ export function PaceChart({ monthly, target, elapsed }: { monthly: { month: stri
             <XAxis dataKey="month" {...axis} />
             <YAxis {...axis} width={52} />
             <Tooltip {...tooltipStyle} formatter={(v, n) => [kgFmt(Number(v)), n === "actual" ? "Collected so far" : "Even pace"]} />
-            <Area dataKey="pace" stroke={ORCHID} strokeDasharray="6 4" strokeWidth={2} fill="none" animationDuration={800} />
-            <Area dataKey="actual" stroke={NIGHT} strokeWidth={2.5} fill={`url(#${fillId})`} connectNulls={false} animationDuration={900} />
+            <Area type="monotone" dataKey="pace" stroke={ORCHID} strokeDasharray="6 4" strokeWidth={2} fill="none" animationDuration={800} />
+            <Area type="monotone" dataKey="actual" stroke={VIOLET} strokeWidth={2.5} fill={`url(#${fillId})`} connectNulls={false} animationDuration={1100} activeDot={{ r: 5, fill: SNOW, stroke: VIOLET, strokeWidth: 2 }} />
           </AreaChart>
         </ResponsiveContainer>
       </div>
@@ -490,6 +493,204 @@ export function ProductBars({ products }: { products: { name: string; company?: 
       <Takeaway>
         {top ? <><strong>{top.name}</strong> is the most-collected product: {kgFmt(top.kg)}, {total > 0 ? Math.round((top.kg / total) * 100) : 0}% of product-level waste.</> : "No product scans in this period."}
       </Takeaway>
+    </div>
+  )
+}
+
+// ── Reference-style cards ─────────────────────────────────────
+type Point = { day: string; value: number }
+const shortDay = (d: string) => new Date(`${d}T00:00:00Z`).toLocaleDateString("en-IN", { weekday: "short", timeZone: "UTC" }).slice(0, 2)
+const shortDate = (d: string) => new Date(`${d}T00:00:00Z`).toLocaleDateString("en-IN", { day: "numeric", month: "short", timeZone: "UTC" })
+
+// Filled Violet headline card: big number, change badge, 30-day sparkline, soft Orchid circles.
+export function HeroStat({ label, value, caption, delta, deltaLabel, spark }: { label: string; value: string; caption: string; delta: number | null; deltaLabel: string; spark: Point[] }) {
+  const id = `spark-${useId().replace(/[^a-zA-Z0-9]/g, "")}`
+  return (
+    <div className="btn-lit relative isolate flex h-full flex-col justify-between overflow-hidden rounded-card p-5 text-snow sm:p-6" role="group" aria-label={`${label}: ${value}`}>
+      <span aria-hidden className="absolute -top-16 -right-10 -z-10 size-48 rounded-full bg-orchid/35 float-slow" />
+      <span aria-hidden className="absolute -top-4 right-16 -z-10 size-28 rounded-full bg-snow/10 float-slow [animation-delay:-4s]" />
+      <div className="flex items-start justify-between gap-3">
+        <p className="eyebrow text-snow/85">{label}</p>
+        <DeltaChip value={delta} label={deltaLabel} tone="onViolet" />
+      </div>
+      <div className="mt-4 flex items-end justify-between gap-4">
+        <div className="min-w-0">
+          <p className="font-display text-[34px] leading-none font-semibold tracking-[-0.03em] whitespace-nowrap lg:text-[40px]"><CountUp value={value} className="tnum" /></p>
+          <p className="mt-2 text-sm text-snow/85">{caption}</p>
+        </div>
+        <div className="h-14 w-28 shrink-0 sm:w-40" aria-hidden>
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={spark} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
+              <defs>
+                <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={SNOW} stopOpacity={0.45} />
+                  <stop offset="100%" stopColor={SNOW} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <Area type="monotone" dataKey="value" stroke={SNOW} strokeWidth={2} fill={`url(#${id})`} animationDuration={1200} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Pill bars on tracks: one bar per day, today in Violet. Header carries the total and the change.
+export function PillBars({ title, subtitle, total, delta, deltaLabel, data, unit, legend }: {
+  title: string
+  subtitle: string
+  total: string
+  delta: number | null
+  deltaLabel: string
+  data: Point[]
+  unit: string
+  legend?: { label: string; pct: number; tone: "violet" | "orchid" }[]
+}) {
+  const max = Math.max(...data.map((d) => d.value), 1)
+  const rows = data.map((d) => ({ ...d, label: shortDay(d.day), track: max }))
+  const best = data.reduce((a, b) => (b.value > a.value ? b : a), data[0] ?? { day: "", value: 0 })
+  return (
+    <div role="img" aria-label={`${title}: ${total}. ${data.map((d) => `${shortDate(d.day)} ${d.value} ${unit}`).join(", ")}.`}>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="t-h3">{title}</p>
+          <p className="text-sm text-dim">{subtitle}</p>
+        </div>
+        <div className="flex flex-col items-end gap-1 text-right">
+          <p className="tnum font-display text-2xl font-semibold"><CountUp value={total} /></p>
+          <DeltaChip value={delta} label={deltaLabel} />
+        </div>
+      </div>
+      <div className="mt-6 h-44">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={rows} margin={{ top: 0, right: 0, bottom: 0, left: 0 }} barCategoryGap="30%">
+            <XAxis dataKey="label" {...axis} />
+            <Tooltip {...tooltipStyle} cursor={false} labelFormatter={(_, pl) => (pl?.[0] ? shortDate((pl[0].payload as Point).day) : "")} formatter={(v) => [`${Number(v).toLocaleString("en-IN")} ${unit}`, ""]} />
+            <Bar dataKey="value" barSize={14} radius={999} background={{ fill: "rgba(23,17,35,0.07)", radius: 999 }} animationDuration={900}>
+              {rows.map((r, i) => <Cell key={r.day} fill={i === rows.length - 1 ? VIOLET : ORCHID} />)}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+      {legend && (
+        <ul className="mt-5 space-y-2.5">
+          {legend.map((l) => (
+            <li key={l.label} className="flex items-center gap-3 text-sm">
+              <span aria-hidden className={cn("size-3.5 rounded-full border-[3px]", l.tone === "violet" ? "border-violet" : "border-orchid")} />
+              <span className="flex-1">{l.label}</span>
+              <span className="tnum font-semibold">{l.pct}%</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <Takeaway>{best && best.value > 0 ? <>Busiest day: <strong>{shortDate(best.day)}</strong> with {best.value.toLocaleString("en-IN")} {unit}. Today, still in progress, is the Violet bar.</> : `No ${unit} in this window yet.`}</Takeaway>
+    </div>
+  )
+}
+
+// Category momentum: a row per category with a mini area, this month's weight and the change.
+export function Momentum({ rows, monthLabel }: { rows: { key: Category; current: number; delta: number | null; series: number[] }[]; monthLabel: string }) {
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, "")
+  const rising = [...rows].filter((r) => r.delta !== null).sort((a, b) => (b.delta ?? 0) - (a.delta ?? 0))[0]
+  return (
+    <div role="img" aria-label={`Category momentum for ${monthLabel}: ${rows.map((r) => `${CATEGORY_LABEL[r.key]} ${kgFmt(r.current)}`).join(", ")}.`}>
+      <ul className="divide-y divide-line">
+        {rows.map((r) => {
+          const color = r.key === "cat4_compostable" ? VIOLET : CATEGORY_COLOR[r.key]
+          const gid = `mo-${uid}-${r.key}`
+          return (
+            <li key={r.key} className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 py-3 sm:grid-cols-[minmax(0,1fr)_8rem_6rem_auto]">
+              <span className="flex min-w-0 items-center gap-2.5 text-sm">
+                <CategorySwatch category={r.key} className="size-3.5" />
+                <span className="truncate font-semibold">{CATEGORY_LABEL[r.key]}</span>
+              </span>
+              <span className="hidden h-10 sm:block" aria-hidden>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={r.series.map((v, i) => ({ i, v }))} margin={{ top: 4, right: 0, bottom: 2, left: 0 }}>
+                    <defs>
+                      <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={color} stopOpacity={0.35} />
+                        <stop offset="100%" stopColor={color} stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <Area type="monotone" dataKey="v" stroke={color} strokeWidth={2} fill={`url(#${gid})`} animationDuration={1000} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </span>
+              <span className="tnum text-right text-sm font-semibold">{kgFmt(r.current)}</span>
+              <span className="justify-self-end"><DeltaChip value={r.delta} label="vs previous month" /></span>
+            </li>
+          )
+        })}
+      </ul>
+      <Takeaway>{rising ? <>Fastest-moving stream in {monthLabel}: <strong>{CATEGORY_LABEL[rising.key]}</strong>, {(rising.delta ?? 0) >= 0 ? "up" : "down"} {Math.abs(rising.delta ?? 0).toFixed(1)}% on the month before.</> : "Momentum appears once there are two months of data."}</Takeaway>
+    </div>
+  )
+}
+
+// Stacked pills per day by category, on tracks.
+export function StackedPills({ days }: { days: ({ day: string } & Record<Category, number>)[] }) {
+  const h = useHatch()
+  const rows = days.map((d) => ({ ...d, label: shortDate(d.day), total: CATEGORIES.reduce((a, c) => a + d[c], 0) }))
+  const peak = rows.reduce((a, b) => (b.total > a.total ? b : a), rows[0] ?? { label: "", total: 0 })
+  const avg = rows.length ? rows.reduce((a, r) => a + r.total, 0) / rows.length : 0
+  return (
+    <div role="img" aria-label={`Daily collection by category over ${rows.length} days. Peak ${peak.label}, ${kgFmt(peak.total)}.`}>
+      <Legend />
+      <div className="h-56">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={rows} margin={{ top: 4, right: 0, bottom: 0, left: -12 }} barCategoryGap="28%">
+            {h.def}
+            <CartesianGrid vertical={false} stroke={GRID} />
+            <XAxis dataKey="label" {...axis} interval="preserveStartEnd" minTickGap={12} />
+            <YAxis {...axis} width={44} />
+            <Tooltip {...tooltipStyle} cursor={{ fill: "rgba(111,45,189,0.06)" }} formatter={(v, n) => [kgFmt(Number(v)), CATEGORY_LABEL[n as Category]]} />
+            {CATEGORIES.map((c, i) => (
+              <Bar
+                key={c}
+                dataKey={c}
+                stackId="d"
+                barSize={14}
+                fill={h.fill(c)}
+                stroke={c === "cat4_compostable" ? VIOLET : SNOW}
+                strokeWidth={1}
+                radius={4}
+                background={i === 0 ? { fill: "rgba(23,17,35,0.05)", radius: 999 } : undefined}
+                animationDuration={900}
+              />
+            ))}
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+      <Takeaway>{peak.total > 0 ? <>Peak day <strong>{peak.label}</strong> at {kgFmt(peak.total)}, against a daily average of {kgFmt(avg)}.</> : "No collection in this window."}</Takeaway>
+    </div>
+  )
+}
+
+// A line with its value printed on every point (the last 7 days, readable without hovering).
+// Props stay serialisable (server pages render this), so the number format is a decimals count.
+export function LabeledLine({ data, unit, decimals = 1 }: { data: Point[]; unit: string; decimals?: number }) {
+  const format = (v: number) => v.toLocaleString("en-IN", { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
+  const rows = data.map((d) => ({ ...d, label: shortDay(d.day) }))
+  const first = data[0]?.value ?? 0
+  const last = data.at(-1)?.value ?? 0
+  return (
+    <div role="img" aria-label={`${unit} per day: ${data.map((d) => `${shortDate(d.day)} ${format(d.value)}`).join(", ")}.`}>
+      <div className="h-48">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={rows} margin={{ top: 28, right: 18, bottom: 0, left: 18 }}>
+            <CartesianGrid vertical={false} stroke={GRID} />
+            <XAxis dataKey="label" {...axis} />
+            <YAxis hide domain={[0, (m: number) => m * 1.25]} />
+            <Tooltip {...tooltipStyle} labelFormatter={(_, pl) => (pl?.[0] ? shortDate((pl[0].payload as Point).day) : "")} formatter={(v) => [format(Number(v)), unit]} />
+            <Line type="monotone" dataKey="value" stroke={VIOLET} strokeWidth={2.5} dot={{ r: 4, fill: SNOW, stroke: VIOLET, strokeWidth: 2 }} activeDot={{ r: 6 }} animationDuration={1000}>
+              <LabelList dataKey="value" position="top" offset={10} formatter={(v) => format(Number(v))} style={{ fill: NIGHT, fontSize: 11, fontWeight: 600 }} />
+            </Line>
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+      <Takeaway>{data.length > 1 ? <>Across the week, daily {unit} went from {format(first)} to {format(last)}.</> : `No ${unit} yet.`}</Takeaway>
     </div>
   )
 }

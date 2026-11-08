@@ -2,7 +2,8 @@
 import Link from "next/link"
 import type { ReactNode } from "react"
 import { cn } from "cn"
-import { AlertTriangle, ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, XCircle } from "lucide-react"
+import { AlertTriangle, ArrowLeft, CheckCircle2, ChevronLeft, ChevronRight, TrendingDown, TrendingUp, XCircle } from "lucide-react"
+import { CountUp } from "./count-up"
 import { ANOMALY_THRESHOLD, CATEGORY_COLOR, CATEGORY_DESC, CATEGORY_LABEL, reasonLabel, type Category, type ScoreReason } from "@/lib/shared"
 import { kg, pct } from "@/lib/format"
 
@@ -108,7 +109,7 @@ export function KpiCard({ href, label, value, caption }: { href: string; label: 
   return (
     <Link href={href} className="group neu rounded-card p-4 transition-transform duration-500 ease-(--ease-spring) hover:-translate-y-1 focus-visible:outline-none sm:p-6">
       <p className="eyebrow text-dim">{label}</p>
-      <p className="t-kpi mt-3 text-ink transition-colors group-hover:text-lit">{value}</p>
+      <p className="t-kpi mt-3 whitespace-nowrap text-ink transition-colors group-hover:text-lit"><CountUp value={value} /></p>
       {caption && <p className="mt-1 text-xs text-dim">{caption}</p>}
     </Link>
   )
@@ -306,4 +307,25 @@ export function StatusBadge({ status, quiet }: { status: string; quiet: boolean 
   if (status === "inactive") return <Badge kind="neutral">Inactive</Badge>
   if (quiet) return <Badge kind="warning">⚠ Quiet</Badge>
   return <Badge kind="ok">● Active</Badge>
+}
+
+// Change badge, e.g. "+12.4%" vs the previous window. Up is good here (more plastic collected);
+// the arrow and sign carry the direction, never colour alone.
+export function DeltaChip({ value, label = "vs previous", tone = "light" }: { value: number | null; label?: string; tone?: "light" | "onViolet" }) {
+  if (value === null) return <span className="text-xs text-dim">No earlier data</span>
+  const up = value >= 0
+  const Icon = up ? TrendingUp : TrendingDown
+  return (
+    <span
+      title={`${up ? "+" : "−"}${Math.abs(value).toFixed(1)}% ${label}`}
+      className={cn(
+        "tnum inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap",
+        tone === "onViolet" ? "bg-snow/20 text-snow" : up ? "bg-chip text-lit" : "border border-warning text-ink"
+      )}
+    >
+      <Icon className="size-3.5" aria-hidden />
+      {up ? "+" : "−"}{Math.abs(value).toFixed(1)}%
+      <span className="sr-only"> {label}</span>
+    </span>
+  )
 }
