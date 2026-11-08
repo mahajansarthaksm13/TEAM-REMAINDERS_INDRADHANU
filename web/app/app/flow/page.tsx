@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 import { Card, CardHead, CategorySwatch, DataTable, EmptyState, KpiCard, Notice, PageHeader } from "@/components/vb/ui"
 import { CategoryStack, FlowSankey, LabeledLine, ProductBars, ShareDonut, StackedPills } from "@/components/vb/charts"
 import { flowTotals, productTotals } from "@/lib/data"
-import { flowInsights, stackBy, windowValues } from "@/lib/chart-math"
+import { flowInsights, stackBy } from "@/lib/chart-math"
 import { href, pageCtx } from "@/lib/session"
 import { completeDays } from "@/lib/period"
 import { kg, num } from "@/lib/format"
@@ -39,7 +39,7 @@ export default async function FlowPage({ searchParams }: { searchParams: Promise
   const inPeriod = completeDays(14).days.filter((d) => d >= period.from && d <= period.to)
   const dayMap = new Map(flow.days.map((d) => [d.day, d]))
   const daily = inPeriod.map((day) => dayMap.get(day) ?? { day, scans: 0, kg: 0, cat1_rigid: 0, cat2_flexible: 0, cat3_multilayer: 0, cat4_compostable: 0 })
-  const week = windowValues(flow.days, inPeriod.slice(-7), (d) => +d.kg.toFixed(2))
+  const week = daily.slice(-7).map((d) => ({ day: d.day, kg: +d.kg.toFixed(3), scans: d.scans }))
   const scans = (extra: Record<string, string> = {}) => href("/app/scans", sp, extra)
 
   return (
@@ -93,8 +93,8 @@ export default async function FlowPage({ searchParams }: { searchParams: Promise
                 <StackedPills days={daily} />
               </Card>
               <Card className="lg:col-span-5">
-                <CardHead eyebrow="This week" title="Kilograms collected per day" />
-                <LabeledLine data={week} unit="kg" decimals={1} />
+                <CardHead eyebrow="This week" title="Collected per day" />
+                <LabeledLine data={week} />
               </Card>
             </div>
           )}
@@ -103,11 +103,7 @@ export default async function FlowPage({ searchParams }: { searchParams: Promise
             {multi ? (
               <Card className="lg:col-span-7">
                 <CardHead eyebrow="By company" title="Who the collected waste belongs to" />
-                <CategoryStack
-                  label="Collected waste per company by category"
-                  data={byCompany}
-                  takeaway={<><strong>{byCompany[0].name}</strong> accounts for {Math.round((byCompany[0].total / total) * 100)}% of collected waste across {byCompany.length} companies.</>}
-                />
+                <CategoryStack label="Collected waste per company by category" data={byCompany} subject="company" />
               </Card>
             ) : (
               <Card className="lg:col-span-7">
@@ -117,11 +113,7 @@ export default async function FlowPage({ searchParams }: { searchParams: Promise
             )}
             <Card className="lg:col-span-5">
               <CardHead eyebrow="By city" title="Where it ends up" />
-              <CategoryStack
-                label="Collected waste per city by category"
-                data={byCity}
-                takeaway={<>{byCity.length > 1 ? <><strong>{byCity[0].name}</strong> collects {Math.round((byCity[0].total / total) * 100)}% of it.</> : <>All of it is collected in <strong>{byCity[0].name}</strong>.</>} Open a city in Scans to see each signed record.</>}
-              />
+              <CategoryStack label="Collected waste per city by category" data={byCity} subject="city" />
               <ul className="mt-4 flex flex-wrap gap-2">
                 {byCity.map((c) => (
                   <li key={c.key}>

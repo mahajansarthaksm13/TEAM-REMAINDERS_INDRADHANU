@@ -26,7 +26,7 @@ export default async function BinsPage({ searchParams }: { searchParams: Promise
         <div className="mb-6 grid gap-6 lg:grid-cols-2">
           <Card>
             <CardHead eyebrow="Trust" title="How healthy are the bins?" />
-            <ScoreHistogram scores={all.map((b) => b.trust_score)} />
+            <ScoreHistogram bins={all.map((b) => ({ city: b.city, status: b.status, score: b.trust_score }))} />
           </Card>
           <Card>
             <CardHead eyebrow="Coverage" title="Where the bins are" />

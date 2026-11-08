@@ -4,7 +4,7 @@ import { Card, CardHead, CategoryBar, EmptyState, KpiCard, PageHeader, ScoreText
 import { HeroStat, Momentum, PaceChart, PillBars, ShareDonut, TrendChart } from "@/components/vb/charts"
 import { LiveFeed } from "@/components/vb/live-feed"
 import { atRiskByCategory, binList, codeMix, flowTotals, kpis, latestFeed, monthlyTrend } from "@/lib/data"
-import { momentum, pctDelta, windowValues } from "@/lib/chart-math"
+import { momentum } from "@/lib/chart-math"
 import { href, pageCtx } from "@/lib/session"
 import { completeDays, fyKey, fyMonths, monthsElapsed, recentDays } from "@/lib/period"
 import { kg, num, timeAgo } from "@/lib/format"
@@ -18,16 +18,17 @@ export default async function LivePage({ searchParams }: { searchParams: Promise
   const { sb, scope, period, sp } = await pageCtx(searchParams)
   const cid = scope.companyId
   // Recent windows run up to today (IST), whatever period is selected: "how is this week going?"
+  // 60 complete days let the 7/14/30-day filters compare each window with the one before it.
   const w7 = recentDays(7)
-  const c7 = completeDays(7) // week-on-week changes compare whole days only
-  const w30 = recentDays(30)
+  const c60 = completeDays(60)
+  const today = recentDays(1).to
   const [k, trendMap, risk, bins, feed, recent30, mix] = await Promise.all([
     kpis(sb, period.from, period.to, cid),
     monthlyTrend(sb, `${period.fy}-04-01`, `${period.fy + 1}-03-31`, cid),
     atRiskByCategory(sb, fyKey(period.fy), cid),
     binList(sb, cid),
     latestFeed(sb, cid),
-    flowTotals(sb, w30.days[0], w30.to, cid),
+    flowTotals(sb, c60.days[0], today, cid),
     codeMix(sb, w7.days[0], w7.to, cid),
   ])
   const trend = fyMonths(period.fy).map((m) => ({
@@ -40,13 +41,10 @@ export default async function LivePage({ searchParams }: { searchParams: Promise
   const scans = (extra: Record<string, string> = {}) => href("/app/scans", sp, extra)
   const elapsed = monthsElapsed(period.fy)
   const monthly = trend.map((t) => ({ month: t.month, kg: CATEGORIES.reduce((a, c) => a + t[c], 0) }))
-  const sum = (xs: { value: number }[]) => xs.reduce((a, x) => a + x.value, 0)
-  const spark = windowValues(recent30.days, w30.days, (d) => d.kg)
-  const kg7 = sum(windowValues(recent30.days, c7.days, (d) => d.kg))
-  const kgPrev7 = sum(windowValues(recent30.days, c7.prev, (d) => d.kg))
-  const scans7 = windowValues(recent30.days, w7.days, (d) => d.scans)
-  const scansFull7 = sum(windowValues(recent30.days, c7.days, (d) => d.scans))
-  const scansPrev7 = sum(windowValues(recent30.days, c7.prev, (d) => d.scans))
+  const dayMap = new Map(recent30.days.map((d) => [d.day, d]))
+  const dayPoint = (day: string) => ({ day, scans: dayMap.get(day)?.scans ?? 0, kg: +(dayMap.get(day)?.kg ?? 0).toFixed(3) })
+  const fullDays = c60.days.map(dayPoint)
+  const kgDaily = fullDays.map((d) => ({ day: d.day, value: d.kg }))
   const mixTotal = mix.qr + mix.barcode
   const qrPct = mixTotal > 0 ? Math.round((mix.qr / mixTotal) * 100) : 0
   const moves = momentum(trend, CATEGORIES, elapsed)
@@ -58,14 +56,7 @@ export default async function LivePage({ searchParams }: { searchParams: Promise
 
       <div className="stagger grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-6">
         <div className="col-span-2">
-          <HeroStat
-            label={`Collected · ${period.label}`}
-            value={kg(k.total_kg)}
-            caption={`${num(k.scan_count)} signed scans · ${kg(kg7)} in the last 7 full days`}
-            delta={pctDelta(kg7, kgPrev7)}
-            deltaLabel="last 7 full days vs the 7 before"
-            spark={spark}
-          />
+          <HeroStat label={`Collected · ${period.label}`} value={kg(k.total_kg)} caption={`${num(k.scan_count)} signed scans`} daily={kgDaily} />
         </div>
         <KpiCard href={href("/app/targets", sp)} label="Target" value={kg(k.target_kg)} caption="Full financial-year target" />
         <KpiCard href={scans()} label="Gap" value={kg(gap)} caption={k.target_kg > 0 && gap === 0 ? "✓ Target met" : "Still to collect this FY"} />
@@ -81,15 +72,11 @@ export default async function LivePage({ searchParams }: { searchParams: Promise
         <Card className="lg:col-span-5">
           <PillBars
             title="Signed scans"
-            subtitle="Last 7 days · today so far, in Violet"
-            total={num(sum(scans7))}
-            delta={pctDelta(scansFull7, scansPrev7)}
-            deltaLabel="last 7 full days vs the 7 before"
-            data={scans7}
-            unit="scans"
+            days={fullDays.slice(-28)}
+            today={dayPoint(today)}
             legend={mixTotal > 0 ? [
-              { label: "QR codes · one-time serials, strongest evidence", pct: qrPct, tone: "violet" },
-              { label: "Barcodes · product-level", pct: 100 - qrPct, tone: "orchid" },
+              { label: "QR codes, last 7 days · one-time serials, strongest evidence", pct: qrPct, tone: "violet" },
+              { label: "Barcodes, last 7 days · product-level", pct: 100 - qrPct, tone: "orchid" },
             ] : undefined}
           />
         </Card>

@@ -557,6 +557,16 @@ html.fx :where(.stagger > *, [data-reveal]).is-in {
 .float-slow { animation: float-slow 9s ease-in-out infinite alternate; }
 @keyframes float-slow { to { transform: translate(-14px, 10px) scale(1.06); } }
 
+/* Chart redraw: when a filter changes, the plot eases in and replays its own draw-in. */
+.chart-swap { animation: chart-swap 450ms var(--ease-out) both; }
+@keyframes chart-swap {
+  from { opacity: 0; transform: translateY(8px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+/* Flow-chart bands fade in after the nodes settle. */
+.flow-band { animation: band-in 900ms 150ms var(--ease-out) backwards; }
+@keyframes band-in { from { opacity: 0; } }
+
 /* Live feed row: slide in and hold an Orchid wash for 1.2 s. */
 @keyframes feed-in {
   0% { transform: translateY(-8px); opacity: 0; background-color: rgba(166, 99, 204, 0.22); }
