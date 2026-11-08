@@ -2,6 +2,7 @@ import Link from "next/link"
 import type { Metadata } from "next"
 import { PublicIntro, Section } from "@/components/vb/brand"
 import { CategoryBar, EmptyState } from "@/components/vb/ui"
+import { ShareDonut } from "@/components/vb/charts"
 import { Button } from "@/components/ui/button"
 import { anonDb } from "@/lib/supabase"
 import { CATEGORIES, type Category } from "@/lib/shared"
@@ -42,13 +43,13 @@ export default async function LiveDataPage() {
                 ["Active bins", num(s.active_bins)],
                 ["Cities", num(s.cities)],
               ].map(([k, v]) => (
-                <div key={k} className="glass rounded-card p-4 sm:p-6">
+                <div key={k} className="neu rounded-card p-4 sm:p-6">
                   <dt className="eyebrow text-dim">{k}</dt>
                   <dd className="t-kpi mt-2">{v}</dd>
                 </div>
               ))}
             </dl>
-            <div className="glass rounded-card p-4 sm:p-6 lg:col-span-7">
+            <div className="neu rounded-card p-4 sm:p-6 lg:col-span-7">
               <p className="eyebrow text-dim">By EPR category</p>
               <div className="mt-5 space-y-6">
                 {s.by_category.map((c) => (
@@ -56,6 +57,11 @@ export default async function LiveDataPage() {
                 ))}
               </div>
               <p className="mt-6 text-xs text-dim">Bars are relative to the largest category. Catalogue weights. Live as of page load.</p>
+            </div>
+            <div data-reveal className="neu rounded-card p-4 sm:p-6 lg:col-span-12">
+              <p className="eyebrow text-dim">Category mix</p>
+              <h2 className="t-h3 mt-1 mb-5">What India&apos;s bins are collecting</h2>
+              <ShareDonut data={s.by_category.map((c) => ({ category: c.category, kg: c.kg }))} caption="nationally" />
             </div>
           </div>
         )}

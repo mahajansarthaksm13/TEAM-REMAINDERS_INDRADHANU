@@ -16,7 +16,7 @@ import { Card, CardHead, Notice } from "./ui"
 type Snap = { qr_kg: number; barcode_kg: number; scan_count: number; under_review_count: number; checkpoint_day: string; checkpoint_hash: string; fingerprint: string }
 type Generated = { report_id: string; verify_url: string; fingerprint: string; pdf_url: string; csv_url: string; pdf_stored: boolean }
 
-const field = "h-10 w-full glass-inset rounded-input text-ink px-3 text-sm focus-visible:ring-2 focus-visible:ring-lit focus-visible:outline-none"
+const field = "h-10 w-full neu-inset rounded-input text-ink px-3 text-sm focus-visible:ring-2 focus-visible:ring-lit focus-visible:outline-none"
 
 export function ReportBuilder({ fy, defaultPeriod }: { fy: number; defaultPeriod: string }) {
   const router = useRouter()

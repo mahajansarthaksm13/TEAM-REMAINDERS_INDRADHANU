@@ -19,7 +19,7 @@ export function PublicIntro({ eyebrow, title, children }: { eyebrow: string; tit
     <section className="relative isolate overflow-hidden border-b border-line">
       <GlowBackdrop className="opacity-60" />
       <div className="relative mx-auto max-w-[1200px] px-4 pt-20 pb-14 sm:px-6 lg:pt-28 lg:pb-20">
-        <p className="glass-pill reveal mb-5 inline-block rounded-full px-3.5 py-1 text-xs font-semibold tracking-[0.12em] text-orchid uppercase">{eyebrow}</p>
+        <p className="neu-pill reveal mb-5 inline-block rounded-full px-3.5 py-1 text-xs font-semibold tracking-[0.12em] text-ink uppercase"><span aria-hidden className="mr-2 inline-block size-1.5 rounded-full bg-orchid align-middle" />{eyebrow}</p>
         <h1 className="t-h1 reveal max-w-3xl" style={{ animationDelay: "100ms" }}>{title}</h1>
         {children && <div className="reveal mt-5 max-w-[60ch] text-base text-ink/80 lg:text-lg lg:leading-7" style={{ animationDelay: "200ms" }}>{children}</div>}
       </div>

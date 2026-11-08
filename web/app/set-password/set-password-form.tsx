@@ -22,10 +22,18 @@ export function SetPasswordForm() {
   const [ready, setReady] = useState<boolean | null>(null)
   const [err, setErr] = useState("")
   const [pending, setPending] = useState(false)
+  const [saved, setSaved] = useState(false)
 
   useEffect(() => {
     client.auth.getSession().then(({ data }) => setReady(!!data.session))
   }, [client])
+
+  // After saving, show the tick drawing itself, then hand over to the login page.
+  useEffect(() => {
+    if (!saved) return
+    const id = setTimeout(() => router.push("/login"), 1600)
+    return () => clearTimeout(id)
+  }, [saved, router])
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -38,13 +46,31 @@ export function SetPasswordForm() {
     setPending(false)
     if (error) return setErr("Couldn't set the password. Ask your admin for a new invite.")
     await client.auth.signOut()
-    router.push("/login")
+    setSaved(true)
   }
 
-  if (ready === null) return <p className="mt-6 text-sm text-dim">Checking your invite…</p>
-  if (!ready) return <div className="mt-6"><Notice kind="error">This invite link is invalid or has expired. Ask your admin for a new one.</Notice></div>
+  if (saved)
+    return (
+      <div role="status" className="reveal mt-8 flex flex-col items-center gap-4 text-center">
+        <span className="neu flex size-16 items-center justify-center rounded-full text-lit">
+          <svg viewBox="0 0 24 24" className="draw-tick size-8" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M5 12.5l4.5 4.5L19 7.5" />
+          </svg>
+        </span>
+        <p className="font-semibold">Password saved.</p>
+        <p className="text-sm text-dim">Taking you to log in…</p>
+      </div>
+    )
+  if (ready === null)
+    return (
+      <p role="status" className="mt-6 flex items-center gap-2 text-sm text-dim">
+        <Loader2 className="size-4 animate-spin" aria-hidden />
+        Checking your invite…
+      </p>
+    )
+  if (!ready) return <div className="reveal mt-6"><Notice kind="error">This invite link is invalid or has expired. Ask your admin for a new one.</Notice></div>
   return (
-    <form onSubmit={submit} noValidate className="mt-6 flex flex-col gap-4">
+    <form onSubmit={submit} noValidate className="cascade mt-6 flex flex-col gap-4">
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="password">New password</Label>
         <Input id="password" name="password" type="password" autoComplete="new-password" />

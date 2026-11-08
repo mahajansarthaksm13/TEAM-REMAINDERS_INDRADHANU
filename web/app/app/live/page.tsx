@@ -1,11 +1,11 @@
 import Link from "next/link"
 import type { Metadata } from "next"
 import { Card, CardHead, CategoryBar, EmptyState, KpiCard, PageHeader, ScoreText } from "@/components/vb/ui"
-import { TrendChart } from "@/components/vb/charts"
+import { PaceChart, ShareDonut, TrendChart } from "@/components/vb/charts"
 import { LiveFeed } from "@/components/vb/live-feed"
 import { atRiskByCategory, binList, kpis, latestFeed, monthlyTrend } from "@/lib/data"
 import { href, pageCtx } from "@/lib/session"
-import { fyKey, fyMonths } from "@/lib/period"
+import { fyKey, fyMonths, monthsElapsed } from "@/lib/period"
 import { kg, num, timeAgo } from "@/lib/format"
 import { CATEGORIES, cityName } from "@/lib/shared"
 
@@ -31,6 +31,8 @@ export default async function LivePage({ searchParams }: { searchParams: Promise
   const activeBins = bins.filter((b) => b.status === "active").length
   const recent = [...bins].sort((a, b) => (b.last_seen ?? "").localeCompare(a.last_seen ?? "")).slice(0, 7)
   const scans = (extra: Record<string, string> = {}) => href("/app/scans", sp, extra)
+  const elapsed = monthsElapsed(period.fy)
+  const monthly = trend.map((t) => ({ month: t.month, kg: CATEGORIES.reduce((a, c) => a + t[c], 0) }))
 
   return (
     <>
@@ -61,6 +63,17 @@ export default async function LivePage({ searchParams }: { searchParams: Promise
         <Card className="lg:col-span-7">
           <CardHead eyebrow="Monthly trend" title={`FY ${period.fy}–${String(period.fy + 1).slice(2)}`} />
           <TrendChart data={trend} />
+        </Card>
+      </div>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-12">
+        <Card className="lg:col-span-5">
+          <CardHead eyebrow="Category mix" title={`What was collected · ${period.label}`} />
+          <ShareDonut data={k.rows.map((r) => ({ category: r.category, kg: r.collected_kg }))} caption="in this period" />
+        </Card>
+        <Card className="lg:col-span-7">
+          <CardHead eyebrow="Pace" title={`On track for the FY target?`} />
+          <PaceChart monthly={monthly} target={k.target_kg} elapsed={elapsed} />
         </Card>
       </div>
 

@@ -4,15 +4,20 @@
 @import "lenis/dist/lenis.css";
 
 /* ─────────────────────────────────────────────────────────────
-   VeriBin, Violet Glass. Single fixed DARK theme.
+   VeriBin, Soft Night. Single fixed DARK theme, fully neumorphic.
 
    Strictly four colours. Every value below is one of them, either solid or
    as a see-through tint of itself; nothing else appears anywhere:
-     Night    #171123   60  the ground and every recessed surface
-     Snow     #FBFBFB   30  running text, and frosted glass as a 4–10% tint
-     Violet   #6F2DBD   10  primary action, active state, glows behind glass
-     Orchid   #A663CC   10  focus, links, highlights, the selected item
-   Status never relies on colour: ✓ ⚠ ✗ icons and words carry the meaning.
+     Night    #171123   60  the ground (lifted 4% by Snow) and every shadow
+     Snow     #FBFBFB   30  running text and the highlight edge of every surface
+     Violet   #6F2DBD   10  primary action, active state
+     Orchid   #A663CC   10  focus, highlights, status marks, the selected item
+
+   Neumorphism: every surface is cut from the ground itself. Raised things catch
+   a Snow highlight top-left and cast a Night shadow bottom-right; pressed
+   things do the inverse. Nothing floats on a different colour.
+   Status never relies on colour: ✓ ⚠ ✗ icons and words carry the meaning, and
+   small status text stays Snow so it always reads at 4.5:1 or better.
    ───────────────────────────────────────────────────────────── */
 :root {
   /* palette */
@@ -20,6 +25,12 @@
   --snow: #fbfbfb;
   --violet: #6f2dbd;
   --orchid: #a663cc;
+
+  /* the neumorphic ground: Night lifted by a 4% Snow veil, so a Night shadow can fall on it */
+  --veil: rgba(251, 251, 251, 0.04);
+  --surface: linear-gradient(var(--veil), var(--veil)), var(--night);
+  --neu-hi: rgba(251, 251, 251, 0.07); /* highlight edge */
+  --neu-lo: var(--night); /* cast shadow */
 
   /* roles: palette colours, solid or as alpha tints of themselves */
   --ground: var(--night);
@@ -29,12 +40,10 @@
   --chip: rgba(111, 45, 189, 0.42); /* badges, chips */
   --line: rgba(251, 251, 251, 0.1); /* hairlines, table rules */
   --line-strong: rgba(166, 99, 204, 0.5);
-  --ink: var(--snow); /* running text: 17.6:1 on the ground */
-  --dim: rgba(251, 251, 251, 0.68); /* secondary text: 8.4:1 on the ground */
-  --lit: var(--orchid); /* focus, links, active nav: 4.6:1 on the ground */
+  --ink: var(--snow); /* running text: 15:1 on the lifted ground */
+  --dim: rgba(251, 251, 251, 0.7); /* secondary text: 7.6:1 on the lifted ground */
+  --lit: var(--orchid); /* focus rings, marks, fills: non-text (3:1+) or large text only */
   --on-lit: var(--night); /* text on an Orchid fill: 4.6:1 */
-  --glass-rim: rgba(251, 251, 251, 0.1);
-  --glass-rim-hi: rgba(251, 251, 251, 0.2);
 
   /* status: palette only, always paired with an icon and words */
   --success: var(--snow);
@@ -138,11 +147,12 @@
     -webkit-text-size-adjust: 100%;
     color-scheme: dark;
     /* also paints the overscroll area, so a bounce never flashes an off-palette colour */
-    background: var(--ground);
+    background: var(--surface);
     color: var(--ink);
   }
   body {
-    background: var(--ground);
+    background: var(--surface);
+    background-attachment: fixed;
     color: var(--ink);
     font-weight: 400;
     @apply antialiased;
@@ -254,84 +264,94 @@
   background-color: var(--violet);
 }
 
-/* ── Glass ────────────────────────────────────────────────────
-   Frosted Snow over the glowing ground: a 4–9% tint, a blur, a hairline rim that
-   catches light on the top edge, and a faint Orchid bloom inside. */
-.glass {
-  background:
-    linear-gradient(180deg, rgba(251, 251, 251, 0.07) 0%, rgba(111, 45, 189, 0.06) 100%),
-    rgba(23, 17, 35, 0.55);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
-  backdrop-filter: blur(18px) saturate(140%);
-  border: 1px solid var(--glass-rim);
-  border-top-color: var(--glass-rim-hi);
+/* ── Neumorphic materials ────────────────────────────────────
+   Light falls from the top-left. Raised: Snow highlight up-left, Night shadow
+   down-right. Pressed: the same two, inside. Every surface is the ground. */
+.neu {
+  background: linear-gradient(145deg, rgba(251, 251, 251, 0.035), rgba(251, 251, 251, 0)), var(--surface);
+  border: 1px solid rgba(251, 251, 251, 0.035);
   box-shadow:
-    inset 0 1px 0 rgba(251, 251, 251, 0.07),
-    inset 0 3px 14px rgba(166, 99, 204, 0.1),
-    0 24px 48px -24px rgba(23, 17, 35, 0.95);
+    -8px -8px 20px var(--neu-hi),
+    10px 10px 24px var(--neu-lo),
+    4px 4px 8px var(--neu-lo);
 }
-.glass-inset {
-  background: rgba(23, 17, 35, 0.78);
-  border: 1px solid var(--glass-rim);
-  box-shadow: inset 0 2px 6px rgba(23, 17, 35, 0.9);
-  transition: border-color 200ms, box-shadow 200ms;
+/* Pressed wells: inputs, selects, code blocks. */
+.neu-inset {
+  background: var(--surface);
+  border: 1px solid transparent;
+  box-shadow:
+    inset 4px 4px 10px var(--neu-lo),
+    inset -4px -4px 10px var(--neu-hi);
+  transition: box-shadow 200ms, border-color 200ms;
 }
-.glass-inset:hover {
-  border-color: var(--glass-rim-hi);
+.neu-inset:hover {
+  border-color: rgba(251, 251, 251, 0.06);
 }
-.glass-inset:focus,
-.glass-inset:focus-visible {
+.neu-inset:focus,
+.neu-inset:focus-visible {
   border-color: var(--lit);
-  box-shadow: inset 0 2px 6px rgba(23, 17, 35, 0.9), 0 0 0 3px rgba(166, 99, 204, 0.25);
-}
-/* Sticky bars and the sidebar: thinner tint, heavier blur, so content slides under them. */
-.glass-bar {
-  background: rgba(23, 17, 35, 0.62);
-  -webkit-backdrop-filter: blur(28px) saturate(160%);
-  backdrop-filter: blur(28px) saturate(160%);
-  border-color: rgba(251, 251, 251, 0.08);
-}
-/* Small glass pill (the reference's tag above the headline). */
-.glass-pill {
-  background: rgba(251, 251, 251, 0.06);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
-  border: 1px solid var(--glass-rim);
-  box-shadow: inset 0 1px 2px rgba(251, 251, 251, 0.1);
-}
-.btn-glass {
-  background: rgba(251, 251, 251, 0.06);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-  border: 1px solid var(--glass-rim);
-  border-top-color: var(--glass-rim-hi);
-  box-shadow: inset 0 1px 2px rgba(251, 251, 251, 0.12), 0 8px 20px -10px rgba(23, 17, 35, 0.9);
-}
-/* The 10%: one Violet control per view, lit from above toward Orchid. */
-.btn-lit {
-  background: linear-gradient(180deg, rgba(166, 99, 204, 0.55) 0%, rgba(166, 99, 204, 0) 60%), var(--violet);
-  border: 1px solid rgba(166, 99, 204, 0.7);
   box-shadow:
-    inset 0 1px 0 rgba(251, 251, 251, 0.3),
-    inset 0 -2px 6px rgba(23, 17, 35, 0.35),
-    0 10px 28px -8px rgba(111, 45, 189, 0.75);
+    inset 4px 4px 10px var(--neu-lo),
+    inset -4px -4px 10px var(--neu-hi),
+    0 0 0 3px rgba(166, 99, 204, 0.25);
+}
+/* Sticky header and sidebar: the same ground, lifted, with a soft shadow edge. */
+.neu-bar {
+  background: var(--surface);
+  border-color: rgba(251, 251, 251, 0.04);
+  box-shadow: 0 8px 24px -10px var(--neu-lo);
+}
+/* Small raised pill (tags, nav group, back links). */
+.neu-pill {
+  background: var(--surface);
+  border: 1px solid rgba(251, 251, 251, 0.035);
+  box-shadow:
+    -3px -3px 8px var(--neu-hi),
+    4px 4px 10px var(--neu-lo);
+}
+/* A pressed-in track inside a raised pill (the nav's active item sits in one). */
+.neu-press {
+  box-shadow:
+    inset 3px 3px 7px var(--neu-lo),
+    inset -3px -3px 7px var(--neu-hi);
+}
+.btn-neu {
+  background: linear-gradient(145deg, rgba(251, 251, 251, 0.05), rgba(251, 251, 251, 0)), var(--surface);
+  border: 1px solid rgba(251, 251, 251, 0.04);
+  box-shadow:
+    -4px -4px 10px var(--neu-hi),
+    6px 6px 14px var(--neu-lo);
+}
+/* The 10%: one Violet control per view, convex, catching Orchid light on its top-left. */
+.btn-lit {
+  background: linear-gradient(145deg, rgba(166, 99, 204, 0.6) 0%, rgba(166, 99, 204, 0) 62%), var(--violet);
+  border: 1px solid rgba(166, 99, 204, 0.55);
+  box-shadow:
+    -4px -4px 10px var(--neu-hi),
+    6px 6px 16px var(--neu-lo),
+    inset 1px 1px 0 rgba(251, 251, 251, 0.25);
 }
 .btn-lit:disabled {
-  background: rgba(251, 251, 251, 0.05);
-  border-color: var(--glass-rim);
+  background: var(--surface);
+  border-color: transparent;
   color: var(--dim);
-  box-shadow: none;
+  box-shadow:
+    inset 3px 3px 8px var(--neu-lo),
+    inset -3px -3px 8px var(--neu-hi);
 }
-.btn-glass:active:not(:disabled),
+/* Pressing pushes the control into the ground. */
+.btn-neu:active:not(:disabled),
 .btn-lit:active:not(:disabled) {
-  box-shadow: inset 0 3px 8px rgba(23, 17, 35, 0.6);
+  box-shadow:
+    inset 4px 4px 10px var(--neu-lo),
+    inset -4px -4px 10px var(--neu-hi);
 }
 
 /* ── Flow sweep (unchanged motion) ───────────────────────────
    An oversized circle parked off the bottom-right corner slides over the face
    on hover and flips the label. Hover only, never :focus-visible, so a
    focused control is never left covered; keyboard focus shows the ring.
-     .flow-btn          glass control  -> sweeps Orchid, label goes Night
+     .flow-btn          raised control -> sweeps Orchid, label goes Night
      .flow-btn-invert   Violet fill    -> sweeps Snow, label goes Violet */
 .flow-btn {
   position: relative;
@@ -377,21 +397,22 @@
   color: var(--violet);
 }
 
-/* ── Backdrop: the glow the glass floats over ────────────────
-   Three soft violet lights drifting on long periods, a faint dot grid fading
-   out toward the bottom, and a vignette. Fixed, never scrolls, never clicks. */
+/* ── Backdrop ────────────────────────────────────────────────
+   The lifted ground with two very soft Violet / Orchid lights drifting on long
+   periods, kept faint so raised surfaces still read as cut from the ground.
+   Fixed, never scrolls, never clicks. */
 .vb-backdrop {
   position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
   overflow: hidden;
-  background: var(--ground);
+  background: var(--surface);
 }
 .vb-glow {
   position: absolute;
   border-radius: 9999px;
-  filter: blur(90px);
+  filter: blur(110px);
   will-change: transform;
   animation: vb-drift var(--dur, 28s) ease-in-out infinite alternate;
 }
@@ -428,6 +449,94 @@ html.fx :where(.stagger > *, [data-reveal]).is-in {
   animation: rise 800ms var(--ease-out) var(--d, 0ms) backwards;
 }
 
+/* ── Login flow ─────────────────────────────────────────────
+   Photo stage: three duotone photographs cross-fade with a slow Ken Burns push.
+   Duotone keeps them in the palette: greyscale photo, Violet in the shadows via
+   multiply, Orchid in the highlights via screen, Night falling from the bottom. */
+.auth-stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--night);
+}
+.auth-photo {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  animation: auth-cycle 18s infinite;
+}
+.auth-photo img {
+  object-fit: cover;
+  filter: grayscale(1) contrast(1.15) brightness(0.9);
+  animation: auth-push 18s ease-out infinite;
+}
+.auth-photo:nth-child(2), .auth-photo:nth-child(2) img { animation-delay: 6s; }
+.auth-photo:nth-child(3), .auth-photo:nth-child(3) img { animation-delay: 12s; }
+@keyframes auth-cycle {
+  0% { opacity: 0; }
+  6%, 33% { opacity: 1; }
+  40%, 100% { opacity: 0; }
+}
+@keyframes auth-push {
+  from { transform: scale(1.12) translate(1.5%, 1%); }
+  to { transform: scale(1) translate(0, 0); }
+}
+.auth-tone-violet { position: absolute; inset: 0; background: var(--violet); mix-blend-mode: multiply; }
+.auth-tone-orchid { position: absolute; inset: 0; background: var(--orchid); mix-blend-mode: screen; opacity: 0.35; }
+.auth-tone-fade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(23, 17, 35, 0.55) 0%, rgba(23, 17, 35, 0) 30%, rgba(23, 17, 35, 0.2) 55%, rgba(23, 17, 35, 0.95) 100%);
+}
+/* Chain links orbiting the stage: the product's idea (one record linked to the next) in motion. */
+.auth-orbit {
+  position: absolute;
+  border-radius: 9999px;
+  border: 1px dashed rgba(251, 251, 251, 0.18);
+  animation: auth-spin var(--t, 40s) linear infinite;
+}
+.auth-orbit > span {
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  margin-left: -7px;
+  border-radius: 9999px;
+  background: var(--orchid);
+  box-shadow: 0 0 0 4px rgba(166, 99, 204, 0.25);
+}
+@keyframes auth-spin { to { transform: rotate(360deg); } }
+/* Dots under the stage: which photo is showing (decorative, mirrors the cycle). */
+.auth-dot { animation: auth-dot 18s infinite; }
+.auth-dot:nth-child(2) { animation-delay: 6s; }
+.auth-dot:nth-child(3) { animation-delay: 12s; }
+@keyframes auth-dot {
+  0%, 40%, 100% { width: 8px; background: rgba(251, 251, 251, 0.35); }
+  6%, 33% { width: 28px; background: var(--snow); }
+}
+/* Form side: the card settles in, then each field rises in turn. */
+@keyframes settle {
+  from { opacity: 0; transform: translateY(24px) scale(0.97); filter: blur(8px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
+.auth-card { animation: settle 900ms var(--ease-out) both; }
+.cascade > * { animation: rise 700ms var(--ease-out) both; }
+.cascade > *:nth-child(1) { animation-delay: 250ms; }
+.cascade > *:nth-child(2) { animation-delay: 330ms; }
+.cascade > *:nth-child(3) { animation-delay: 410ms; }
+.cascade > *:nth-child(4) { animation-delay: 490ms; }
+.cascade > *:nth-child(5) { animation-delay: 570ms; }
+.cascade > *:nth-child(n + 6) { animation-delay: 650ms; }
+/* A success tick that draws itself (password saved). */
+.draw-tick path {
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+  animation: draw 700ms 200ms var(--ease-out) forwards;
+}
+@keyframes draw { to { stroke-dashoffset: 0; } }
+
 /* Live feed row: slide in and hold an Orchid wash for 1.2 s. */
 @keyframes feed-in {
   0% { transform: translateY(-8px); opacity: 0; background-color: rgba(166, 99, 204, 0.22); }
@@ -449,11 +558,13 @@ html.fx :where(.stagger > *, [data-reveal]).is-in {
     transition-duration: 0.01ms !important;
   }
   .flow-btn:hover:not(:disabled), .flow-btn:active:not(:disabled) { transform: none; }
+  .auth-photo:first-child { opacity: 1; }
+  .draw-tick path { stroke-dashoffset: 0; }
 }
 
 /* ── Print (QR sheets): plain ink on white ─────────────────── */
 @media print {
   .no-print, .vb-backdrop { display: none !important; }
   body { background: var(--snow); color: var(--night); }
-  .glass { background: var(--snow); box-shadow: none; backdrop-filter: none; }
+  .neu { background: var(--snow); box-shadow: none; }
 }

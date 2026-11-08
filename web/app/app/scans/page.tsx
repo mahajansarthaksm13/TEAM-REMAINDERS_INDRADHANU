@@ -11,7 +11,7 @@ import { fmtDateTime, num } from "@/lib/format"
 
 export const metadata: Metadata = { title: "Scans" }
 
-const field = "h-10 w-full glass-inset rounded-input text-ink px-3 text-sm focus-visible:ring-2 focus-visible:ring-lit focus-visible:outline-none"
+const field = "h-10 w-full neu-inset rounded-input text-ink px-3 text-sm focus-visible:ring-2 focus-visible:ring-lit focus-visible:outline-none"
 
 export default async function ScansPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { sb, scope, period, sp } = await pageCtx(searchParams)
@@ -90,7 +90,7 @@ export default async function ScansPage({ searchParams }: { searchParams: Promis
     <>
       <PageHeader eyebrow={`${scope.label} · ${period.label}`} title="Scans" desc="Every signed scan behind the totals. Filters live in the URL, so any view can be shared." />
 
-      <div className="sticky top-16 z-20 -mx-4 mb-4 border-b glass-bar px-4 py-3 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+      <div className="sticky top-16 z-20 -mx-4 mb-4 border-b neu-bar px-4 py-3 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
         <div className="hidden md:block">{filters}</div>
         <details className="md:hidden">
           <summary className="flex h-11 cursor-pointer list-none items-center gap-2 font-semibold">
@@ -108,7 +108,7 @@ export default async function ScansPage({ searchParams }: { searchParams: Promis
       {rows.length === 0 ? (
         <EmptyState action={<Link href={href("/app/scans", sp)} className="font-semibold text-dim underline-offset-4 hover:underline">Clear filters</Link>}>No scans match these filters.</EmptyState>
       ) : (
-        <div className="glass rounded-card p-4 sm:p-6">
+        <div className="neu rounded-card p-4 sm:p-6">
           <DataTable<FeedRow>
             caption="Scans, newest first"
             rows={rows}

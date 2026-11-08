@@ -1,7 +1,8 @@
 import Form from "next/form"
 import type { Metadata } from "next"
 import { AutoSubmit } from "@/components/vb/client"
-import { DataTable, EmptyState, PageHeader, ScoreText, StatusBadge } from "@/components/vb/ui"
+import { Card, CardHead, DataTable, EmptyState, PageHeader, ScoreText, StatusBadge } from "@/components/vb/ui"
+import { CityBins, ScoreHistogram } from "@/components/vb/charts"
 import { binList, type BinRow } from "@/lib/data"
 import { cityName } from "@/lib/shared"
 import { href, one, pageCtx } from "@/lib/session"
@@ -9,7 +10,7 @@ import { fmtDateTime, num, timeAgo } from "@/lib/format"
 
 export const metadata: Metadata = { title: "Bins" }
 
-const field = "h-10 glass-inset rounded-input text-ink px-3 text-sm focus-visible:ring-2 focus-visible:ring-lit focus-visible:outline-none"
+const field = "h-10 neu-inset rounded-input text-ink px-3 text-sm focus-visible:ring-2 focus-visible:ring-lit focus-visible:outline-none"
 
 export default async function BinsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { sb, scope, sp } = await pageCtx(searchParams)
@@ -21,6 +22,18 @@ export default async function BinsPage({ searchParams }: { searchParams: Promise
   return (
     <>
       <PageHeader title="Bins" desc="Every bin signs with its own key. Trust scores appear after the nightly analysis has 20+ scans for a bin." />
+      {all.length > 0 && (
+        <div className="mb-6 grid gap-6 lg:grid-cols-2">
+          <Card>
+            <CardHead eyebrow="Trust" title="How healthy are the bins?" />
+            <ScoreHistogram scores={all.map((b) => b.trust_score)} />
+          </Card>
+          <Card>
+            <CardHead eyebrow="Coverage" title="Where the bins are" />
+            <CityBins bins={all} />
+          </Card>
+        </div>
+      )}
       <Form action="/app/bins" className="mb-4">
         {one(sp.company) && <input type="hidden" name="company" value={one(sp.company)} />}
         {one(sp.period) && <input type="hidden" name="period" value={one(sp.period)} />}
@@ -45,7 +58,7 @@ export default async function BinsPage({ searchParams }: { searchParams: Promise
       {rows.length === 0 ? (
         <EmptyState>No bins registered.</EmptyState>
       ) : (
-        <div className="glass rounded-card p-4 sm:p-6">
+        <div className="neu rounded-card p-4 sm:p-6">
           <DataTable<BinRow>
             caption="Bins"
             rows={rows}
@@ -58,7 +71,7 @@ export default async function BinsPage({ searchParams }: { searchParams: Promise
               { key: "status", label: "Status", cell: (r) => <StatusBadge status={r.status} quiet={r.quiet} /> },
               { key: "seen", label: "Last seen (IST)", cell: (r) => (r.last_seen ? <span title={fmtDateTime(r.last_seen)}>{timeAgo(r.last_seen)}</span> : "Never reported") },
               { key: "score", label: "Trust score", align: "right", cell: (r) => <ScoreText score={r.trust_score} /> },
-              { key: "alerts", label: "Open alerts", align: "right", cell: (r) => (r.open_alerts ? <span className="font-semibold text-warning">{num(r.open_alerts)}</span> : "0") },
+              { key: "alerts", label: "Open alerts", align: "right", cell: (r) => (r.open_alerts ? <span className="font-semibold text-ink">{num(r.open_alerts)}</span> : "0") },
             ]}
           />
         </div>

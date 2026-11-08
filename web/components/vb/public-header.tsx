@@ -25,10 +25,10 @@ export function PublicHeader({ loggedIn }: { loggedIn: boolean }) {
     <Button asChild variant="dark" size="sm"><Link href="/login">Log in</Link></Button>
   )
   return (
-    <header className="sticky top-0 z-40 border-b glass-bar no-print">
+    <header className="sticky top-0 z-40 border-b neu-bar no-print">
       <div className="mx-auto flex h-16 max-w-[1200px] items-center justify-between gap-6 px-4 sm:px-6">
         <Wordmark />
-        <nav aria-label="Main" className="glass-pill hidden items-center gap-0.5 rounded-full p-1 lg:flex">
+        <nav aria-label="Main" className="neu-pill hidden items-center gap-0.5 rounded-full p-1 lg:flex">
           {LINKS.map(([href, label]) => (
             <Link
               key={href}
@@ -47,7 +47,7 @@ export function PublicHeader({ loggedIn }: { loggedIn: boolean }) {
               <Menu />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-[min(86vw,320px)] glass-bar p-6 text-ink">
+          <SheetContent side="left" className="w-[min(86vw,320px)] neu-bar p-6 text-ink">
             <SheetTitle className="font-display text-[28px] font-normal text-ink">VeriBin</SheetTitle>
             <nav aria-label="Main" className="flex flex-col gap-1">
               <Link href="/" aria-current={path === "/" ? "page" : undefined} className={cn("rounded-full px-3 py-3 text-ink/90 hover:bg-panel-hi", path === "/" && "bg-violet text-snow")}>Home</Link>

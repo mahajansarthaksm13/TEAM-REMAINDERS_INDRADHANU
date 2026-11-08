@@ -9,6 +9,10 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  // Login-flow photographs (Unsplash License), resized by next/image.
+  images: {
+    remotePatterns: [{ protocol: "https", hostname: "images.unsplash.com", pathname: "/photo-*" }],
+  },
   // Frontend Spec B9 (CSP is [FILL])
   async headers() {
     return [

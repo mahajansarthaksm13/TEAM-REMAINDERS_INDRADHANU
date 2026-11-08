@@ -1,7 +1,8 @@
 import Link from "next/link"
 import type { Metadata } from "next"
 import { cn } from "cn"
-import { Badge, Card, CategoryBar, EmptyState, PageHeader } from "@/components/vb/ui"
+import { Badge, Card, CardHead, CategoryBar, EmptyState, PageHeader } from "@/components/vb/ui"
+import { TargetRings } from "@/components/vb/charts"
 import { atRiskByCategory, kpis } from "@/lib/data"
 import { href, one, pageCtx } from "@/lib/session"
 import { fyKey, fyLabel } from "@/lib/period"
@@ -33,6 +34,10 @@ export default async function TargetsPage({ searchParams }: { searchParams: Prom
               <div><p className="eyebrow text-dim">FY target</p><p className="t-kpi mt-1">{kg(total)}</p></div>
               <div><p className="eyebrow text-dim">Progress</p><p className="t-kpi mt-1">{pct(got, total)}%</p></div>
             </div>
+          </Card>
+          <Card className="mt-6">
+            <CardHead eyebrow="At a glance" title="Progress to target, by category" />
+            <TargetRings rows={t} />
           </Card>
           <div className="mt-6 grid gap-6 md:grid-cols-2">
             {t.map((x) => (

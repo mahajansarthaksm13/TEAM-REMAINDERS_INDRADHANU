@@ -14,7 +14,7 @@ export default async function Home() {
       <section className="relative isolate flex min-h-[72vh] items-center lg:min-h-[86vh]">
         <GlowBackdrop />
         <div className="relative mx-auto flex w-full max-w-[1200px] flex-col items-center px-4 pt-20 pb-16 text-center sm:px-6 lg:pb-24">
-          <p className="glass-pill reveal mb-7 rounded-full px-4 py-1.5 text-sm text-orchid">Verifiable plastic collection for EPR</p>
+          <p className="neu-pill reveal mb-7 rounded-full px-4 py-1.5 text-sm text-ink"><span aria-hidden className="mr-2 inline-block size-1.5 rounded-full bg-orchid align-middle" />Verifiable plastic collection for EPR</p>
           <h1 className="t-display reveal max-w-4xl" style={{ animationDelay: "120ms" }}>
             A small scan.
             <br />A bigger change.
@@ -39,7 +39,7 @@ export default async function Home() {
               ["₹355 crore", "in environmental compensation proposed against non-compliant producers."],
               ["July 2024", "The National Green Tribunal took suo motu notice of fake EPR credits."],
             ].map(([v, d]) => (
-              <div key={v} className="glass rounded-card p-6 transition-transform duration-500 ease-(--ease-spring) hover:-translate-y-1 lg:p-8">
+              <div key={v} className="neu rounded-card p-6 transition-transform duration-500 ease-(--ease-spring) hover:-translate-y-1 lg:p-8">
                 <dt className="font-display text-[40px] leading-none font-semibold tracking-[-0.03em] text-lit lg:text-[52px]">{v}</dt>
                 <dd className="mt-4 max-w-[34ch] text-sm text-ink">{d}</dd>
               </div>
@@ -59,7 +59,7 @@ export default async function Home() {
               <p>Auditors and regulators don&apos;t need access to our servers to check a claim. A phone camera and the report&apos;s QR code are enough.</p>
             </div>
           </div>
-          <figure data-reveal className="glass rounded-card p-6 lg:col-span-5" aria-label="Example of a signed scan record">
+          <figure data-reveal className="neu rounded-card p-6 lg:col-span-5" aria-label="Example of a signed scan record">
             <p className="eyebrow text-dim">Signed record · BIN-0001</p>
             <pre className="mt-3 overflow-x-auto font-mono text-[13px] leading-5 text-ink [overflow-wrap:anywhere] whitespace-pre-wrap">1|BIN-0001|4182|2026-10-25T08:15:03Z|VB1A3F9C2E…|24</pre>
             <dl className="mt-5 space-y-3 font-mono text-xs">
@@ -104,7 +104,7 @@ export default async function Home() {
 
       <section className="pb-16 lg:pb-24">
         <div className="mx-auto max-w-[1200px] px-4 sm:px-6">
-          <div data-reveal className="glass relative isolate overflow-hidden rounded-card px-6 py-12 lg:px-12 lg:py-16">
+          <div data-reveal className="neu relative isolate overflow-hidden rounded-card px-6 py-12 lg:px-12 lg:py-16">
             <GlowBackdrop className="opacity-70" />
             <div className="relative grid gap-6 lg:grid-cols-12 lg:items-end">
               <h2 className="t-h2 lg:col-span-7">See the proof yourself. It takes ten seconds.</h2>

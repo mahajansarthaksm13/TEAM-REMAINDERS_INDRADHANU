@@ -55,7 +55,7 @@ function NavList({ role }: { role: Role }) {
             aria-current={active ? "page" : undefined}
             className={cn(
               "flex h-11 items-center gap-3 rounded-xl px-4 text-sm font-semibold text-dim transition-[background-color,color,transform] duration-300 ease-(--ease-spring) hover:translate-x-1 hover:bg-panel-hi/60 hover:text-ink",
-              active && "bg-panel-hi text-lit shadow-[inset_3px_0_0_var(--lit)]"
+              active && "neu-press text-ink [&_svg]:text-lit"
             )}
           >
             <Icon className="size-[18px]" aria-hidden />
@@ -69,7 +69,7 @@ function NavList({ role }: { role: Role }) {
 
 export function Sidebar({ role }: { role: Role }) {
   return (
-    <aside className="no-print fixed inset-y-0 left-0 z-40 hidden w-[248px] flex-col gap-8 border-r glass-bar px-4 py-6 lg:flex">
+    <aside className="no-print fixed inset-y-0 left-0 z-40 hidden w-[248px] flex-col gap-8 border-r neu-bar px-4 py-6 lg:flex">
       <Wordmark href="/app/live" className="px-4" />
       <NavList role={role} />
       <p className="eyebrow mt-auto px-4 text-dim">All times IST</p>
@@ -100,7 +100,7 @@ export function TopBar({ user, scope, alerts }: { user: { name: string; email: s
   const readOnly = user.role === "auditor" || user.role === "regulator"
 
   return (
-    <header className="no-print sticky top-0 z-30 border-b glass-bar">
+    <header className="no-print sticky top-0 z-30 border-b neu-bar">
       <div className="flex h-16 items-center gap-2 px-4 sm:gap-3 lg:px-8">
         <Sheet>
           <SheetTrigger asChild>
@@ -108,7 +108,7 @@ export function TopBar({ user, scope, alerts }: { user: { name: string; email: s
               <Menu />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-[min(86vw,320px)] glass-bar px-4 py-5 text-ink">
+          <SheetContent side="left" className="w-[min(86vw,320px)] neu-bar px-4 py-5 text-ink">
             <SheetTitle className="px-4 font-display text-[28px] font-normal text-ink">VeriBin</SheetTitle>
             <SheetClose asChild>
               <div><NavList role={user.role} /></div>
@@ -176,7 +176,7 @@ export function TopBar({ user, scope, alerts }: { user: { name: string; email: s
                   {alerts.map((a) => (
                     <li key={a.id} className="flex items-start gap-1 pr-2 hover:bg-panel-hi">
                       <Link href={keep(a.href)} className="flex min-w-0 flex-1 flex-col gap-0.5 px-4 py-3 text-sm">
-                        <span className={cn("eyebrow", a.type === "chain_break" ? "text-error" : a.type === "bin_offline" ? "text-dim" : "text-warning")}>
+                        <span className={cn("eyebrow", a.type === "chain_break" ? "text-ink" : a.type === "bin_offline" ? "text-dim" : "text-ink")}>
                           {a.type === "chain_break" ? "✗ " : a.type === "bin_offline" ? "" : "⚠ "}
                           {ALERT_LABEL[a.type] ?? a.type}
                         </span>

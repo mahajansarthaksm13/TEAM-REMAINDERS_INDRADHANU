@@ -7,7 +7,7 @@ import { ANOMALY_THRESHOLD, CATEGORY_COLOR, CATEGORY_DESC, CATEGORY_LABEL, reaso
 import { kg, pct } from "@/lib/format"
 
 export function Card({ className, children, id }: { className?: string; children: ReactNode; id?: string }) {
-  return <section id={id} className={cn("glass rounded-card p-4 sm:p-6", className)}>{children}</section>
+  return <section id={id} className={cn("neu rounded-card p-4 sm:p-6", className)}>{children}</section>
 }
 
 export function CardHead({ eyebrow, title, action, className }: { eyebrow?: string; title: ReactNode; action?: ReactNode; className?: string }) {
@@ -29,7 +29,7 @@ export function PageHeader({ eyebrow, title, desc, actions, back }: { eyebrow?: 
     <header className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
       <div className="max-w-[68ch]">
         {back && (
-          <Link href={back.href} className="glass-pill mb-4 inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold text-dim transition-colors hover:text-ink focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
+          <Link href={back.href} className="neu-pill mb-4 inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-semibold text-dim transition-colors hover:text-ink focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
             <ArrowLeft className="size-3.5" aria-hidden />
             {back.label}
           </Link>
@@ -47,12 +47,12 @@ const badgeStyles = {
   qr: "bg-violet text-snow",
   barcode: "bg-chip text-ink ring-1 ring-line-strong",
   ok: "border border-success text-success",
-  mismatch: "border border-warning text-warning",
+  mismatch: "border border-warning text-ink",
   flagged: "border border-error bg-error font-bold text-on-lit",
   pending: "bg-chip text-ink",
   approved: "bg-success/15 text-success ring-1 ring-success/50",
   readonly: "bg-violet text-snow",
-  warning: "border border-warning text-warning",
+  warning: "border border-warning text-ink",
   error: "border border-error bg-error font-bold text-on-lit",
   neutral: "border border-line-strong text-ink",
 } as const
@@ -73,10 +73,10 @@ export const FlagBadge = () => <Badge kind="flagged">✗ Flagged</Badge>
 
 export function VerdictBanner({ kind, title, children }: { kind: "success" | "error" | "warning"; title: string; children?: ReactNode }) {
   const Icon = kind === "success" ? CheckCircle2 : kind === "error" ? XCircle : AlertTriangle
-  const tone = { success: "bg-success/10 text-success", error: "bg-error/10 text-error", warning: "bg-warning/10 text-warning" }[kind]
+  const tone = { success: "bg-success/10 text-success", error: "bg-error/10 text-ink", warning: "bg-warning/10 text-ink" }[kind]
   return (
     <div role={kind === "success" ? "status" : "alert"} className={cn("flex gap-3 rounded-card p-5", tone)}>
-      <Icon className="mt-0.5 size-6 shrink-0" aria-hidden />
+      <Icon className={cn("mt-0.5 size-6 shrink-0", kind !== "success" && "text-lit")} aria-hidden />
       <div>
         <p className="text-lg leading-[26px] font-semibold">{title}</p>
         {children && <div className="mt-1 text-sm text-ink">{children}</div>}
@@ -86,10 +86,10 @@ export function VerdictBanner({ kind, title, children }: { kind: "success" | "er
 }
 
 export function Notice({ kind = "warning", children }: { kind?: "warning" | "error" | "info"; children: ReactNode }) {
-  const tone = kind === "warning" ? "border-warning/40 bg-warning/10 text-warning" : kind === "error" ? "border-error/40 bg-error/10 text-error" : "border-line bg-panel text-dim"
+  const tone = kind === "warning" ? "border-warning/40 bg-warning/10 text-ink" : kind === "error" ? "border-error/40 bg-error/10 text-ink" : "border-line bg-panel text-dim"
   return (
     <p role={kind === "error" ? "alert" : "status"} className={cn("flex items-center gap-2 rounded-[14px] border px-4 py-3 text-sm font-medium", tone)}>
-      {kind !== "info" && <AlertTriangle className="size-4 shrink-0" aria-hidden />}
+      {kind !== "info" && <AlertTriangle className="size-4 shrink-0 text-lit" aria-hidden />}
       {children}
     </p>
   )
@@ -106,7 +106,7 @@ export function EmptyState({ children, action }: { children: ReactNode; action?:
 
 export function KpiCard({ href, label, value, caption }: { href: string; label: string; value: string; caption?: ReactNode }) {
   return (
-    <Link href={href} className="group glass rounded-card p-4 transition-transform duration-500 ease-(--ease-spring) hover:-translate-y-1 focus-visible:outline-none sm:p-6">
+    <Link href={href} className="group neu rounded-card p-4 transition-transform duration-500 ease-(--ease-spring) hover:-translate-y-1 focus-visible:outline-none sm:p-6">
       <p className="eyebrow text-dim">{label}</p>
       <p className="t-kpi mt-3 text-ink transition-colors group-hover:text-lit">{value}</p>
       {caption && <p className="mt-1 text-xs text-dim">{caption}</p>}
@@ -236,7 +236,7 @@ export function DataTable<T>({ rows, cols, rowKey, rowHref, title, caption }: { 
 
 export function Pagination({ page, total, per, hrefFor }: { page: number; total: number; per: number; hrefFor: (p: number) => string }) {
   const pages = Math.max(1, Math.ceil(total / per))
-  const btn = "btn-glass flow-btn inline-flex h-10 items-center gap-1 rounded-xl px-4 text-sm font-semibold text-ink"
+  const btn = "btn-neu flow-btn inline-flex h-10 items-center gap-1 rounded-xl px-4 text-sm font-semibold text-ink"
   return (
     <nav aria-label="Pagination" className="mt-4 flex items-center justify-between gap-3 text-sm">
       <span className="tnum text-dim">
@@ -269,7 +269,7 @@ export function ScoreText({ score }: { score: number | null }) {
   const band = score < ANOMALY_THRESHOLD ? { label: "Anomaly", kind: "warning" as const } : score < 80 ? { label: "Watch", kind: "neutral" as const } : { label: "Good", kind: "ok" as const }
   return (
     <span className="inline-flex items-center gap-2 whitespace-nowrap">
-      <span className={cn("tnum text-base font-semibold", band.kind === "warning" && "text-warning")}>{score}</span>
+      <span className={cn("tnum text-base font-semibold", band.kind === "warning" && "text-ink")}>{score}</span>
       <Badge kind={band.kind}>{band.kind === "warning" && "⚠ "}{band.label}</Badge>
     </span>
   )
@@ -294,8 +294,8 @@ export function ReasonList({ reasons, max = 2 }: { reasons: ScoreReason[]; max?:
 
 export function FieldError({ id, children }: { id: string; children: ReactNode }) {
   return (
-    <p id={id} role="alert" className="flex items-center gap-1.5 text-sm text-error">
-      <AlertTriangle className="size-4 shrink-0" aria-hidden />
+    <p id={id} role="alert" className="flex items-center gap-1.5 text-sm text-ink">
+      <AlertTriangle className="size-4 shrink-0 text-lit" aria-hidden />
       {children}
     </p>
   )

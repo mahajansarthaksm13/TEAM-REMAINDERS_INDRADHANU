@@ -65,7 +65,7 @@ export function LiveFeed({ initial, companyId, scanHref }: { initial: FeedRow[];
         <p className="eyebrow text-dim">Live scan feed · latest 50</p>
         {status === "live" && <span className="flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-xs font-semibold text-success"><span className="soft-pulse size-2 rounded-full bg-success" />Live</span>}
         {status === "polling" && <span className="rounded-full bg-chip px-2.5 py-1 text-xs font-semibold">Refreshes every 60 s</span>}
-        {status === "reconnecting" && <span className="rounded-full bg-warning/10 px-2.5 py-1 text-xs font-semibold text-warning">Reconnecting…</span>}
+        {status === "reconnecting" && <span className="rounded-full bg-warning/10 px-2.5 py-1 text-xs font-semibold text-ink">Reconnecting…</span>}
       </div>
       {rows.length === 0 ? (
         <p className="rounded-[14px] border border-dashed border-line-strong/60 px-4 py-10 text-center text-sm text-dim">Waiting for the first scan…</p>

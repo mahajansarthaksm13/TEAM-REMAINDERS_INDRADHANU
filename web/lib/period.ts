@@ -55,3 +55,9 @@ export function periodOptions(fy: number) {
 
 // FY months as "YYYY-MM" (Apr→Mar)
 export const fyMonths = (fy: number) => periodOptions(fy).month.map((m) => m.key)
+
+// How many months of the FY have started, in IST (0 before April, 12 after March).
+export const monthsElapsed = (fy: number, now = Date.now()) => {
+  const month = new Date(now + 5.5 * 3_600_000).toISOString().slice(0, 7)
+  return fyMonths(fy).filter((m) => m <= month).length
+}

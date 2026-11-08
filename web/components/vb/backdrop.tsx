@@ -1,4 +1,4 @@
-/* The glow the glass floats over: three soft palette lights drifting on long periods, a faint dot
+/* The glow the neu floats over: three soft palette lights drifting on long periods, a faint dot
    grid fading out downward. Fixed behind everything; pure CSS, server-rendered. */
 
 const GLOWS = [

@@ -23,8 +23,8 @@ export function LoginForm({ next, notice }: { next: string; notice?: string }) {
 
   return (
     <>
-      {notice && !state.error && <p role="status" className="mt-6 rounded-[14px] bg-chip px-4 py-3 text-sm">{notice}</p>}
-      <form action={action} onSubmit={validate} noValidate className="mt-6 flex flex-col gap-4">
+      {notice && !state.error && <p role="status" className="neu-inset reveal mt-6 rounded-[14px] px-4 py-3 text-sm">{notice}</p>}
+      <form action={action} onSubmit={validate} noValidate className="cascade mt-6 flex flex-col gap-4">
         <input type="hidden" name="next" value={next} />
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="email">Email</Label>

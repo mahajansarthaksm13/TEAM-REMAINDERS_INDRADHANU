@@ -105,9 +105,9 @@ export function Simulator({ initialFeed }: { initialFeed: FeedItem[] }) {
 
   return (
     <div className="grid gap-6 lg:grid-cols-12">
-      <div className="glass rounded-card p-4 sm:p-6 lg:col-span-8">
+      <div className="neu rounded-card p-4 sm:p-6 lg:col-span-8">
         <p className="eyebrow mb-3 text-dim">1 · The packet</p>
-        <div className="flex items-center gap-4 glass-inset rounded-[14px] p-4 text-sm">
+        <div className="flex items-center gap-4 neu-inset rounded-[14px] p-4 text-sm">
           <span className="font-semibold">Demo bottle</span>
           <span className="text-dim">Category I · 24 g · barcode 8900000099999 · bin VB-PUN-9999-DEMO</span>
         </div>
@@ -123,9 +123,9 @@ export function Simulator({ initialFeed }: { initialFeed: FeedItem[] }) {
             </Button>
           )}
           <p role="status" aria-live="polite" className="text-sm font-semibold">
-            {(state.kind === "limited" || cooldown > 0) && <span className="text-warning">⚠ Demo limit reached — try again in a minute.{cooldown > 0 && ` (${cooldown}s)`}</span>}
-            {state.kind === "network" && <span className="text-error">✗ Couldn&apos;t reach the server.</span>}
-            {state.kind === "rejected" && <span className="text-error">✗ Ingest rejected: {state.reason}. {REASON[state.reason] ?? ""}</span>}
+            {(state.kind === "limited" || cooldown > 0) && <span className="text-ink">⚠ Demo limit reached — try again in a minute.{cooldown > 0 && ` (${cooldown}s)`}</span>}
+            {state.kind === "network" && <span className="text-ink">✗ Couldn&apos;t reach the server.</span>}
+            {state.kind === "rejected" && <span className="text-ink">✗ Ingest rejected: {state.reason}. {REASON[state.reason] ?? ""}</span>}
             {state.kind === "success" && <span className="text-success">✓ Stored, chained and in the feed.</span>}
           </p>
         </div>
@@ -148,7 +148,7 @@ export function Simulator({ initialFeed }: { initialFeed: FeedItem[] }) {
                 >
                   {isFail ? <X className="size-3.5" /> : isDone ? <Check className="size-3.5" /> : null}
                 </span>
-                <span className={cn("mt-2 text-xs font-semibold sm:text-sm", isFail && "text-error")}>
+                <span className={cn("mt-2 text-xs font-semibold sm:text-sm", isFail && "text-ink")}>
                   {s}
                   <span className="sr-only">{isFail ? " — failed" : isDone ? " — done" : isActive ? " — in progress" : " — pending"}</span>
                 </span>
@@ -178,13 +178,13 @@ export function Simulator({ initialFeed }: { initialFeed: FeedItem[] }) {
         )}
       </div>
 
-      <aside className="glass rounded-card p-4 sm:p-6 lg:col-span-4" aria-label="Demo feed">
+      <aside className="neu rounded-card p-4 sm:p-6 lg:col-span-4" aria-label="Demo feed">
         <div className="mb-4 flex items-center justify-between">
           <p className="eyebrow text-dim">Live demo feed</p>
           {feedLive ? (
             <span className="flex items-center gap-1.5 text-xs font-semibold text-success"><span className="size-2 rounded-full bg-success" />Live</span>
           ) : (
-            <span className="text-xs font-semibold text-warning">Live feed reconnecting…</span>
+            <span className="text-xs font-semibold text-ink">Live feed reconnecting…</span>
           )}
         </div>
         {feed.length === 0 ? (

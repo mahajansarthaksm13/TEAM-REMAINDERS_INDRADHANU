@@ -39,7 +39,7 @@ export default async function HowItWorksPage() {
       <Section>
         <ol className="grid gap-6 md:grid-cols-2">
           {STEPS.map((s) => (
-            <li key={s.n} id={`step-${s.n}`} className="scroll-mt-24 glass rounded-card p-6 lg:p-8">
+            <li key={s.n} id={`step-${s.n}`} className="scroll-mt-24 neu rounded-card p-6 lg:p-8">
               <span className="flex size-10 items-center justify-center rounded-full bg-lit font-bold text-on-lit">{s.n}</span>
               <h2 className="t-h3 mt-5">{s.title}</h2>
               <p className="mt-2 max-w-[56ch] text-dim">{DETAIL[s.n]}</p>

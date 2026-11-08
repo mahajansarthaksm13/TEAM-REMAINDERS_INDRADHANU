@@ -91,7 +91,7 @@ export default async function BinDetailPage({ params, searchParams }: { params: 
             <ul className="space-y-3">
               {alerts.map((a) => (
                 <li key={a.id} className="rounded-[14px] border border-line p-3 text-sm">
-                  <p className={a.kind === "chain_break" ? "eyebrow text-error" : "eyebrow text-warning"}>{a.kind === "chain_break" ? "✗" : "⚠"} {ALERT_LABEL[a.kind] ?? a.kind}</p>
+                  <p className={a.kind === "chain_break" ? "eyebrow text-ink" : "eyebrow text-ink"}>{a.kind === "chain_break" ? "✗" : "⚠"} {ALERT_LABEL[a.kind] ?? a.kind}</p>
                   <p className="mt-1 font-semibold">{humanize(a.message)}</p>
                   <p className="mt-1 text-xs text-dim">{fmtDateTime(a.opened_at)}</p>
                 </li>

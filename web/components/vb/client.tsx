@@ -76,8 +76,8 @@ export function VerifySignature({ recordText, signature, publicKey }: { recordTe
   }
   const msg: Partial<Record<VState, ReactNode>> = {
     valid: <span className="text-success">✓ Signature valid — verified in your browser.</span>,
-    invalid: <span className="text-error">✗ Signature does not match this record.</span>,
-    unsupported: <span className="text-warning">⚠ Your browser can&apos;t run Ed25519 verification. Try a current Chrome, Edge, Firefox or Safari.</span>,
+    invalid: <span className="text-ink">✗ Signature does not match this record.</span>,
+    unsupported: <span className="text-ink">⚠ Your browser can&apos;t run Ed25519 verification. Try a current Chrome, Edge, Firefox or Safari.</span>,
   }
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center">

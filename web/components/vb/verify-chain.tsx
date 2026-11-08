@@ -38,13 +38,13 @@ export function VerifyChain({ binId, scanHref }: { binId: string; scanHref: stri
       <div role="status" aria-live="polite" className="text-sm font-semibold">
         {s.kind === "running" && <span className="text-dim">Walking the chain…</span>}
         {s.kind === "error" && (
-          <span className="text-error">
+          <span className="text-ink">
             Verification couldn&apos;t run. <button className="underline" onClick={run}>Retry</button>
           </span>
         )}
         {s.kind === "done" && s.r.ok && <span className="text-success">✓ Chain intact — all {Number(s.r.scans_checked).toLocaleString("en-IN")} records verified.</span>}
         {s.kind === "done" && !s.r.ok && (
-          <span className="text-error">
+          <span className="text-ink">
             ✗ Chain break at record {Number(s.r.scans_checked).toLocaleString("en-IN")}: {REASON[s.r.reason ?? ""] ?? s.r.reason}.{" "}
             {s.r.failing_scan && <Link href={`/app/scans/${s.r.failing_scan}${scanHref}`} className="underline underline-offset-4">Open that scan →</Link>}
           </span>
