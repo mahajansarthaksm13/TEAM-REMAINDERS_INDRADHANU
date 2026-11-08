@@ -29,7 +29,7 @@ export default async function BinDetailPage({ params, searchParams }: { params: 
 
   return (
     <>
-      <PageHeader eyebrow={cityName(b.city)} title={b.bin_id} actions={<Link href={href("/app/bins", sp)} className="text-sm font-semibold text-olive-700 underline-offset-4 hover:underline">← All bins</Link>} />
+      <PageHeader eyebrow={cityName(b.city)} title={b.bin_id} actions={<Link href={href("/app/bins", sp)} className="text-sm font-semibold text-dim underline-offset-4 hover:underline">← All bins</Link>} />
 
       <Card>
         <div className="grid gap-6 lg:grid-cols-12 lg:items-center">
@@ -45,7 +45,7 @@ export default async function BinDetailPage({ params, searchParams }: { params: 
             />
           </div>
           <div className="lg:col-span-5">
-            <p className="mb-3 text-sm text-olive-700">Recomputes every record hash and link in this bin&apos;s chain, from the first scan to the latest.</p>
+            <p className="mb-3 text-sm text-dim">Recomputes every record hash and link in this bin&apos;s chain, from the first scan to the latest.</p>
             <VerifyChain binId={b.bin_id} scanHref={href("", sp)} />
           </div>
         </div>
@@ -59,11 +59,11 @@ export default async function BinDetailPage({ params, searchParams }: { params: 
           ) : (
             <>
               <ScoreChart data={[...scores].reverse().map((s) => ({ day: s.day, score: s.score }))} />
-              <p className="eyebrow mt-6 mb-2 text-olive-700">Deductions (each score covers the 90 days before it)</p>
+              <p className="eyebrow mt-6 mb-2 text-dim">Deductions (each score covers the 90 days before it)</p>
               {withReasons.length === 0 ? (
-                <p className="text-sm text-olive-700">No deductions in this window.</p>
+                <p className="text-sm text-dim">No deductions in this window.</p>
               ) : (
-                <ul className="divide-y divide-sage-200">
+                <ul className="divide-y divide-line">
                   {withReasons.map((s) => (
                     <li key={s.day} className="flex flex-col gap-1 py-3 sm:flex-row sm:items-center sm:justify-between">
                       <span className="text-sm">
@@ -71,7 +71,7 @@ export default async function BinDetailPage({ params, searchParams }: { params: 
                       </span>
                       <span className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
                         {s.reasons.map((r) => (
-                          <Link key={r.code} href={href("/app/scans", sp, { bin: b.bin_id, from: daysBefore(s.day, 90), to: s.day })} title={r.detail} className="text-olive-700 underline-offset-4 hover:underline">
+                          <Link key={r.code} href={href("/app/scans", sp, { bin: b.bin_id, from: daysBefore(s.day, 90), to: s.day })} title={r.detail} className="text-dim underline-offset-4 hover:underline">
                             {reasonLabel(r.code)} (−{Math.round(r.points)})
                           </Link>
                         ))}
@@ -86,14 +86,14 @@ export default async function BinDetailPage({ params, searchParams }: { params: 
         <Card className="lg:col-span-4">
           <CardHead eyebrow="Open alerts" title={alerts.length ? `${alerts.length} open` : "None"} />
           {alerts.length === 0 ? (
-            <p className="text-sm text-olive-700">No open alerts for this bin.</p>
+            <p className="text-sm text-dim">No open alerts for this bin.</p>
           ) : (
             <ul className="space-y-3">
               {alerts.map((a) => (
-                <li key={a.id} className="rounded-[14px] border border-sage-200 p-3 text-sm">
+                <li key={a.id} className="rounded-[14px] border border-line p-3 text-sm">
                   <p className={a.kind === "chain_break" ? "eyebrow text-error" : "eyebrow text-warning"}>{a.kind === "chain_break" ? "✗" : "⚠"} {ALERT_LABEL[a.kind] ?? a.kind}</p>
                   <p className="mt-1 font-semibold">{humanize(a.message)}</p>
-                  <p className="mt-1 text-xs text-olive-700">{fmtDateTime(a.opened_at)}</p>
+                  <p className="mt-1 text-xs text-dim">{fmtDateTime(a.opened_at)}</p>
                 </li>
               ))}
             </ul>

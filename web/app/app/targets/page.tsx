@@ -29,24 +29,24 @@ export default async function TargetsPage({ searchParams }: { searchParams: Prom
         <>
           <Card>
             <div className="grid gap-6 sm:grid-cols-3">
-              <div><p className="eyebrow text-olive-700">Collected</p><p className="t-kpi mt-1">{kg(got)}</p></div>
-              <div><p className="eyebrow text-olive-700">FY target</p><p className="t-kpi mt-1">{kg(total)}</p></div>
-              <div><p className="eyebrow text-olive-700">Progress</p><p className="t-kpi mt-1">{pct(got, total)}%</p></div>
+              <div><p className="eyebrow text-dim">Collected</p><p className="t-kpi mt-1">{kg(got)}</p></div>
+              <div><p className="eyebrow text-dim">FY target</p><p className="t-kpi mt-1">{kg(total)}</p></div>
+              <div><p className="eyebrow text-dim">Progress</p><p className="t-kpi mt-1">{pct(got, total)}%</p></div>
             </div>
           </Card>
           <div className="mt-6 grid gap-6 md:grid-cols-2">
             {t.map((x) => (
-              <Card key={x.category} id={x.category} className={cn(focus === x.category && "border-olive-700 ring-2 ring-olive-700/20")}>
+              <Card key={x.category} id={x.category} className={cn(focus === x.category && "ring-2 ring-lit/60")}>
                 <div className="mb-4 flex items-start justify-between gap-3">
                   <div>
-                    <p className="eyebrow text-olive-700">{CATEGORY_DESC[x.category]}</p>
+                    <p className="eyebrow text-dim">{CATEGORY_DESC[x.category]}</p>
                     <h2 className="t-h3 mt-1">{CATEGORY_LABEL[x.category]}</h2>
                   </div>
                   {x.at_risk ? <Badge kind="warning">⚠ At risk</Badge> : <Badge kind="ok">✓ On track</Badge>}
                 </div>
                 <CategoryBar category={x.category} collected={x.collected_kg} target={x.target_kg} href={href("/app/scans", sp, { category: x.category, period: `FY${period.fy}` })} />
-                <p className="mt-4 text-sm text-olive-700">
-                  Remaining gap <strong className="tnum text-olive-950">{kg(Math.max(0, x.target_kg - x.collected_kg))}</strong>
+                <p className="mt-4 text-sm text-dim">
+                  Remaining gap <strong className="tnum text-ink">{kg(Math.max(0, x.target_kg - x.collected_kg))}</strong>
                   {x.at_risk && <> · forecast falls short — <Link href={href("/app/insights", sp)} className="font-semibold underline-offset-4 hover:underline">see forecast</Link></>}
                 </p>
               </Card>

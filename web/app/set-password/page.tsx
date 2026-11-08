@@ -11,7 +11,7 @@ export default function SetPasswordPage() {
       <Wordmark className="mb-10" />
       <div className="w-full max-w-[420px]">
         <h1 className="t-h2">Set your password</h1>
-        <p className="mt-2 text-sm text-olive-700">You were invited to VeriBin. Choose a password, then log in.</p>
+        <p className="mt-2 text-sm text-dim">You were invited to VeriBin. Choose a password, then log in.</p>
         <SetPasswordForm />
       </div>
     </main>

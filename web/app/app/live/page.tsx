@@ -36,7 +36,7 @@ export default async function LivePage({ searchParams }: { searchParams: Promise
     <>
       <PageHeader eyebrow={`${scope.label} · ${period.label}`} title="Live Data" />
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-6">
+      <div className="stagger grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-6">
         <KpiCard href={scans()} label="Total collected" value={kg(k.total_kg)} caption={`${num(k.scan_count)} signed scans · catalogue weight`} />
         <KpiCard href={href("/app/targets", sp)} label="Target" value={kg(k.target_kg)} caption="Full financial-year target" />
         <KpiCard href={scans()} label="Gap" value={kg(gap)} caption={k.target_kg > 0 && gap === 0 ? "✓ Target met" : "Still to collect this FY"} />
@@ -69,17 +69,17 @@ export default async function LivePage({ searchParams }: { searchParams: Promise
           <LiveFeed initial={feed} companyId={cid} scanHref={href("", sp)} />
         </Card>
         <Card className="lg:col-span-4">
-          <CardHead eyebrow="Bins" title="Recently seen" action={<Link href={href("/app/bins", sp)} className="text-sm font-semibold text-olive-700 underline-offset-4 hover:underline">All bins</Link>} />
+          <CardHead eyebrow="Bins" title="Recently seen" action={<Link href={href("/app/bins", sp)} className="text-sm font-semibold text-dim underline-offset-4 hover:underline">All bins</Link>} />
           {recent.length === 0 ? (
-            <p className="text-sm text-olive-700">No bins registered.</p>
+            <p className="text-sm text-dim">No bins registered.</p>
           ) : (
-            <ul className="divide-y divide-sage-200">
+            <ul className="divide-y divide-line">
               {recent.map((b) => (
                 <li key={b.bin_id}>
-                  <Link href={href(`/app/bins/${b.bin_id}`, sp)} className="flex min-h-11 items-center justify-between gap-3 py-2 text-sm hover:bg-garden-50">
+                  <Link href={href(`/app/bins/${b.bin_id}`, sp)} className="flex min-h-11 items-center justify-between gap-3 py-2 text-sm hover:bg-panel-hi">
                     <span>
                       <span className="font-mono font-semibold">{b.bin_id}</span>
-                      <span className="block text-xs text-olive-700">{cityName(b.city)} · {b.last_seen ? timeAgo(b.last_seen) : "never reported"}</span>
+                      <span className="block text-xs text-dim">{cityName(b.city)} · {b.last_seen ? timeAgo(b.last_seen) : "never reported"}</span>
                     </span>
                     <ScoreText score={b.trust_score} />
                   </Link>

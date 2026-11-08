@@ -54,8 +54,8 @@ function NavList({ role }: { role: Role }) {
             href={keep(href)}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "flex h-11 items-center gap-3 rounded-full px-4 text-sm font-semibold text-garden-50/75 transition-colors duration-150 hover:bg-olive-700/50 hover:text-garden-50 focus-visible:ring-2 focus-visible:ring-sage-200 focus-visible:outline-none",
-              active && "bg-olive-700 text-garden-50"
+              "flex h-11 items-center gap-3 rounded-xl px-4 text-sm font-semibold text-dim transition-[background-color,color,transform] duration-300 ease-(--ease-spring) hover:translate-x-1 hover:bg-panel-hi/60 hover:text-ink",
+              active && "bg-panel-hi text-lit shadow-[inset_3px_0_0_var(--lit)]"
             )}
           >
             <Icon className="size-[18px]" aria-hidden />
@@ -69,10 +69,10 @@ function NavList({ role }: { role: Role }) {
 
 export function Sidebar({ role }: { role: Role }) {
   return (
-    <aside className="dark-band no-print fixed inset-y-0 left-0 z-40 hidden w-[248px] flex-col gap-8 px-4 py-5 lg:flex">
+    <aside className="no-print fixed inset-y-0 left-0 z-40 hidden w-[248px] flex-col gap-8 border-r border-line bg-deep/95 px-4 py-6 lg:flex">
       <Wordmark href="/app/live" className="px-4" />
       <NavList role={role} />
-      <p className="mt-auto px-4 text-xs text-sage-500">All times IST</p>
+      <p className="eyebrow mt-auto px-4 text-dim">All times IST</p>
     </aside>
   )
 }
@@ -100,7 +100,7 @@ export function TopBar({ user, scope, alerts }: { user: { name: string; email: s
   const readOnly = user.role === "auditor" || user.role === "regulator"
 
   return (
-    <header className="no-print sticky top-0 z-30 border-b border-sage-200 bg-garden-50/95 backdrop-blur">
+    <header className="no-print sticky top-0 z-30 border-b border-line bg-ground/90 backdrop-blur">
       <div className="flex h-16 items-center gap-2 px-4 sm:gap-3 lg:px-8">
         <Sheet>
           <SheetTrigger asChild>
@@ -108,8 +108,8 @@ export function TopBar({ user, scope, alerts }: { user: { name: string; email: s
               <Menu />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="dark-band w-[min(86vw,320px)] border-olive-700 bg-olive-950 px-4 py-5 text-garden-50">
-            <SheetTitle className="px-4 font-display text-[28px] font-normal text-garden-50">VeriBin</SheetTitle>
+          <SheetContent side="left" className="w-[min(86vw,320px)] border-line bg-deep px-4 py-5 text-ink">
+            <SheetTitle className="px-4 font-display text-[28px] font-normal text-ink">VeriBin</SheetTitle>
             <SheetClose asChild>
               <div><NavList role={user.role} /></div>
             </SheetClose>
@@ -163,25 +163,25 @@ export function TopBar({ user, scope, alerts }: { user: { name: string; email: s
               <Button variant="ghost" size="icon" aria-label={`Notifications, ${alerts.length} open`} className="relative">
                 <Bell />
                 {alerts.length > 0 && (
-                  <span className="tnum absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-olive-950 px-1 text-[10px] font-semibold text-garden-50">{alerts.length}</span>
+                  <span className="tnum absolute top-1 right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-deep px-1 text-[10px] font-semibold text-ink">{alerts.length}</span>
                 )}
               </Button>
             </PopoverTrigger>
             <PopoverContent align="end" className="w-[min(92vw,380px)] p-0">
-              <p className="eyebrow border-b border-sage-200 px-4 py-3 text-olive-700">Open alerts</p>
+              <p className="eyebrow border-b border-line px-4 py-3 text-dim">Open alerts</p>
               {alerts.length === 0 ? (
-                <p className="px-4 py-6 text-sm text-olive-700">No open alerts.</p>
+                <p className="px-4 py-6 text-sm text-dim">No open alerts.</p>
               ) : (
-                <ul className="max-h-96 divide-y divide-sage-200 overflow-y-auto">
+                <ul className="max-h-96 divide-y divide-line overflow-y-auto">
                   {alerts.map((a) => (
-                    <li key={a.id} className="flex items-start gap-1 pr-2 hover:bg-garden-50">
+                    <li key={a.id} className="flex items-start gap-1 pr-2 hover:bg-panel-hi">
                       <Link href={keep(a.href)} className="flex min-w-0 flex-1 flex-col gap-0.5 px-4 py-3 text-sm">
-                        <span className={cn("eyebrow", a.type === "chain_break" ? "text-error" : a.type === "bin_offline" ? "text-olive-700" : "text-warning")}>
+                        <span className={cn("eyebrow", a.type === "chain_break" ? "text-error" : a.type === "bin_offline" ? "text-dim" : "text-warning")}>
                           {a.type === "chain_break" ? "✗ " : a.type === "bin_offline" ? "" : "⚠ "}
                           {ALERT_LABEL[a.type] ?? a.type}
                         </span>
                         <span className="font-semibold">{humanize(a.message)}</span>
-                        <span className="text-xs text-olive-700">{timeAgo(a.created_at)}</span>
+                        <span className="text-xs text-dim">{timeAgo(a.created_at)}</span>
                       </Link>
                       {a.canClose && (
                         <Button variant="ghost" size="sm" className="mt-2 shrink-0" onClick={() => closeAlert(a.id).then(() => router.refresh())} aria-label={`Close alert: ${a.message}`}>
@@ -198,7 +198,7 @@ export function TopBar({ user, scope, alerts }: { user: { name: string; email: s
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="gap-2 px-2 sm:px-3" aria-label="Profile menu">
-                <span className="flex size-8 items-center justify-center rounded-full bg-olive-700 text-xs font-semibold text-garden-50">
+                <span className="flex size-8 items-center justify-center rounded-full bg-lit text-xs font-bold text-on-lit">
                   {user.name.split(" ").map((p) => p[0]).join("").slice(0, 2)}
                 </span>
                 <ChevronDown className="hidden size-4 sm:block" />
@@ -207,7 +207,7 @@ export function TopBar({ user, scope, alerts }: { user: { name: string; email: s
             <DropdownMenuContent align="end" className="w-60">
               <DropdownMenuLabel className="font-normal">
                 <p className="font-semibold">{user.name}</p>
-                <p className="text-xs text-olive-700">{ROLE_LABEL[user.role]} · {user.email}</p>
+                <p className="text-xs text-dim">{ROLE_LABEL[user.role]} · {user.email}</p>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
@@ -220,7 +220,7 @@ export function TopBar({ user, scope, alerts }: { user: { name: string; email: s
           </DropdownMenu>
         </div>
       </div>
-      {readOnly && <p className="border-t border-sage-200 px-4 py-1 text-xs font-semibold sm:hidden">Read-only access</p>}
+      {readOnly && <p className="border-t border-line px-4 py-1 text-xs font-semibold sm:hidden">Read-only access</p>}
     </header>
   )
 }

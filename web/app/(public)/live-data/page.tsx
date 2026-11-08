@@ -42,24 +42,24 @@ export default async function LiveDataPage() {
                 ["Active bins", num(s.active_bins)],
                 ["Cities", num(s.cities)],
               ].map(([k, v]) => (
-                <div key={k} className="rounded-card border border-sage-200 bg-surface p-4 sm:p-6">
-                  <dt className="eyebrow text-olive-700">{k}</dt>
+                <div key={k} className="skeu-raised rounded-card p-4 sm:p-6">
+                  <dt className="eyebrow text-dim">{k}</dt>
                   <dd className="t-kpi mt-2">{v}</dd>
                 </div>
               ))}
             </dl>
-            <div className="rounded-card border border-sage-200 bg-surface p-4 sm:p-6 lg:col-span-7">
-              <p className="eyebrow text-olive-700">By EPR category</p>
+            <div className="skeu-raised rounded-card p-4 sm:p-6 lg:col-span-7">
+              <p className="eyebrow text-dim">By EPR category</p>
               <div className="mt-5 space-y-6">
                 {s.by_category.map((c) => (
                   <CategoryBar key={c.category} category={c.category} collected={c.kg} target={max} relative />
                 ))}
               </div>
-              <p className="mt-6 text-xs text-olive-700">Bars are relative to the largest category. Catalogue weights. Live as of page load.</p>
+              <p className="mt-6 text-xs text-dim">Bars are relative to the largest category. Catalogue weights. Live as of page load.</p>
             </div>
           </div>
         )}
-        <div className="mt-12 flex flex-col gap-4 rounded-card bg-sage-200 p-6 sm:flex-row sm:items-center sm:justify-between lg:p-8">
+        <div className="mt-12 flex flex-col gap-4 rounded-card bg-chip p-6 sm:flex-row sm:items-center sm:justify-between lg:p-8">
           <p className="max-w-[52ch]">Producers, auditors and regulators see the same numbers per company, down to each signed scan.</p>
           <Button asChild><Link href="/login">Open dashboard</Link></Button>
         </div>

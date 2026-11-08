@@ -22,7 +22,7 @@ export default async function ScanDetailPage({ params, searchParams }: { params:
     return (
       <>
         <PageHeader title="Scan detail" />
-        <EmptyState action={<Link href={href("/app/scans", sp)} className="font-semibold text-olive-700 underline-offset-4 hover:underline">Back to scans</Link>}>Scan not found or not visible to you.</EmptyState>
+        <EmptyState action={<Link href={href("/app/scans", sp)} className="font-semibold text-dim underline-offset-4 hover:underline">Back to scans</Link>}>Scan not found or not visible to you.</EmptyState>
       </>
     )
   }
@@ -37,7 +37,7 @@ export default async function ScanDetailPage({ params, searchParams }: { params:
         eyebrow={`${s.bin_id} · sequence ${s.sequence}`}
         title={p.name}
         desc={`Totals use the catalogue weight (${p.unit_weight_g} g), not the measured weight.`}
-        actions={<Link href={href("/app/scans", sp)} className="text-sm font-semibold text-olive-700 underline-offset-4 hover:underline">← All scans</Link>}
+        actions={<Link href={href("/app/scans", sp)} className="text-sm font-semibold text-dim underline-offset-4 hover:underline">← All scans</Link>}
       />
       <div className="flex flex-col gap-6">
         <Card>
@@ -65,8 +65,8 @@ export default async function ScanDetailPage({ params, searchParams }: { params:
               items={[
                 ["Product", p.name],
                 ["Category", <span key="c" className="inline-flex items-center gap-2"><CategorySwatch category={category} />{CATEGORY_LABEL[category]} · {CATEGORY_DESC[category]}</span>],
-                ["Bin", <Link key="b" href={href(`/app/bins/${s.bin_id}`, sp)} className="font-mono font-semibold text-olive-700 underline-offset-4 hover:underline">{s.bin_id} · {cityName(d.bins.city)}</Link>],
-                ["Weight", <span key="w" className="tnum">{s.weight_g} g <span className="text-olive-700">vs catalogue {p.unit_weight_g} g ({diff >= 0 ? "+" : ""}{diff} g)</span></span>],
+                ["Bin", <Link key="b" href={href(`/app/bins/${s.bin_id}`, sp)} className="font-mono font-semibold text-dim underline-offset-4 hover:underline">{s.bin_id} · {cityName(d.bins.city)}</Link>],
+                ["Weight", <span key="w" className="tnum">{s.weight_g} g <span className="text-dim">vs catalogue {p.unit_weight_g} g ({diff >= 0 ? "+" : ""}{diff} g)</span></span>],
                 ["Weight check", <WeightBadge key="ok" ok={s.weight_ok} />],
                 ["Tier", <TierBadge key="t" tier={s.code_type as Tier} />],
                 ["Product code", <span key="code" className="font-mono text-[13px]">{s.code}</span>],
@@ -78,16 +78,16 @@ export default async function ScanDetailPage({ params, searchParams }: { params:
           <Card className="lg:col-span-5">
             <CardHead eyebrow="AI flags" title={flags.length ? "Under review" : "No flags"} />
             {flags.length === 0 ? (
-              <p className="text-sm text-olive-700">The nightly detector found nothing unusual about this scan.</p>
+              <p className="text-sm text-dim">The nightly detector found nothing unusual about this scan.</p>
             ) : (
               <ul className="space-y-3">
                 {flags.map((f) => (
-                  <li key={f.reason} className="flex items-start justify-between gap-3 rounded-[14px] border border-sage-200 p-3 text-sm">
+                  <li key={f.reason} className="flex items-start justify-between gap-3 rounded-[14px] border border-line p-3 text-sm">
                     <span>{reasonLabel(f.reason)}</span>
                     <Badge kind={f.severity === "high" ? "flagged" : "warning"}>{f.severity}</Badge>
                   </li>
                 ))}
-                <li className="text-xs text-olive-700">Flags never change the ledger. On reports, flagged scans are counted as under review; only a weight mismatch leaves a scan out of the totals.</li>
+                <li className="text-xs text-dim">Flags never change the ledger. On reports, flagged scans are counted as under review; only a weight mismatch leaves a scan out of the totals.</li>
               </ul>
             )}
           </Card>

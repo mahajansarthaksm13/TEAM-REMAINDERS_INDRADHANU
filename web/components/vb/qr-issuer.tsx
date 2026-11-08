@@ -12,7 +12,7 @@ import { issueQr } from "@/lib/actions"
 import { FieldError, Notice } from "./ui"
 import { HashChip } from "./client"
 
-const select = "h-10 w-full rounded-input border border-sage-600 bg-surface px-3 text-sm focus-visible:ring-2 focus-visible:ring-olive-950 focus-visible:outline-none"
+const select = "h-10 w-full skeu-inset rounded-input text-ink px-3 text-sm focus-visible:ring-2 focus-visible:ring-lit focus-visible:outline-none"
 const QUANTITY_RANGE = "Quantity must be a whole number from 1 to 10,000."
 
 export function QrIssuer({ products, printBase }: { products: { id: string; name: string }[]; printBase: string }) {
@@ -61,8 +61,8 @@ export function QrIssuer({ products, printBase }: { products: { id: string; name
       </div>
       {err && <Notice kind="error">{err}</Notice>}
       {batch && (
-        <div className="rounded-[14px] bg-garden-50 p-4">
-          <p className="eyebrow text-olive-700">Batch created</p>
+        <div className="rounded-[14px] bg-deep/60 p-4">
+          <p className="eyebrow text-dim">Batch created</p>
           <p className="mt-2 flex flex-wrap items-center gap-2 text-sm">Batch <HashChip value={batch.batch_id} label="Batch ID" /> · <strong className="tnum">{batch.count.toLocaleString("en-IN")}</strong> codes</p>
           <div className="mt-3 flex flex-wrap gap-2">
             <Button asChild variant="secondary"><a href={`/api/qr/${batch.batch_id}/csv`}><Download />Download CSV</a></Button>

@@ -40,7 +40,7 @@ export function SampleSignatures({ samples }: { samples: Sample[] }) {
     <>
       <p role="status" aria-live="polite" className="mb-4 text-sm font-semibold">
         {!done ? (
-          <span className="text-olive-700">Checking signatures in your browser…</span>
+          <span className="text-dim">Checking signatures in your browser…</span>
         ) : unsupported ? (
           <span className="text-warning">⚠ Your browser can&apos;t run Ed25519 verification. Try a current Chrome, Edge, Firefox or Safari.</span>
         ) : valid === samples.length ? (
@@ -49,17 +49,17 @@ export function SampleSignatures({ samples }: { samples: Sample[] }) {
           <span className="text-error">✗ {samples.length - valid} of {samples.length} signatures do not match their records.</span>
         )}
       </p>
-      <ul className="divide-y divide-sage-200">
+      <ul className="divide-y divide-line">
         {samples.map((s) => {
           const r = results[s.scan_id]
           return (
             <li key={s.scan_id} className="flex flex-col gap-1 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
               <span className="flex items-center gap-2">
-                <span className={!r ? "text-olive-700" : r === "valid" ? "text-success" : "text-error"} aria-label={r ?? "checking"}>
+                <span className={!r ? "text-dim" : r === "valid" ? "text-success" : "text-error"} aria-label={r ?? "checking"}>
                   {!r ? "…" : r === "valid" ? "✓" : "✗"}
                 </span>
                 <span className="font-mono">{s.bin_id} #{s.record_text.split("|")[2]}</span>
-                <span className="text-olive-700">{cityName(s.bin_id.split("-")[1])} · {fmtDateTime(s.scanned_at)}</span>
+                <span className="text-dim">{cityName(s.bin_id.split("-")[1])} · {fmtDateTime(s.scanned_at)}</span>
               </span>
               <HashChip value={s.chain_hash} label="Chain hash" />
             </li>

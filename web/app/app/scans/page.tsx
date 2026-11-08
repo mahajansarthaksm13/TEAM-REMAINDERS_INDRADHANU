@@ -11,7 +11,7 @@ import { fmtDateTime, num } from "@/lib/format"
 
 export const metadata: Metadata = { title: "Scans" }
 
-const field = "h-10 w-full rounded-input border border-sage-600 bg-surface px-3 text-sm focus-visible:ring-2 focus-visible:ring-olive-950 focus-visible:outline-none"
+const field = "h-10 w-full skeu-inset rounded-input text-ink px-3 text-sm focus-visible:ring-2 focus-visible:ring-lit focus-visible:outline-none"
 
 export default async function ScansPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { sb, scope, period, sp } = await pageCtx(searchParams)
@@ -90,7 +90,7 @@ export default async function ScansPage({ searchParams }: { searchParams: Promis
     <>
       <PageHeader eyebrow={`${scope.label} · ${period.label}`} title="Scans" desc="Every signed scan behind the totals. Filters live in the URL, so any view can be shared." />
 
-      <div className="sticky top-16 z-20 -mx-4 mb-4 border-b border-sage-200 bg-garden-50/95 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+      <div className="sticky top-16 z-20 -mx-4 mb-4 border-b border-line bg-ground/90 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
         <div className="hidden md:block">{filters}</div>
         <details className="md:hidden">
           <summary className="flex h-11 cursor-pointer list-none items-center gap-2 font-semibold">
@@ -101,14 +101,14 @@ export default async function ScansPage({ searchParams }: { searchParams: Promis
       </div>
 
       <div className="mb-3 flex items-center justify-between gap-3 text-sm">
-        <p className="tnum text-olive-700">{num(total)} scans</p>
-        {filtered && <Link href={href("/app/scans", sp)} className="font-semibold text-olive-700 underline-offset-4 hover:underline">Clear filters</Link>}
+        <p className="tnum text-dim">{num(total)} scans</p>
+        {filtered && <Link href={href("/app/scans", sp)} className="font-semibold text-dim underline-offset-4 hover:underline">Clear filters</Link>}
       </div>
 
       {rows.length === 0 ? (
-        <EmptyState action={<Link href={href("/app/scans", sp)} className="font-semibold text-olive-700 underline-offset-4 hover:underline">Clear filters</Link>}>No scans match these filters.</EmptyState>
+        <EmptyState action={<Link href={href("/app/scans", sp)} className="font-semibold text-dim underline-offset-4 hover:underline">Clear filters</Link>}>No scans match these filters.</EmptyState>
       ) : (
-        <div className="rounded-card border border-sage-200 bg-surface p-4 sm:p-6">
+        <div className="skeu-raised rounded-card p-4 sm:p-6">
           <DataTable<FeedRow>
             caption="Scans, newest first"
             rows={rows}
@@ -124,7 +124,7 @@ export default async function ScansPage({ searchParams }: { searchParams: Promis
               { key: "w", label: "Weight (g)", align: "right", cell: (r) => r.weight_g },
               { key: "tier", label: "Tier", cell: (r) => <TierBadge tier={r.tier} /> },
               { key: "ok", label: "Weight OK", cell: (r) => <WeightBadge ok={r.weight_ok} /> },
-              { key: "flag", label: "Flag", cell: (r) => (r.flagged ? <Badge kind="flagged">✗ Flagged</Badge> : <span className="text-olive-700">—</span>) },
+              { key: "flag", label: "Flag", cell: (r) => (r.flagged ? <Badge kind="flagged">✗ Flagged</Badge> : <span className="text-dim">—</span>) },
             ]}
           />
           <Pagination page={f.page} total={total} per={PAGE} hrefFor={pageHref} />

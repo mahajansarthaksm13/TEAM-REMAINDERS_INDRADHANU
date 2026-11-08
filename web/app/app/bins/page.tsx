@@ -9,7 +9,7 @@ import { fmtDateTime, num, timeAgo } from "@/lib/format"
 
 export const metadata: Metadata = { title: "Bins" }
 
-const field = "h-10 rounded-input border border-sage-600 bg-surface px-3 text-sm focus-visible:ring-2 focus-visible:ring-olive-950 focus-visible:outline-none"
+const field = "h-10 skeu-inset rounded-input text-ink px-3 text-sm focus-visible:ring-2 focus-visible:ring-lit focus-visible:outline-none"
 
 export default async function BinsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { sb, scope, sp } = await pageCtx(searchParams)
@@ -45,7 +45,7 @@ export default async function BinsPage({ searchParams }: { searchParams: Promise
       {rows.length === 0 ? (
         <EmptyState>No bins registered.</EmptyState>
       ) : (
-        <div className="rounded-card border border-sage-200 bg-surface p-4 sm:p-6">
+        <div className="skeu-raised rounded-card p-4 sm:p-6">
           <DataTable<BinRow>
             caption="Bins"
             rows={rows}

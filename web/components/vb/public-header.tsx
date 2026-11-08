@@ -25,7 +25,7 @@ export function PublicHeader({ loggedIn }: { loggedIn: boolean }) {
     <Button asChild variant="dark" size="sm"><Link href="/login">Log in</Link></Button>
   )
   return (
-    <header className="dark-band sticky top-0 z-40 border-b border-olive-700/60 bg-olive-950/95 backdrop-blur no-print">
+    <header className="sticky top-0 z-40 border-b border-line bg-ground/85 backdrop-blur no-print">
       <div className="mx-auto flex h-16 max-w-[1200px] items-center justify-between gap-6 px-4 sm:px-6">
         <Wordmark />
         <nav aria-label="Main" className="hidden items-center gap-1 lg:flex">
@@ -34,7 +34,7 @@ export function PublicHeader({ loggedIn }: { loggedIn: boolean }) {
               key={href}
               href={href}
               aria-current={path.startsWith(href) ? "page" : undefined}
-              className={cn("rounded-full px-3 py-2 text-sm text-garden-50/80 transition-colors hover:text-garden-50", path.startsWith(href) && "bg-olive-700/60 text-garden-50")}
+              className={cn("rounded-full px-3 py-2 text-sm text-ink/80 transition-colors hover:text-ink", path.startsWith(href) && "bg-panel-hi text-ink")}
             >
               {label}
             </Link>
@@ -47,12 +47,12 @@ export function PublicHeader({ loggedIn }: { loggedIn: boolean }) {
               <Menu />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="dark-band w-[min(86vw,320px)] border-olive-700 bg-olive-950 p-6 text-garden-50">
-            <SheetTitle className="font-display text-[28px] font-normal text-garden-50">VeriBin</SheetTitle>
+          <SheetContent side="left" className="w-[min(86vw,320px)] border-line bg-deep p-6 text-ink">
+            <SheetTitle className="font-display text-[28px] font-normal text-ink">VeriBin</SheetTitle>
             <nav aria-label="Main" className="flex flex-col gap-1">
-              <Link href="/" className="rounded-full px-3 py-3 text-garden-50/90 hover:bg-olive-700">Home</Link>
+              <Link href="/" className="rounded-full px-3 py-3 text-ink/90 hover:bg-panel-hi">Home</Link>
               {LINKS.map(([href, label]) => (
-                <Link key={href} href={href} className={cn("rounded-full px-3 py-3 text-garden-50/90 hover:bg-olive-700", path.startsWith(href) && "bg-olive-700 text-garden-50")}>
+                <Link key={href} href={href} className={cn("rounded-full px-3 py-3 text-ink/90 hover:bg-panel-hi", path.startsWith(href) && "bg-panel-hi text-ink")}>
                   {label}
                 </Link>
               ))}

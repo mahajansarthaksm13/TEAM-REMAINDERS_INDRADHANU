@@ -41,7 +41,7 @@ export function SetPasswordForm() {
     router.push("/login")
   }
 
-  if (ready === null) return <p className="mt-6 text-sm text-olive-700">Checking your invite…</p>
+  if (ready === null) return <p className="mt-6 text-sm text-dim">Checking your invite…</p>
   if (!ready) return <div className="mt-6"><Notice kind="error">This invite link is invalid or has expired. Ask your admin for a new one.</Notice></div>
   return (
     <form onSubmit={submit} noValidate className="mt-6 flex flex-col gap-4">

@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react"
 import { Loader2 } from "lucide-react"
 import { FieldError } from "@/components/vb/ui"
-import { Button } from "@/components/ui/button"
+import { Cta } from "@/components/vb/magnetic"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { login, type LoginState } from "@/lib/actions"
@@ -23,7 +23,7 @@ export function LoginForm({ next, notice }: { next: string; notice?: string }) {
 
   return (
     <>
-      {notice && !state.error && <p role="status" className="mt-6 rounded-[14px] bg-sage-200 px-4 py-3 text-sm">{notice}</p>}
+      {notice && !state.error && <p role="status" className="mt-6 rounded-[14px] bg-chip px-4 py-3 text-sm">{notice}</p>}
       <form action={action} onSubmit={validate} noValidate className="mt-6 flex flex-col gap-4">
         <input type="hidden" name="next" value={next} />
         <div className="flex flex-col gap-1.5">
@@ -37,11 +37,11 @@ export function LoginForm({ next, notice }: { next: string; notice?: string }) {
           {errs.password && <FieldError id="pw-err">{errs.password}</FieldError>}
         </div>
         {state.error && <FieldError id="form-err">{state.error}</FieldError>}
-        <Button type="submit" size="lg" disabled={pending} className="mt-2">
+        <Cta type="submit" size="lg" disabled={pending} magnetic={false} className="mt-2 w-full">
           {pending && <Loader2 className="animate-spin" />}Log in
-        </Button>
+        </Cta>
       </form>
-      <p className="mt-4 text-sm text-olive-700">Forgot your password? Ask your admin to reset it.</p>
+      <p className="mt-4 text-sm text-dim">Forgot your password? Ask your admin to reset it.</p>
     </>
   )
 }

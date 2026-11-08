@@ -105,11 +105,11 @@ export function Simulator({ initialFeed }: { initialFeed: FeedItem[] }) {
 
   return (
     <div className="grid gap-6 lg:grid-cols-12">
-      <div className="rounded-card border border-sage-200 bg-surface p-4 sm:p-6 lg:col-span-8">
-        <p className="eyebrow mb-3 text-olive-700">1 · The packet</p>
-        <div className="flex items-center gap-4 rounded-[14px] border border-olive-700 bg-sage-200 p-4 text-sm">
+      <div className="skeu-raised rounded-card p-4 sm:p-6 lg:col-span-8">
+        <p className="eyebrow mb-3 text-dim">1 · The packet</p>
+        <div className="flex items-center gap-4 skeu-inset rounded-[14px] p-4 text-sm">
           <span className="font-semibold">Demo bottle</span>
-          <span className="text-olive-700">Category I · 24 g · barcode 8900000099999 · bin VB-PUN-9999-DEMO</span>
+          <span className="text-dim">Category I · 24 g · barcode 8900000099999 · bin VB-PUN-9999-DEMO</span>
         </div>
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -130,7 +130,7 @@ export function Simulator({ initialFeed }: { initialFeed: FeedItem[] }) {
           </p>
         </div>
 
-        <p className="eyebrow mt-8 mb-4 text-olive-700">2 · Watch it travel</p>
+        <p className="eyebrow mt-8 mb-4 text-dim">2 · Watch it travel</p>
         <ol className="grid grid-cols-4 gap-2" aria-label="Scan stages">
           {STAGES.map((s, i) => {
             const n = i + 1
@@ -139,11 +139,11 @@ export function Simulator({ initialFeed }: { initialFeed: FeedItem[] }) {
             const isActive = busy && n === done + 1
             return (
               <li key={s} className="relative flex flex-col items-center text-center">
-                {i < 3 && <span aria-hidden className={cn("absolute top-3 left-[calc(50%+12px)] h-0.5 w-[calc(100%-24px)]", n < done ? "bg-olive-700" : "bg-sage-200")} />}
+                {i < 3 && <span aria-hidden className={cn("absolute top-3 left-[calc(50%+12px)] h-0.5 w-[calc(100%-24px)]", n < done ? "bg-lit" : "bg-chip")} />}
                 <span
                   className={cn(
-                    "relative z-10 flex size-6 items-center justify-center rounded-full border-2 text-garden-50",
-                    isFail ? "border-error bg-error" : isDone ? "border-olive-700 bg-olive-700" : isActive ? "soft-pulse border-olive-700 bg-surface" : "border-sage-200 bg-surface"
+                    "relative z-10 flex size-6 items-center justify-center rounded-full border-2 text-ink",
+                    isFail ? "border-error bg-error" : isDone ? "border-lit bg-lit text-on-lit" : isActive ? "soft-pulse border-lit bg-panel" : "border-line bg-panel"
                   )}
                 >
                   {isFail ? <X className="size-3.5" /> : isDone ? <Check className="size-3.5" /> : null}
@@ -169,8 +169,8 @@ export function Simulator({ initialFeed }: { initialFeed: FeedItem[] }) {
               </div>
             )}
             {state.kind === "success" && (
-              <div className="rounded-[14px] bg-garden-50 p-4">
-                <p className="mb-3 text-sm text-olive-700">Check the signature yourself, on your device, with the demo bin&apos;s public key.</p>
+              <div className="rounded-[14px] bg-deep/60 p-4">
+                <p className="mb-3 text-sm text-dim">Check the signature yourself, on your device, with the demo bin&apos;s public key.</p>
                 <VerifySignature recordText={res.record} signature={res.signature} publicKey={res.public_key} />
               </div>
             )}
@@ -178,9 +178,9 @@ export function Simulator({ initialFeed }: { initialFeed: FeedItem[] }) {
         )}
       </div>
 
-      <aside className="rounded-card border border-sage-200 bg-surface p-4 sm:p-6 lg:col-span-4" aria-label="Demo feed">
+      <aside className="skeu-raised rounded-card p-4 sm:p-6 lg:col-span-4" aria-label="Demo feed">
         <div className="mb-4 flex items-center justify-between">
-          <p className="eyebrow text-olive-700">Live demo feed</p>
+          <p className="eyebrow text-dim">Live demo feed</p>
           {feedLive ? (
             <span className="flex items-center gap-1.5 text-xs font-semibold text-success"><span className="size-2 rounded-full bg-success" />Live</span>
           ) : (
@@ -188,18 +188,18 @@ export function Simulator({ initialFeed }: { initialFeed: FeedItem[] }) {
           )}
         </div>
         {feed.length === 0 ? (
-          <p className="text-sm text-olive-700">No demo scans yet. Be the first.</p>
+          <p className="text-sm text-dim">No demo scans yet. Be the first.</p>
         ) : (
-          <ul className="divide-y divide-sage-200" aria-live="polite">
+          <ul className="divide-y divide-line" aria-live="polite">
             {feed.map((f) => (
               <li key={f.scan_id} className={cn("flex items-center justify-between gap-3 rounded-[10px] px-2 py-3 text-sm", f.scan_id === fresh && "feed-in")}>
                 <span className="truncate">Demo bottle · {f.weight_g} g</span>
-                <span className="tnum shrink-0 text-xs text-olive-700">{fmtTime(f.received_at)}</span>
+                <span className="tnum shrink-0 text-xs text-dim">{fmtTime(f.received_at)}</span>
               </li>
             ))}
           </ul>
         )}
-        <p className="mt-4 text-xs text-olive-700">Simulator scans use demo bin VB-PUN-9999-DEMO and never count toward company or national totals.</p>
+        <p className="mt-4 text-xs text-dim">Simulator scans use demo bin VB-PUN-9999-DEMO and never count toward company or national totals.</p>
       </aside>
     </div>
   )

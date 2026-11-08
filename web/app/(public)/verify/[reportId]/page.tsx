@@ -65,7 +65,7 @@ export default async function VerifyReportPage({ params }: { params: Promise<{ r
               ["Under review", num(Number(v.under_review_count))],
             ]}
           />
-          <p className="mt-4 text-xs text-olive-700">Figures recomputed now from the ledger. Totals use catalogue weights.</p>
+          <p className="mt-4 text-xs text-dim">Figures recomputed now from the ledger. Totals use catalogue weights.</p>
         </Card>
 
         <Card>
@@ -81,10 +81,10 @@ export default async function VerifyReportPage({ params }: { params: Promise<{ r
           <CardHead
             eyebrow="Checkpoint"
             title={fmtDay(v.checkpoint_day)}
-            action={<a href={checkpointUrl(v.checkpoint_day)} target="_blank" rel="noreferrer" className="text-sm font-semibold whitespace-nowrap text-olive-700 underline-offset-4 hover:underline">View on GitHub ↗</a>}
+            action={<a href={checkpointUrl(v.checkpoint_day)} target="_blank" rel="noreferrer" className="text-sm font-semibold whitespace-nowrap text-dim underline-offset-4 hover:underline">View on GitHub ↗</a>}
           />
           <ProofField label="Checkpoint hash" value={v.checkpoint_hash} />
-          <p className="mt-3 text-sm text-olive-700">Only scans that reached the ledger before the end of this day (IST) count toward the report.</p>
+          <p className="mt-3 text-sm text-dim">Only scans that reached the ledger before the end of this day (IST) count toward the report.</p>
         </Card>
 
         <Card>
@@ -99,7 +99,7 @@ export default async function VerifyReportPage({ params }: { params: Promise<{ r
 function Shell({ id, children }: { id: string; children: React.ReactNode }) {
   return (
     <div className="mx-auto max-w-[840px] px-4 py-10 sm:px-6 lg:py-16">
-      <p className="eyebrow mb-2 text-olive-700">Report verification</p>
+      <p className="eyebrow mb-2 text-dim">Report verification</p>
       <h1 className="mb-6 font-mono text-lg leading-7 [overflow-wrap:anywhere] lg:text-xl">{id}</h1>
       {children}
     </div>
@@ -107,5 +107,5 @@ function Shell({ id, children }: { id: string; children: React.ReactNode }) {
 }
 
 const NotFound = () => (
-  <EmptyState action={<Link href="/" className="font-semibold text-olive-700 underline-offset-4 hover:underline">Go to home</Link>}>No report with this ID.</EmptyState>
+  <EmptyState action={<Link href="/" className="font-semibold text-dim underline-offset-4 hover:underline">Go to home</Link>}>No report with this ID.</EmptyState>
 )

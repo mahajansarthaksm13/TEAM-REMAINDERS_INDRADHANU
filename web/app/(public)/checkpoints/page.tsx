@@ -45,7 +45,7 @@ export default async function CheckpointsPage({ searchParams }: { searchParams: 
                   label: "Proof",
                   align: "right",
                   cell: (r) => (
-                    <a href={checkpointUrl(r.day)} target="_blank" rel="noreferrer" className="font-semibold text-olive-700 underline-offset-4 hover:underline">
+                    <a href={checkpointUrl(r.day)} target="_blank" rel="noreferrer" className="font-semibold text-dim underline-offset-4 hover:underline">
                       View on GitHub ↗
                     </a>
                   ),
@@ -55,8 +55,8 @@ export default async function CheckpointsPage({ searchParams }: { searchParams: 
             <Pagination page={page} total={count ?? 0} per={PER} hrefFor={(p) => `/checkpoints?page=${p}`} />
           </>
         )}
-        <details className="mt-10 text-sm text-olive-700">
-          <summary className="cursor-pointer font-semibold text-olive-950">How to recompute a checkpoint</summary>
+        <details className="mt-10 text-sm text-dim">
+          <summary className="cursor-pointer font-semibold text-ink">How to recompute a checkpoint</summary>
           <p className="mt-3 max-w-[68ch]">
             For every bin created before midnight IST at the end of the day, in bin-id order, take <code className="font-mono">&lt;bin_id&gt;=&lt;chain hash of its last scan received before that time&gt;</code> (64 zeros if none) and join them with <code className="font-mono">|</code>. The checkpoint hash is SHA-256 of <code className="font-mono">&lt;day&gt;|&lt;previous checkpoint hash&gt;|&lt;heads&gt;</code>.
           </p>

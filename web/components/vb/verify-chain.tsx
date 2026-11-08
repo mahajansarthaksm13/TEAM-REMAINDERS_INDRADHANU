@@ -36,7 +36,7 @@ export function VerifyChain({ binId, scanHref }: { binId: string; scanHref: stri
         {s.kind === "running" ? <Loader2 className="animate-spin" /> : <Link2 />}Verify chain
       </Button>
       <div role="status" aria-live="polite" className="text-sm font-semibold">
-        {s.kind === "running" && <span className="text-olive-700">Walking the chain…</span>}
+        {s.kind === "running" && <span className="text-dim">Walking the chain…</span>}
         {s.kind === "error" && (
           <span className="text-error">
             Verification couldn&apos;t run. <button className="underline" onClick={run}>Retry</button>

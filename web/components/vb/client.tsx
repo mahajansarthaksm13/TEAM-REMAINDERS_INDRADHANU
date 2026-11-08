@@ -13,7 +13,7 @@ export function CopyButton({ value, label = "Copy", className }: { value: string
     <button
       type="button"
       aria-label={`${label} to clipboard`}
-      className={cn("inline-flex size-8 shrink-0 items-center justify-center rounded-full text-olive-700 hover:bg-sage-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none", className)}
+      className={cn("inline-flex size-8 shrink-0 items-center justify-center rounded-full text-dim hover:bg-panel-hi focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none", className)}
       onClick={async () => {
         try {
           await navigator.clipboard.writeText(value)
@@ -37,7 +37,7 @@ export function HashChip({ value, full, label }: { value: string; full?: boolean
       <code
         title={value}
         className={cn(
-          "rounded-badge bg-sage-200 px-2 py-0.5 font-mono text-xs text-olive-950 sm:text-[13px]",
+          "rounded-badge bg-chip px-2 py-0.5 font-mono text-xs text-ink sm:text-[13px]",
           full ? "min-w-0 flex-1 leading-5 [overflow-wrap:anywhere]" : "whitespace-nowrap"
         )}
       >
@@ -51,7 +51,7 @@ export function HashChip({ value, full, label }: { value: string; full?: boolean
 export function ProofField({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0">
-      <p className="eyebrow mb-1 text-olive-700">{label}</p>
+      <p className="eyebrow mb-1 text-dim">{label}</p>
       <HashChip value={value} full label={label} />
     </div>
   )

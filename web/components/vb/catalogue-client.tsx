@@ -12,7 +12,7 @@ import { approve, createProduct, type ProductState } from "@/lib/actions"
 import { CATEGORIES, CATEGORY_DESC, CATEGORY_LABEL } from "@/lib/shared"
 import { FieldError, Notice } from "./ui"
 
-const select = "h-10 w-full rounded-input border border-sage-600 bg-surface px-3 text-sm focus-visible:ring-2 focus-visible:ring-olive-950 focus-visible:outline-none aria-invalid:border-error"
+const select = "h-10 w-full skeu-inset rounded-input text-ink px-3 text-sm focus-visible:ring-2 focus-visible:ring-lit focus-visible:outline-none aria-invalid:border-error"
 
 function Field({ id, label, error, children }: { id: string; label: string; error?: string; children: React.ReactNode }) {
   return (

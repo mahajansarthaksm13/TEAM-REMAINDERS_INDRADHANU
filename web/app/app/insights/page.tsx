@@ -97,7 +97,7 @@ export default async function InsightsPage({ searchParams }: { searchParams: Pro
           {cards.map((c) => (
             <Card key={c.id} className="flex min-w-[78vw] snap-start flex-col justify-between gap-4 sm:min-w-0">
               <p className="text-base leading-6">{humanize(c.sentence ?? "")}</p>
-              <Link href={filterLink(c.scan_filter as Record<string, string>)} className="text-sm font-semibold text-olive-700 underline-offset-4 hover:underline">View scans →</Link>
+              <Link href={filterLink(c.scan_filter as Record<string, string>)} className="text-sm font-semibold text-dim underline-offset-4 hover:underline">View scans →</Link>
             </Card>
           ))}
         </div>
@@ -132,19 +132,19 @@ export default async function InsightsPage({ searchParams }: { searchParams: Pro
         <Card className="lg:col-span-4">
           <CardHead eyebrow="Detector accuracy" title="Against planted test fraud" />
           {!acc ? (
-            <p className="text-sm text-olive-700">Not measured yet. It is recorded when the detector is evaluated against simulator ground truth.</p>
+            <p className="text-sm text-dim">Not measured yet. It is recorded when the detector is evaluated against simulator ground truth.</p>
           ) : (
             <>
               <dl className="grid grid-cols-2 gap-4">
-                <div><dt className="eyebrow text-olive-700">Caught</dt><dd className="t-kpi mt-1">{caught}/{planted}</dd></div>
-                <div><dt className="eyebrow text-olive-700">False alarms</dt><dd className="t-kpi mt-1">{acc.false_alarms?.flagged ?? 0}</dd></div>
+                <div><dt className="eyebrow text-dim">Caught</dt><dd className="t-kpi mt-1">{caught}/{planted}</dd></div>
+                <div><dt className="eyebrow text-dim">False alarms</dt><dd className="t-kpi mt-1">{acc.false_alarms?.flagged ?? 0}</dd></div>
               </dl>
               <ul className="mt-4 space-y-1 text-sm">
                 {fraud.map(([k, v]) => (
-                  <li key={k} className="flex justify-between gap-3"><span>{k.replaceAll("_", " ")}</span><span className="tnum text-olive-700">{v.caught}/{v.planted}</span></li>
+                  <li key={k} className="flex justify-between gap-3"><span>{k.replaceAll("_", " ")}</span><span className="tnum text-dim">{v.caught}/{v.planted}</span></li>
                 ))}
               </ul>
-              <p className="mt-4 text-xs text-olive-700">False alarms out of {acc.false_alarms?.clean_scans ?? 0} clean scans. Measured {fmtDateTime(accRows![0].created_at)}.</p>
+              <p className="mt-4 text-xs text-dim">False alarms out of {acc.false_alarms?.clean_scans ?? 0} clean scans. Measured {fmtDateTime(accRows![0].created_at)}.</p>
             </>
           )}
         </Card>

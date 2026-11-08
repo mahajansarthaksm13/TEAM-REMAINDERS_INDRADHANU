@@ -20,12 +20,13 @@ export const CATEGORY_DESC: Record<Category, string> = {
   cat4_compostable: "Compostable plastics",
 }
 
-// Design Brief §5: I = Olive Black, II = Deep Olive, III = Muted Sage, IV = Sage Mist + hatch
+// Same palette, tonal order flipped for the dark ground (lightest = Category I):
+// I = Garden White, II = Sage Mist, III = Muted Sage, IV = Deep Olive with a Sage Mist hatch.
 export const CATEGORY_COLOR: Record<Category, string> = {
-  cat1_rigid: "#1F261A",
-  cat2_flexible: "#4A543D",
+  cat1_rigid: "#F5F7EF",
+  cat2_flexible: "#D7DEC8",
   cat3_multilayer: "#8B9678",
-  cat4_compostable: "#D7DEC8",
+  cat4_compostable: "#4A543D",
 }
 
 export const isCategory = (v: unknown): v is Category => CATEGORIES.includes(v as Category)

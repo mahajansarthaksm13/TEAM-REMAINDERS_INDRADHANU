@@ -24,7 +24,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           scope={{ options: scopeOptions(user, companies), staticName: user.role === "company" ? own?.name ?? "Your company" : undefined }}
           alerts={alerts}
         />
-        <main id="main" className="mx-auto max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{children}</main>
+        {/* stagger: each block on a page rises in after the one before it */}
+        <main id="main" className="stagger mx-auto max-w-[1440px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{children}</main>
       </div>
     </div>
   )

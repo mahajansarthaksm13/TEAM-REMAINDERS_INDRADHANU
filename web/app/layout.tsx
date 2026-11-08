@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
-import { Instrument_Sans, Instrument_Serif, JetBrains_Mono } from "next/font/google";
+import { Comfortaa, JetBrains_Mono, Jost } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
+import { Backdrop } from "@/components/vb/backdrop";
 import "./globals.css";
 
-// Display: Anola once licensed — swap to next/font/local({ src: "./fonts/Anola.woff2", variable: "--font-display-face" }).
-const display = Instrument_Serif({ variable: "--font-display-face", subsets: ["latin"], weight: "400", display: "swap" });
-const sans = Instrument_Sans({ variable: "--font-sans-face", subsets: ["latin"], display: "swap" });
+// Type, the reference pairing:
+//  · Comfortaa: monoline geometric with true-circle bowls; titles, copy, controls, numbers.
+//  · Jost (a Futura revival): only the small tracked caps (eyebrows, table heads).
+//  · JetBrains Mono: hashes, signatures and IDs, where 0/O and 1/l must never be confused.
+const display = Comfortaa({ variable: "--font-display-face", subsets: ["latin"], weight: ["400", "500", "600", "700"], display: "swap" });
+const caption = Jost({ variable: "--font-caption-face", subsets: ["latin"], display: "swap" });
 const mono = JetBrains_Mono({ variable: "--font-mono-face", subsets: ["latin"], display: "swap" });
 
 export const metadata: Metadata = {
@@ -15,8 +19,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en-IN" className={`${display.variable} ${sans.variable} ${mono.variable}`}>
+    <html lang="en-IN" className={`${display.variable} ${caption.variable} ${mono.variable}`}>
       <body className="min-h-dvh">
+        {/* Mounted once so it never remounts across navigation. */}
+        <Backdrop />
         {children}
         <Toaster />
       </body>

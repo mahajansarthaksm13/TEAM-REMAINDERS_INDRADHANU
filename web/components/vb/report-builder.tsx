@@ -16,7 +16,7 @@ import { Card, CardHead, Notice } from "./ui"
 type Snap = { qr_kg: number; barcode_kg: number; scan_count: number; under_review_count: number; checkpoint_day: string; checkpoint_hash: string; fingerprint: string }
 type Generated = { report_id: string; verify_url: string; fingerprint: string; pdf_url: string; csv_url: string; pdf_stored: boolean }
 
-const field = "h-10 w-full rounded-input border border-sage-600 bg-surface px-3 text-sm focus-visible:ring-2 focus-visible:ring-olive-950 focus-visible:outline-none"
+const field = "h-10 w-full skeu-inset rounded-input text-ink px-3 text-sm focus-visible:ring-2 focus-visible:ring-lit focus-visible:outline-none"
 
 export function ReportBuilder({ fy, defaultPeriod }: { fy: number; defaultPeriod: string }) {
   const router = useRouter()
@@ -104,7 +104,7 @@ export function ReportBuilder({ fy, defaultPeriod }: { fy: number; defaultPeriod
 
       <Card className="lg:col-span-8">
         {snap === undefined ? (
-          <div className="flex h-full min-h-48 items-center justify-center text-center text-sm text-olive-700">Pick a category and period, then Preview to see the snapshot.</div>
+          <div className="flex h-full min-h-48 items-center justify-center text-center text-sm text-dim">Pick a category and period, then Preview to see the snapshot.</div>
         ) : snap === null ? (
           <Notice>{note || "No checkpointed scans in this period. Scans become reportable after the nightly checkpoint."}</Notice>
         ) : (
@@ -117,19 +117,19 @@ export function ReportBuilder({ fy, defaultPeriod }: { fy: number; defaultPeriod
                 ["Scans included", num(snap.scan_count)],
                 ["Under review", num(snap.under_review_count)],
               ].map(([k, v]) => (
-                <div key={k} className="rounded-[14px] bg-garden-50 p-4">
-                  <dt className="eyebrow text-olive-700">{k}</dt>
+                <div key={k} className="rounded-[14px] bg-deep/60 p-4">
+                  <dt className="eyebrow text-dim">{k}</dt>
                   <dd className="t-kpi mt-1 text-2xl lg:text-[28px]">{v}</dd>
                 </div>
               ))}
             </dl>
-            <p className="mt-4 flex flex-wrap items-center gap-2 text-sm text-olive-700">Checkpoint hash <HashChip value={snap.checkpoint_hash} label="Checkpoint hash" /></p>
-            <p className="mt-2 text-xs text-olive-700">Totals use catalogue weights. Weight-mismatch scans are left out; AI-flagged scans stay in and are counted as under review.</p>
+            <p className="mt-4 flex flex-wrap items-center gap-2 text-sm text-dim">Checkpoint hash <HashChip value={snap.checkpoint_hash} label="Checkpoint hash" /></p>
+            <p className="mt-2 text-xs text-dim">Totals use catalogue weights. Weight-mismatch scans are left out; AI-flagged scans stay in and are counted as under review.</p>
 
             {gen && (
-              <div className="mt-6 grid gap-6 border-t border-sage-200 pt-6 sm:grid-cols-[160px_1fr]">
+              <div className="mt-6 grid gap-6 border-t border-line pt-6 sm:grid-cols-[160px_1fr]">
                 {/* eslint-disable-next-line @next/next/no-img-element -- local data: URL */}
-                {qr ? <img src={qr} alt={`QR code linking to ${gen.verify_url}`} className="size-40 rounded-[10px] border border-sage-200" /> : <div className="size-40 rounded-[10px] bg-sage-200" />}
+                {qr ? <img src={qr} alt={`QR code linking to ${gen.verify_url}`} className="size-40 rounded-[10px] border border-line" /> : <div className="size-40 rounded-[10px] bg-chip" />}
                 <div className="flex min-w-0 flex-col gap-4">
                   <p className="font-mono text-sm font-semibold [overflow-wrap:anywhere]">{gen.report_id}</p>
                   <ProofField label="Fingerprint" value={gen.fingerprint} />

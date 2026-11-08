@@ -23,7 +23,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
               ["Company", user.role === "regulator" || user.role === "admin" ? "All companies" : companies.map((c) => c.name).join(", ") || "None assigned"],
             ]}
           />
-          <p className="mt-4 text-sm text-olive-700">Profile details are managed by your admin.</p>
+          <p className="mt-4 text-sm text-dim">Profile details are managed by your admin.</p>
           <form action={logout} className="mt-6">
             <Button variant="secondary" type="submit">Sign out</Button>
           </form>
@@ -31,7 +31,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
         {user.role === "admin" && (
           <Card className="lg:col-span-5">
             <CardHead eyebrow="Admin" title="Users" />
-            <p className="mb-4 text-sm text-olive-700">Public sign-up is off. Invite producers, auditors and regulators here.</p>
+            <p className="mb-4 text-sm text-dim">Public sign-up is off. Invite producers, auditors and regulators here.</p>
             <Button asChild><Link href={href("/app/settings/users", sp)}>Manage users</Link></Button>
           </Card>
         )}

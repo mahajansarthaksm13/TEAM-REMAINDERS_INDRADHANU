@@ -29,9 +29,9 @@ export default async function PrintPage({ params }: { params: Promise<{ batchId:
           actions={<PrintButton />}
         />
       </div>
-      <ul className="grid grid-cols-3 gap-3 rounded-card bg-surface p-4 sm:grid-cols-5 lg:grid-cols-8 print:grid-cols-6 print:rounded-none print:p-0">
+      <ul className="grid grid-cols-3 gap-3 rounded-card bg-panel p-4 sm:grid-cols-5 lg:grid-cols-8 print:grid-cols-6 print:rounded-none print:p-0">
         {codes.map(({ s, svg }) => (
-          <li key={s} className="flex flex-col items-center gap-1 rounded-[10px] border border-sage-200 p-2 break-inside-avoid">
+          <li key={s} className="flex flex-col items-center gap-1 rounded-[10px] border border-line p-2 break-inside-avoid">
             <div className="aspect-square w-full [&_svg]:h-full [&_svg]:w-full" dangerouslySetInnerHTML={{ __html: svg }} />
             <span className="w-full truncate text-center font-mono text-[9px]" title={s}>{s.slice(0, 11)}…{s.slice(-4)}</span>
           </li>

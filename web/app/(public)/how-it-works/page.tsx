@@ -39,19 +39,19 @@ export default async function HowItWorksPage() {
       <Section>
         <ol className="grid gap-6 md:grid-cols-2">
           {STEPS.map((s) => (
-            <li key={s.n} id={`step-${s.n}`} className="scroll-mt-24 rounded-card border border-sage-200 bg-surface p-6 lg:p-8">
-              <span className="flex size-10 items-center justify-center rounded-full bg-olive-700 font-semibold text-garden-50">{s.n}</span>
+            <li key={s.n} id={`step-${s.n}`} className="scroll-mt-24 skeu-raised rounded-card p-6 lg:p-8">
+              <span className="flex size-10 items-center justify-center rounded-full bg-lit font-bold text-on-lit">{s.n}</span>
               <h2 className="t-h3 mt-5">{s.title}</h2>
-              <p className="mt-2 max-w-[56ch] text-olive-700">{DETAIL[s.n]}</p>
+              <p className="mt-2 max-w-[56ch] text-dim">{DETAIL[s.n]}</p>
             </li>
           ))}
         </ol>
       </Section>
-      <section id="simulator" className="scroll-mt-16 bg-sage-200/50">
+      <section id="simulator" className="scroll-mt-16 bg-deep/40">
         <div className="mx-auto max-w-[1200px] px-4 py-16 sm:px-6 lg:py-24">
-          <p className="eyebrow mb-3 text-olive-700">Website simulator</p>
+          <p className="eyebrow mb-3 text-dim">Website simulator</p>
           <h2 className="t-h2 max-w-2xl">Scan a sample packet. It goes through the real pipeline.</h2>
-          <p className="mt-3 mb-8 max-w-[60ch] text-olive-700">The server signs your scan with the demo bin&apos;s key and sends it through the same ingest checks a physical bin uses. Demo scans never count toward any company&apos;s totals.</p>
+          <p className="mt-3 mb-8 max-w-[60ch] text-dim">The server signs your scan with the demo bin&apos;s key and sends it through the same ingest checks a physical bin uses. Demo scans never count toward any company&apos;s totals.</p>
           <Simulator initialFeed={await demoFeed()} />
         </div>
       </section>

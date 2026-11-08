@@ -17,7 +17,7 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
   const history = ((await q).data ?? []) as unknown as ReportRow[]
   const companyName = (id: string) => companies.find((c) => c.id === id)?.name ?? "—"
   const isCompany = user.role === "company"
-  const link = "font-semibold text-olive-700 underline-offset-4 hover:underline"
+  const link = "font-semibold text-dim underline-offset-4 hover:underline"
   return (
     <>
       <PageHeader

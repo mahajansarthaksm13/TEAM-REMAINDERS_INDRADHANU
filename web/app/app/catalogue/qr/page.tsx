@@ -17,7 +17,7 @@ export default async function QrPage({ searchParams }: { searchParams: Promise<R
     sb.from("qr_batches").select("id, quantity, created_at, products!inner(name, product_code, company_id)").eq("products.company_id", user.company_id).order("created_at", { ascending: false }).limit(50),
   ])
   const batches = (batchRows ?? []) as unknown as Batch[]
-  const link = "font-semibold text-olive-700 underline-offset-4 hover:underline"
+  const link = "font-semibold text-dim underline-offset-4 hover:underline"
   return (
     <>
       <PageHeader eyebrow="Catalogue" title="Issue QR codes" desc="Each code is a one-time serial. A QR-tier scan counts once; a second scan of the same code is rejected." />
