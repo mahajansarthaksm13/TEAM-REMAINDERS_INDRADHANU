@@ -70,7 +70,6 @@ export const TierBadge = ({ tier }: { tier: "qr" | "barcode" }) => <Badge kind={
 // weight_ok null = the bin has no load cell (weight_g = 0)
 export const WeightBadge = ({ ok }: { ok: boolean | null }) =>
   ok === null ? <Badge kind="neutral">No sensor</Badge> : ok ? <Badge kind="ok">✓ Weight OK</Badge> : <Badge kind="mismatch">⚠ Weight mismatch</Badge>
-export const FlagBadge = () => <Badge kind="flagged">✗ Flagged</Badge>
 
 export function VerdictBanner({ kind, title, children }: { kind: "success" | "error" | "warning"; title: string; children?: ReactNode }) {
   const Icon = kind === "success" ? CheckCircle2 : kind === "error" ? XCircle : AlertTriangle

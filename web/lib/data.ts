@@ -83,12 +83,6 @@ export async function latestFeed(sb: Sb, companyId: string | null, n = 50) {
   return ((data ?? []) as unknown as ScanRow[]).map(toFeedRow)
 }
 
-export async function scanById(sb: Sb, id: string) {
-  const { data, error } = await sb.from("scans").select(SCAN_COLS).eq("id", id).maybeSingle()
-  fail("scan", error)
-  return data ? toFeedRow(data as unknown as ScanRow) : null
-}
-
 export type ScanFilters = { category?: string; product?: string; bin?: string; city?: string; from: string; to: string; page: number }
 export const PAGE = 50
 

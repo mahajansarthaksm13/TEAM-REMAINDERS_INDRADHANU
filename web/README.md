@@ -29,11 +29,12 @@ The folder path on Windows may contain `&`, which breaks npm's `.bin` shims, so 
 | `/verify/<report_id>` | `verify_report` with the publishable key; 20 sample signatures re-checked in the browser (A15) |
 | Bins, Targets, Catalogue, QR | `get_bin_list`, `verify_chain`, `bin_scores`, `products`, `issue_qr_codes` + `qr_codes` paged by `batch_id` (A11) |
 | Alerts bell | `alerts`; companies and admins close them (A12) |
-| How it works simulator | `/api/demo/scan` signs with `DEMO_BIN_PRIVATE_KEY` and posts to the ingest Edge Function; page listens on private `demo` (A16) |
+| Simulation Studio (`/simulator`) | `/api/sim/{codes,open,deposit}` → `issue_demo_qr`, `open_deposit_session`, `decide_deposit`; approved deposits are signed with `DEMO_BIN_PRIVATE_KEY` and sent to the ingest Edge Function, then `record_deposit_result`; page listens on private `demo` (A20). Judge script: `docs/JUDGE-DEMO.md` |
+| Manage (admin) | `admin_scan_counts`, admin RLS policies, `erase_company` + `erasures` (A19) |
 | Live Data (public), Checkpoints | `get_public_stats`, `checkpoints` (anon) |
 
 Regenerate types after any migration: `npx supabase gen types typescript --local > ../web/lib/database.types.ts` (from `database/`).
 
 ## Checks
 
-`npm run lint` · `npm run typecheck` · `npm run build` — the same three CI runs (`ci-web`).
+`npm run lint` · `npm run typecheck` · `npm run build` — the same three CI runs (`ci-web`). `npm test` runs the unit tests in `tests/`.

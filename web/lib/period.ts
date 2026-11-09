@@ -11,7 +11,6 @@ export function currentFY(now = Date.now()) {
 export const fyLabel = (fy: number) => `FY ${fy}–${String(fy + 1).slice(2)}`
 // targets.financial_year / forecasts.financial_year format: "2026-27"
 export const fyKey = (fy: number) => `${fy}-${String((fy + 1) % 100).padStart(2, "0")}`
-export const fyStart = (fy: number) => `${fy}-04-01`
 
 const lastDay = (y: number, m: number) => new Date(Date.UTC(y, m, 0)).getUTCDate()
 const pad = (n: number) => String(n).padStart(2, "0")
