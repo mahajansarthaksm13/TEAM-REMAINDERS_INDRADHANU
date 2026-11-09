@@ -5,7 +5,7 @@ import { AddProductDialog } from "@/components/vb/catalogue-client"
 import { Button } from "@/components/ui/button"
 import type { Category } from "@/lib/shared"
 
-type Product = { id: string; company_id: string; product_code: string; name: string; barcode: string | null; category: Category; unit_weight_g: number; approved: boolean }
+type Product = { id: string; company_id: string; product_code: string; name: string; barcode: string | null; category: Category; unit_weight_g: number; approved: boolean; archived_at: string | null }
 import { href, pageCtx } from "@/lib/session"
 import { CATEGORY_LABEL } from "@/lib/shared"
 
@@ -18,7 +18,7 @@ export default async function CataloguePage({ searchParams }: { searchParams: Pr
 
   const isAdmin = user.role === "admin"
   // RLS: a company sees its own products, an admin sees all of them.
-  const { data } = await sb.from("products").select("id, company_id, product_code, name, barcode, category, unit_weight_g, approved").order("product_code")
+  const { data } = await sb.from("products").select("id, company_id, product_code, name, barcode, category, unit_weight_g, approved, archived_at").order("product_code")
   const demo = new Set((await sb.from("companies").select("id").eq("is_demo", true)).data?.map((c) => c.id) ?? [])
   const rows = ((data ?? []) as Product[]).filter((p) => !demo.has(p.company_id))
   const companyName = (id: string) => companies.find((c) => c.id === id)?.name ?? "—"
@@ -55,7 +55,7 @@ export default async function CataloguePage({ searchParams }: { searchParams: Pr
               { key: "bc", label: "Barcode", cell: (r) => <span className="font-mono text-[13px]">{r.barcode ?? "—"}</span> },
               { key: "cat", label: "Category", cell: (r) => <span className="inline-flex items-center gap-1.5 whitespace-nowrap"><CategorySwatch category={r.category} />{CATEGORY_LABEL[r.category]}</span> },
               { key: "w", label: "Weight (g)", align: "right", cell: (r) => r.unit_weight_g },
-              { key: "st", label: "Status", cell: (r) => (r.approved ? <Badge kind="approved">Approved</Badge> : <Badge kind="pending">Pending approval</Badge>) },
+              { key: "st", label: "Status", cell: (r) => (r.archived_at ? <Badge kind="warning">Archived</Badge> : r.approved ? <Badge kind="approved">Approved</Badge> : <Badge kind="pending">Pending approval</Badge>) },
             ]}
           />
         )}

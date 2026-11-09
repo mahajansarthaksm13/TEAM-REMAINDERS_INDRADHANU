@@ -1,7 +1,6 @@
 import type { Metadata } from "next"
 import { PublicIntro, Section } from "@/components/vb/brand"
-import { Simulator } from "@/components/vb/simulator"
-import { serviceDb } from "@/lib/supabase"
+import Link from "next/link"
 import { STEPS } from "@/lib/shared"
 
 export const metadata: Metadata = { title: "How it works" }
@@ -13,24 +12,7 @@ const DETAIL: Record<number, string> = {
   4: "A report covers one category and period, using only checkpointed scans. Its fingerprint and checkpoint are printed with a QR code that rebuilds it from the ledger.",
 }
 
-export const dynamic = "force-dynamic"
-
-// Latest demo-bin scans for the feed's first paint (anon cannot read scans; demo data only).
-async function demoFeed() {
-  try {
-    const { data } = await serviceDb()
-      .from("scans")
-      .select("id, received_at, weight_g, bins!inner(is_demo)")
-      .eq("bins.is_demo", true)
-      .order("received_at", { ascending: false })
-      .limit(8)
-    return (data ?? []).map((s) => ({ scan_id: s.id, received_at: s.received_at, weight_g: s.weight_g }))
-  } catch {
-    return []
-  }
-}
-
-export default async function HowItWorksPage() {
+export default function HowItWorksPage() {
   return (
     <>
       <PublicIntro eyebrow="How it works" title="From packet to proof, step by step.">
@@ -48,11 +30,15 @@ export default async function HowItWorksPage() {
         </ol>
       </Section>
       <section id="simulator" className="scroll-mt-16">
-        <div className="mx-auto max-w-[1200px] px-4 py-16 sm:px-6 lg:py-24">
-          <p className="eyebrow mb-3 text-dim">Website simulator</p>
-          <h2 className="t-h2 max-w-2xl">Scan a sample packet. It goes through the real pipeline.</h2>
-          <p className="mt-3 mb-8 max-w-[60ch] text-dim">The server signs your scan with the demo bin&apos;s key and sends it through the same ingest checks a physical bin uses. Demo scans never count toward any company&apos;s totals.</p>
-          <Simulator initialFeed={await demoFeed()} />
+        <div className="mx-auto max-w-[1200px] px-4 pb-16 sm:px-6 lg:pb-24">
+          <div className="neu flex flex-col gap-5 rounded-card p-6 sm:flex-row sm:items-center sm:justify-between lg:p-8">
+            <div>
+              <p className="eyebrow mb-2 text-dim">Simulation Studio</p>
+              <h2 className="t-h2 max-w-2xl">Watch a smart bin decide what counts.</h2>
+              <p className="mt-3 max-w-[60ch] text-dim">Scan a code, open the lid, drop the item past the camera and the scale, and see the real server decide. Five one-click scenarios: genuine, fake code, no deposit, reused code and wrong weight.</p>
+            </div>
+            <Link href="/simulator" className="btn-lit inline-flex h-11 shrink-0 items-center justify-center rounded-full px-6 font-semibold focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">Open the simulator</Link>
+          </div>
         </div>
       </section>
     </>

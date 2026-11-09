@@ -14,7 +14,7 @@ export default async function QrPage({ searchParams }: { searchParams: Promise<R
   const back = { href: href("/app/catalogue", sp), label: "Catalogue" }
   if (user.role !== "company" || !user.company_id) return <><PageHeader title="Issue QR codes" back={back} /><EmptyState>Only company users can issue QR codes.</EmptyState></>
   const [{ data: approved }, { data: batchRows }] = await Promise.all([
-    sb.from("products").select("id, name").eq("company_id", user.company_id).eq("approved", true).order("name"),
+    sb.from("products").select("id, name").eq("company_id", user.company_id).eq("approved", true).is("archived_at", null).order("name"),
     sb.from("qr_batches").select("id, quantity, created_at, products!inner(name, product_code, company_id)").eq("products.company_id", user.company_id).order("created_at", { ascending: false }).limit(50),
   ])
   const batches = (batchRows ?? []) as unknown as Batch[]

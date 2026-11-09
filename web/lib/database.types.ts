@@ -97,14 +97,14 @@ isOneToOne: false
                   ]
                 },"bins": {
                   Row: {
-                    "allow_backfill": boolean,"chain_head": string,"city": string,"company_id": string,"created_at": string,"id": string,"is_demo": boolean,"last_seen": string | null,"last_sequence": number,"public_key": string,"status": Database["public"]['Enums']["bin_status"]
+                    "archived_at": string | null,"allow_backfill": boolean,"chain_head": string,"city": string,"company_id": string,"created_at": string,"id": string,"is_demo": boolean,"last_seen": string | null,"last_sequence": number,"public_key": string,"status": Database["public"]['Enums']["bin_status"]
                   }
                   ComputedFields: never
                   Insert: {
-                    "allow_backfill"?: boolean,"chain_head": string,"city": string,"company_id": string,"created_at"?: string,"id": string,"is_demo"?: boolean,"last_seen"?: string | null,"last_sequence"?: number,"public_key": string,"status"?: Database["public"]['Enums']["bin_status"]
+                    "archived_at"?: string | null,"allow_backfill"?: boolean,"chain_head": string,"city": string,"company_id": string,"created_at"?: string,"id": string,"is_demo"?: boolean,"last_seen"?: string | null,"last_sequence"?: number,"public_key": string,"status"?: Database["public"]['Enums']["bin_status"]
                   }
                   Update: {
-                    "allow_backfill"?: boolean,"chain_head"?: string,"city"?: string,"company_id"?: string,"created_at"?: string,"id"?: string,"is_demo"?: boolean,"last_seen"?: string | null,"last_sequence"?: number,"public_key"?: string,"status"?: Database["public"]['Enums']["bin_status"]
+                    "archived_at"?: string | null,"allow_backfill"?: boolean,"chain_head"?: string,"city"?: string,"company_id"?: string,"created_at"?: string,"id"?: string,"is_demo"?: boolean,"last_seen"?: string | null,"last_sequence"?: number,"public_key"?: string,"status"?: Database["public"]['Enums']["bin_status"]
                   }
                   Relationships: [
                     {
@@ -131,14 +131,14 @@ isOneToOne: false
                   ]
                 },"companies": {
                   Row: {
-                    "created_at": string,"id": string,"is_demo": boolean,"name": string
+                    "archived_at": string | null,"created_at": string,"id": string,"is_demo": boolean,"name": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"id"?: string,"is_demo"?: boolean,"name": string
+                    "archived_at"?: string | null,"created_at"?: string,"id"?: string,"is_demo"?: boolean,"name": string
                   }
                   Update: {
-                    "created_at"?: string,"id"?: string,"is_demo"?: boolean,"name"?: string
+                    "archived_at"?: string | null,"created_at"?: string,"id"?: string,"is_demo"?: boolean,"name"?: string
                   }
                   Relationships: [
                     
@@ -168,6 +168,34 @@ isOneToOne: false
       referencedRelation: "companies"
       referencedColumns: ["id"]
     }
+                  ]
+                },"deposit_sessions": {
+                  Row: {
+                    "bin_id": string,"camera_seen": boolean | null,"code": string,"decided_at": string | null,"expires_at": string,"id": string,"opened_at": string,"product_id": string,"reason": string | null,"scan_id": string | null,"simulated": boolean,"source": string,"status": string,"weight_g": number | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "bin_id": string,"camera_seen"?: boolean | null,"code": string,"decided_at"?: string | null,"expires_at"?: string,"id"?: string,"opened_at"?: string,"product_id": string,"reason"?: string | null,"scan_id"?: string | null,"simulated"?: boolean,"source"?: string,"status"?: string,"weight_g"?: number | null
+                  }
+                  Update: {
+                    "bin_id"?: string,"camera_seen"?: boolean | null,"code"?: string,"decided_at"?: string | null,"expires_at"?: string,"id"?: string,"opened_at"?: string,"product_id"?: string,"reason"?: string | null,"scan_id"?: string | null,"simulated"?: boolean,"source"?: string,"status"?: string,"weight_g"?: number | null
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"erasures": {
+                  Row: {
+                    "bin_ids": string[],"company_id": string,"company_name": string,"erased_at": string,"erased_by": string | null,"id": string,"product_count": number,"reason": string,"report_count": number,"scan_count": number,"user_count": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "bin_ids"?: string[],"company_id": string,"company_name": string,"erased_at"?: string,"erased_by"?: string | null,"id"?: string,"product_count"?: number,"reason": string,"report_count"?: number,"scan_count"?: number,"user_count"?: number
+                  }
+                  Update: {
+                    "bin_ids"?: string[],"company_id"?: string,"company_name"?: string,"erased_at"?: string,"erased_by"?: string | null,"id"?: string,"product_count"?: number,"reason"?: string,"report_count"?: number,"scan_count"?: number,"user_count"?: number
+                  }
+                  Relationships: [
+                    
                   ]
                 },"forecasts": {
                   Row: {
@@ -211,14 +239,14 @@ isOneToOne: false
                   ]
                 },"products": {
                   Row: {
-                    "approved": boolean,"barcode": string | null,"category": Database["public"]['Enums']["epr_category"],"company_id": string,"created_at": string,"id": string,"name": string,"product_code": string,"unit_weight_g": number
+                    "archived_at": string | null,"approved": boolean,"barcode": string | null,"category": Database["public"]['Enums']["epr_category"],"company_id": string,"created_at": string,"id": string,"name": string,"product_code": string,"unit_weight_g": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "approved"?: boolean,"barcode"?: string | null,"category": Database["public"]['Enums']["epr_category"],"company_id": string,"created_at"?: string,"id"?: string,"name": string,"product_code"?: string,"unit_weight_g": number
+                    "archived_at"?: string | null,"approved"?: boolean,"barcode"?: string | null,"category": Database["public"]['Enums']["epr_category"],"company_id": string,"created_at"?: string,"id"?: string,"name": string,"product_code"?: string,"unit_weight_g": number
                   }
                   Update: {
-                    "approved"?: boolean,"barcode"?: string | null,"category"?: Database["public"]['Enums']["epr_category"],"company_id"?: string,"created_at"?: string,"id"?: string,"name"?: string,"product_code"?: string,"unit_weight_g"?: number
+                    "archived_at"?: string | null,"approved"?: boolean,"barcode"?: string | null,"category"?: Database["public"]['Enums']["epr_category"],"company_id"?: string,"created_at"?: string,"id"?: string,"name"?: string,"product_code"?: string,"unit_weight_g"?: number
                   }
                   Relationships: [
                     {
@@ -488,6 +516,36 @@ isOneToOne: false
 "get_monthly_trend":
 { Args: { "p_company_id"?: string,"p_from": string,"p_to": string }; Returns: {
               "category": Database["public"]['Enums']["epr_category"],"collected_kg": number,"month": string,"scan_count": number
+            }[]
+                           },
+"admin_scan_counts":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "id": string,"kind": string,"scans": number
+            }[]
+                           },
+"decide_deposit":
+{ Args: { "p_camera_seen": boolean,"p_session": string,"p_weight_g": number }; Returns: Json
+                           },
+"ensure_demo_catalogue":
+{ Args: Record<PropertyKey, never>; Returns: undefined
+                           },
+"issue_demo_qr":
+{ Args: { "p_product_id": string,"p_quantity"?: number }; Returns: {
+              "qr_payload": string
+            }[]
+                           },
+"open_deposit_session":
+{ Args: { "p_bin_id": string,"p_code": string }; Returns: Json
+                           },
+"record_deposit_result":
+{ Args: { "p_result": Json,"p_session": string }; Returns: Json
+                           },
+"erase_company":
+{ Args: { "p_company_id": string,"p_confirm_name": string,"p_reason": string }; Returns: Json
+                           },
+"get_public_erasures":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "bin_ids": string[],"company_name": string,"erased_at": string,"scan_count": number
             }[]
                            },
 "get_public_stats":

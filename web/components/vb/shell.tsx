@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
-import { Activity, Bell, Box, ChevronDown, FileCheck2, LogOut, Menu, Package, Route, Settings, Sparkles, Target } from "lucide-react"
+import { Activity, Bell, Box, ChevronDown, FileCheck2, LogOut, Menu, Package, Route, Settings, SlidersHorizontal, Sparkles, Target, type LucideIcon } from "lucide-react"
 import { cn } from "cn"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
@@ -16,14 +16,17 @@ import { ALERT_LABEL, ROLE_LABEL, humanize, type Role } from "@/lib/shared"
 import { Wordmark } from "./brand"
 import { Badge } from "./ui"
 
-const NAV = [
+type NavItem = { href: string; label: string; icon: LucideIcon; hideFor?: Role[]; onlyFor?: Role[] }
+
+const NAV: NavItem[] = [
   { href: "/app/live", label: "Live Data", icon: Activity },
   { href: "/app/flow", label: "Where waste goes", icon: Route },
   { href: "/app/insights", label: "AI Insights", icon: Sparkles },
   { href: "/app/reports", label: "Reports", icon: FileCheck2 },
   { href: "/app/bins", label: "Bins", icon: Box },
   { href: "/app/targets", label: "Targets", icon: Target },
-  { href: "/app/catalogue", label: "Catalogue", icon: Package, hideFor: ["auditor", "regulator"] as Role[] },
+  { href: "/app/catalogue", label: "Catalogue", icon: Package, hideFor: ["auditor", "regulator"] },
+  { href: "/app/admin", label: "Manage", icon: SlidersHorizontal, onlyFor: ["admin"] },
   { href: "/app/settings", label: "Settings", icon: Settings },
 ]
 
@@ -47,7 +50,7 @@ function NavList({ role }: { role: Role }) {
   const keep = useKeep()
   return (
     <nav aria-label="Dashboard" className="flex flex-col gap-1">
-      {NAV.filter((n) => !n.hideFor?.includes(role)).map(({ href, label, icon: Icon }) => {
+      {NAV.filter((n) => !n.hideFor?.includes(role) && (!n.onlyFor || n.onlyFor.includes(role))).map(({ href, label, icon: Icon }) => {
         const active = path.startsWith(href)
         return (
           <Link

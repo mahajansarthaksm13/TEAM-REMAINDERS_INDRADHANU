@@ -83,12 +83,6 @@ export async function latestFeed(sb: Sb, companyId: string | null, n = 50) {
   return ((data ?? []) as unknown as ScanRow[]).map(toFeedRow)
 }
 
-export async function scanById(sb: Sb, id: string) {
-  const { data, error } = await sb.from("scans").select(SCAN_COLS).eq("id", id).maybeSingle()
-  fail("scan", error)
-  return data ? toFeedRow(data as unknown as ScanRow) : null
-}
-
 export type ScanFilters = { category?: string; product?: string; bin?: string; city?: string; from: string; to: string; page: number }
 export const PAGE = 50
 
@@ -127,11 +121,15 @@ export type BinRow = {
 }
 
 export async function binList(sb: Sb, companyId: string | null) {
-  const { data, error } = await sb.rpc("get_bin_list")
+  const [{ data, error }, { data: archived }] = await Promise.all([
+    sb.rpc("get_bin_list"),
+    sb.from("bins").select("id").not("archived_at", "is", null), // retired by an admin (Manage → Bins)
+  ])
   fail("get_bin_list", error)
+  const retired = new Set((archived ?? []).map((b) => b.id))
   const now = Date.now()
   return (data ?? [])
-    .filter((b) => !b.is_demo && (!companyId || b.company_id === companyId))
+    .filter((b) => !b.is_demo && !retired.has(b.bin_id) && (!companyId || b.company_id === companyId))
     .map(
       (b): BinRow => ({
         bin_id: b.bin_id,

@@ -97,18 +97,6 @@ function Takeaway({ children }: { children: React.ReactNode }) {
   )
 }
 
-export function Legend({ cats = CATEGORIES }: { cats?: Category[] }) {
-  return (
-    <ul className="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-dim">
-      {cats.map((c) => (
-        <li key={c} className="flex items-center gap-1.5">
-          <CategorySwatch category={c} /> {CATEGORY_LABEL[c]}
-        </li>
-      ))}
-    </ul>
-  )
-}
-
 // ── Monthly stacked bars ──────────────────────────────────────
 export function TrendChart({ data }: { data: ({ month: string } & Record<Category, number>)[] }) {
   const h = useHatch()

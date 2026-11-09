@@ -4,11 +4,12 @@ import { DataTable, EmptyState, Pagination } from "@/components/vb/ui"
 import { HashChip } from "@/components/vb/client"
 import { anonDb } from "@/lib/supabase"
 import { checkpointUrl } from "@/lib/shared"
-import { fmtDay } from "@/lib/format"
+import { fmtDateTime, fmtDay, num } from "@/lib/format"
 
 export const metadata: Metadata = { title: "Checkpoints" }
 
 type Checkpoint = { day: string; hash: string; previous_hash: string | null }
+type Erasure = { erased_at: string; company_name: string; bin_ids: string[]; scan_count: number }
 const PER = 30
 
 export default async function CheckpointsPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
@@ -21,6 +22,9 @@ export default async function CheckpointsPage({ searchParams }: { searchParams: 
     .range((page - 1) * PER, page * PER - 1)
   if (error) throw new Error("checkpoints failed")
   const rows = (data ?? []) as Checkpoint[]
+  // Companies an admin erased: their bins' chains are gone, so older checkpoints can't be recomputed for them.
+  const { data: erased } = await anonDb().rpc("get_public_erasures")
+  const erasures = (erased ?? []) as Erasure[]
   return (
     <>
       <PublicIntro eyebrow="Checkpoints" title="Sealed every night at 00:05 IST.">
@@ -60,7 +64,30 @@ export default async function CheckpointsPage({ searchParams }: { searchParams: 
           <p className="mt-3 max-w-[68ch]">
             For every bin created before midnight IST at the end of the day, in bin-id order, take <code className="font-mono">&lt;bin_id&gt;=&lt;chain hash of its last scan received before that time&gt;</code> (64 zeros if none) and join them with <code className="font-mono">|</code>. The checkpoint hash is SHA-256 of <code className="font-mono">&lt;day&gt;|&lt;previous checkpoint hash&gt;|&lt;heads&gt;</code>.
           </p>
+          {erasures.length > 0 && (
+            <p className="mt-3 max-w-[68ch]">
+              Bins of erased companies (listed below) are left out of checkpoints sealed after their erasure. Checkpoints sealed before it included them, so those days can&apos;t be recomputed from today&apos;s data.
+            </p>
+          )}
         </details>
+        {erasures.length > 0 && (
+          <div className="mt-10">
+            <h2 className="text-lg font-semibold text-ink">Erased companies</h2>
+            <p className="mt-1 max-w-[68ch] text-sm text-dim">An admin removed these companies and everything they recorded. Each erasure is logged permanently and can&apos;t be edited.</p>
+            <DataTable<Erasure>
+              caption="Erased companies, newest first"
+              rows={erasures}
+              rowKey={(r) => r.erased_at + r.company_name}
+              title={(r) => r.company_name}
+              cols={[
+                { key: "when", label: "Erased", cell: (r) => <span className="tnum">{fmtDateTime(r.erased_at)}</span> },
+                { key: "name", label: "Company", cell: (r) => r.company_name },
+                { key: "bins", label: "Bins removed", cell: (r) => <span className="font-mono text-xs">{r.bin_ids.join(", ") || "—"}</span> },
+                { key: "scans", label: "Signed scans", align: "right", cell: (r) => num(r.scan_count) },
+              ]}
+            />
+          </div>
+        )}
       </Section>
     </>
   )
