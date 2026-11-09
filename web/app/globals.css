@@ -455,6 +455,15 @@
   background:
     linear-gradient(180deg, rgba(23, 17, 35, 0.55) 0%, rgba(23, 17, 35, 0) 30%, rgba(23, 17, 35, 0.2) 55%, rgba(23, 17, 35, 0.95) 100%);
 }
+/* Duotone photos on the public pages (components/vb/photo.tsx): same grade as the login stage. */
+.duo { position: absolute; inset: 0; z-index: -1; overflow: hidden; background: var(--night); }
+.duo-img { object-fit: cover; filter: grayscale(1) contrast(1.15) brightness(0.9); }
+.duo-drift { animation: duo-drift 24s ease-out both; }
+@keyframes duo-drift { from { transform: scale(1.1); } to { transform: scale(1); } }
+.duo-fade-bottom { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(23, 17, 35, 0.1) 0%, rgba(23, 17, 35, 0.25) 45%, rgba(23, 17, 35, 0.92) 100%); }
+.duo-fade-left { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(23, 17, 35, 0.92) 0%, rgba(23, 17, 35, 0.6) 45%, rgba(23, 17, 35, 0.15) 100%); }
+.duo-fade-even { position: absolute; inset: 0; background: rgba(23, 17, 35, 0.62); }
+
 /* Chain links orbiting the stage: the product's idea (one record linked to the next) in motion. */
 .auth-orbit {
   position: absolute;

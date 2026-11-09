@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Cta } from "@/components/vb/magnetic"
 import { ShareDonut } from "@/components/vb/charts"
 import { CategoryBar } from "@/components/vb/ui"
+import { DuoPhoto } from "@/components/vb/photo"
+import { BinTwin } from "@/components/vb/sim/bin-twin"
 import { anonDb } from "@/lib/supabase"
 import { kg, num } from "@/lib/format"
 import { CATEGORIES, SAMPLE_REPORT_ID, STEPS, hasSessionCookie, type Category } from "@/lib/shared"
@@ -61,6 +63,14 @@ const AUDIENCES = [
   },
 ]
 
+// The four parts of a VeriBin bin, pinned on the illustration (x / y in % of the drawing).
+const PARTS = [
+  { n: 1, title: "Scanner", body: "Reads the packet's one-time QR code and asks the server whether the lid may open.", x: "76%", y: "61%" },
+  { n: 2, title: "Camera", body: "Watches the opening. A deposit needs an item to actually cross it.", x: "84%", y: "6%" },
+  { n: 3, title: "Lid", body: "Opens only for a code VeriBin issued and never used. Everything else stays shut.", x: "12%", y: "26%" },
+  { n: 4, title: "Scale and signing chip", body: "Weighs the deposit, then signs the record with the bin's own key.", x: "18%", y: "90%" },
+]
+
 const textLink = "inline-flex items-center gap-1.5 text-sm font-semibold text-lit underline decoration-lit/40 decoration-2 underline-offset-4 hover:decoration-lit"
 
 export default async function Home() {
@@ -69,65 +79,73 @@ export default async function Home() {
   const maxCat = stats ? Math.max(...stats.byCategory.map((c) => c.kg), 0.001) : 1
   return (
     <>
-      {/* ── Hero: the promise on the left, the live ledger proving it on the right ── */}
-      <section className="mx-auto grid max-w-[1200px] gap-10 px-4 pt-14 pb-16 sm:px-6 lg:grid-cols-12 lg:items-center lg:gap-12 lg:pt-24 lg:pb-24">
-        <div className="lg:col-span-7">
-          <p className="neu-pill reveal mb-7 inline-flex items-center rounded-full px-4 py-1.5 text-sm text-ink">
-            <span aria-hidden className="mr-2 inline-block size-1.5 rounded-full bg-orchid" />
-            Verifiable plastic collection for India&apos;s EPR rules
-          </p>
-          <h1 className="t-display reveal max-w-[14ch]" style={{ animationDelay: "120ms" }}>
-            Plastic collection you can prove.
-          </h1>
-          <p className="reveal mt-6 max-w-[54ch] text-base leading-7 text-dim lg:text-lg lg:leading-8" style={{ animationDelay: "240ms" }}>
-            VeriBin bins sign every packet they collect. The records chain together and are sealed in public each day, so a producer&apos;s recycling claim can be checked by any auditor, regulator or citizen, without trusting anyone&apos;s spreadsheet.
-          </p>
-          <div className="reveal mt-9 flex flex-wrap items-center gap-3" style={{ animationDelay: "360ms" }}>
-            <Cta asChild size="lg" playOnLoad><Link href="/simulator">Try the simulator</Link></Cta>
-            <Button asChild variant="secondary" size="lg"><Link href={loggedIn ? "/app/live" : "/login"}>{loggedIn ? "Open dashboard" : "Log in"}</Link></Button>
-            <Link href="/live-data" className={`${textLink} h-12 px-2`}>
-              See live national data <ArrowRight className="size-4" aria-hidden />
-            </Link>
+      {/* ── Hero: the promise over a duotone photo, the live ledger proving it beside ── */}
+      <section className="mx-auto max-w-[1200px] px-4 pt-6 pb-16 sm:px-6 lg:pt-10 lg:pb-24">
+        <div className="neu reveal rounded-[32px] p-2 sm:p-3">
+          <div className="relative isolate overflow-hidden rounded-[26px] text-snow">
+            <DuoPhoto photo="pile" priority fade="left" position="50% 55%" drift />
+            <div className="grid gap-10 p-6 sm:p-10 lg:min-h-[660px] lg:grid-cols-12 lg:items-end lg:gap-12 lg:p-14">
+              <div className="lg:col-span-7 lg:pb-2">
+                <p className="reveal mb-7 inline-flex items-center rounded-full border border-snow/25 bg-night/40 px-4 py-1.5 text-sm text-snow">
+                  <span aria-hidden className="mr-2 inline-block size-1.5 rounded-full bg-orchid" />
+                  Verifiable plastic collection for India&apos;s EPR rules
+                </p>
+                <h1 className="t-display reveal max-w-[14ch] !text-snow" style={{ animationDelay: "120ms" }}>
+                  Plastic collection you can prove.
+                </h1>
+                <p className="reveal mt-6 max-w-[52ch] text-base leading-7 text-snow/85 lg:text-lg lg:leading-8" style={{ animationDelay: "240ms" }}>
+                  VeriBin bins open only for a registered code, check that the packet really went in, and sign every deposit. The records chain together and are sealed in public each day, so a producer&apos;s recycling claim can be checked by anyone, without trusting a spreadsheet.
+                </p>
+                <div className="reveal mt-9 flex flex-wrap items-center gap-3" style={{ animationDelay: "360ms" }}>
+                  <Cta asChild size="lg" playOnLoad><Link href="/simulator">Try the simulator</Link></Cta>
+                  <Button asChild variant="secondary" size="lg"><Link href={loggedIn ? "/app/live" : "/login"}>{loggedIn ? "Open dashboard" : "Log in"}</Link></Button>
+                  <Link href="/live-data" className="inline-flex h-12 items-center gap-1.5 px-2 text-sm font-semibold text-snow underline decoration-orchid decoration-2 underline-offset-4 hover:decoration-snow">
+                    See live national data <ArrowRight className="size-4" aria-hidden />
+                  </Link>
+                </div>
+              </div>
+
+              <aside className="neu reveal rounded-[28px] p-6 text-ink sm:p-8 lg:col-span-5" style={{ animationDelay: "200ms" }} aria-label="Live from the public ledger">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="eyebrow text-dim">Live from the ledger</p>
+                  <span className="neu-pill inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold">
+                    <span aria-hidden className="soft-pulse size-2 rounded-full bg-violet" />
+                    Live
+                  </span>
+                </div>
+                {stats && stats.kg > 0 ? (
+                  <>
+                    <dl className="mt-6 grid grid-cols-2 gap-4">
+                      {[
+                        ["Plastic collected", kg(stats.kg)],
+                        ["Signed scans", num(stats.scans)],
+                        ["Active bins", num(stats.bins)],
+                        ["Cities", num(stats.cities)],
+                      ].map(([k, v]) => (
+                        <div key={k} className="neu-inset rounded-2xl p-4">
+                          <dt className="text-xs text-dim">{k}</dt>
+                          <dd className="tnum mt-1 font-display text-[24px] leading-8 font-semibold tracking-[-0.02em] whitespace-nowrap sm:text-[28px]">{v}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                    <div className="mt-6 space-y-4">
+                      {stats.byCategory.map((c) => (
+                        <CategoryBar key={c.category} category={c.category} collected={c.kg} target={maxCat} relative />
+                      ))}
+                    </div>
+                    <p className="mt-5 text-xs text-dim">National totals at catalogue weight. Simulator scans never count.</p>
+                  </>
+                ) : (
+                  <figure className="mt-6" aria-label="Example of a signed scan record">
+                    <pre className="neu-inset overflow-x-auto rounded-2xl p-4 font-mono text-[13px] leading-5 [overflow-wrap:anywhere] whitespace-pre-wrap">1|VB-PUN-0001|4182|2026-10-25T08:15:03Z|qr|VB1A3F9C2E…|24</pre>
+                    <figcaption className="mt-4 text-sm text-dim">Live figures appear here as soon as bins report. This is what one signed scan looks like.</figcaption>
+                  </figure>
+                )}
+              </aside>
+            </div>
           </div>
         </div>
-
-        <aside className="neu reveal rounded-[28px] p-6 sm:p-8 lg:col-span-5" style={{ animationDelay: "200ms" }} aria-label="Live from the public ledger">
-          <div className="flex items-center justify-between gap-3">
-            <p className="eyebrow text-dim">Live from the ledger</p>
-            <span className="neu-pill inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold">
-              <span aria-hidden className="soft-pulse size-2 rounded-full bg-violet" />
-              Live
-            </span>
-          </div>
-          {stats && stats.kg > 0 ? (
-            <>
-              <dl className="mt-6 grid grid-cols-2 gap-4">
-                {[
-                  ["Plastic collected", kg(stats.kg)],
-                  ["Signed scans", num(stats.scans)],
-                  ["Active bins", num(stats.bins)],
-                  ["Cities", num(stats.cities)],
-                ].map(([k, v]) => (
-                  <div key={k} className="neu-inset rounded-2xl p-4">
-                    <dt className="text-xs text-dim">{k}</dt>
-                    <dd className="tnum mt-1 font-display text-[24px] leading-8 font-semibold tracking-[-0.02em] whitespace-nowrap sm:text-[28px]">{v}</dd>
-                  </div>
-                ))}
-              </dl>
-              <div className="mt-6 space-y-4">
-                {stats.byCategory.map((c) => (
-                  <CategoryBar key={c.category} category={c.category} collected={c.kg} target={maxCat} relative />
-                ))}
-              </div>
-              <p className="mt-5 text-xs text-dim">National totals at catalogue weight. Simulator scans never count.</p>
-            </>
-          ) : (
-            <figure className="mt-6" aria-label="Example of a signed scan record">
-              <pre className="neu-inset overflow-x-auto rounded-2xl p-4 font-mono text-[13px] leading-5 [overflow-wrap:anywhere] whitespace-pre-wrap">1|VB-PUN-0001|4182|2026-10-25T08:15:03Z|qr|VB1A3F9C2E…|24</pre>
-              <figcaption className="mt-4 text-sm text-dim">Live figures appear here as soon as bins report. This is what one signed scan looks like.</figcaption>
-            </figure>
-          )}
-        </aside>
+        <p className="mt-3 text-right text-[11px] text-dim">Photos: Unsplash</p>
       </section>
 
       {/* ── Proof strip: the three guarantees, one line each ── */}
@@ -145,6 +163,43 @@ export default async function Home() {
         </ul>
       </section>
 
+      {/* ── Meet the bin: what VeriBin physically is ── */}
+      <section className="mx-auto max-w-[1200px] px-4 pt-20 sm:px-6 lg:pt-28" aria-labelledby="bin">
+        <div className="grid gap-10 lg:grid-cols-12 lg:items-center lg:gap-14">
+          <figure data-reveal className="neu relative overflow-hidden rounded-[32px] px-6 pt-10 pb-6 sm:px-10 lg:col-span-7">
+            <div aria-hidden className="absolute inset-x-10 top-1/2 h-1/2 rounded-full bg-orchid/10 blur-3xl" />
+            <div className="relative mx-auto w-full max-w-[340px]">
+              <BinTwin state="CAMERA_VERIFYING" drop="above" category="cat1_rigid" refused={false} />
+              {PARTS.map((p) => (
+                <span key={p.n} aria-hidden className="absolute flex size-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-violet font-display text-sm font-semibold text-snow ring-4 ring-snow" style={{ left: p.x, top: p.y }}>
+                  {p.n}
+                </span>
+              ))}
+            </div>
+            <figcaption className="relative mt-4 text-center text-xs text-dim">A VeriBin smart bin, lid open, camera watching the opening</figcaption>
+          </figure>
+          <div data-reveal className="lg:col-span-5">
+            <p className="eyebrow mb-3 text-dim">Meet the bin</p>
+            <h2 id="bin" className="t-h2">A bin that only counts what goes in.</h2>
+            <p className="mt-4 max-w-[44ch] text-dim">A scan alone proves nothing. The bin checks the code, watches the deposit, weighs it, and only then signs a record.</p>
+            <ol className="mt-8 grid gap-5">
+              {PARTS.map((p) => (
+                <li key={p.n} className="flex gap-4">
+                  <span aria-hidden className="neu-press flex size-9 shrink-0 items-center justify-center rounded-full font-display text-sm font-semibold text-lit">{p.n}</span>
+                  <span>
+                    <span className="block font-display font-semibold">{p.title}</span>
+                    <span className="mt-0.5 block text-sm leading-6 text-dim">{p.body}</span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+            <Link href="/simulator" className={`${textLink} mt-8`}>
+              Watch it decide in the simulator <ArrowRight className="size-4" aria-hidden />
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* ── The problem: one dominant number, two supporting ── */}
       <section className="mx-auto max-w-[1200px] px-4 py-20 sm:px-6 lg:py-28" aria-labelledby="problem">
         <div className="grid gap-10 lg:grid-cols-12">
@@ -154,9 +209,12 @@ export default async function Home() {
             <p className="mt-4 max-w-[42ch] text-dim">EPR credits are traded on paperwork. VeriBin ties each kilogram to a physical scan that cannot be edited after the fact.</p>
           </div>
           <dl className="stagger grid gap-6 sm:grid-cols-2 lg:col-span-8">
-            <div className="neu flex flex-col justify-between gap-6 rounded-[28px] p-8 sm:row-span-2">
-              <dd className="font-display text-[64px] leading-none font-semibold tracking-[-0.04em] text-lit lg:text-[88px]">6 lakh</dd>
-              <dt className="max-w-[30ch] text-dim">EPR certificates flagged as fake in the plastic packaging system.</dt>
+            <div className="neu rounded-[28px] p-2 sm:row-span-2">
+              <div className="relative isolate flex h-full min-h-[340px] flex-col justify-end gap-3 overflow-hidden rounded-[22px] p-7 text-snow">
+                <DuoPhoto photo="river" fade="bottom" position="50% 40%" sizes="(min-width: 1024px) 400px, 100vw" />
+                <dd className="font-display text-[64px] leading-none font-semibold tracking-[-0.04em] lg:text-[88px]">6 lakh</dd>
+                <dt className="max-w-[30ch] text-snow/85">EPR certificates flagged as fake in the plastic packaging system.</dt>
+              </div>
             </div>
             <div className="neu rounded-[28px] p-6">
               <dd className="font-display text-[36px] leading-none font-semibold tracking-[-0.03em]">₹355 crore</dd>
@@ -195,6 +253,20 @@ export default async function Home() {
             ))}
           </ul>
         </div>
+      </section>
+
+      {/* ── Where it starts: a full-width photo band ── */}
+      <section className="mx-auto max-w-[1200px] px-4 pb-20 sm:px-6 lg:pb-28" aria-labelledby="street">
+        <figure data-reveal className="neu rounded-[32px] p-2 sm:p-3">
+          <div className="relative isolate flex min-h-[360px] items-end overflow-hidden rounded-[26px] p-6 text-snow sm:p-10 lg:min-h-[420px] lg:p-14">
+            <DuoPhoto photo="street" fade="left" position="45% 60%" />
+            <figcaption className="max-w-xl">
+              <p className="eyebrow mb-3 text-snow/70">Where it starts</p>
+              <p id="street" className="t-h2">Collection happens on streets, not in spreadsheets.</p>
+              <p className="mt-4 max-w-[48ch] text-snow/80">So the proof has to start there too. Each VeriBin bin signs what it receives at the moment of collection, before anyone can round a number up.</p>
+            </figcaption>
+          </div>
+        </figure>
       </section>
 
       {/* ── How it works ── */}
@@ -245,10 +317,12 @@ export default async function Home() {
 
       {/* ── Close ── */}
       <section className="mx-auto max-w-[1200px] px-4 pb-24 sm:px-6" aria-labelledby="close">
-        <div data-reveal className="neu grid gap-8 rounded-[28px] p-8 sm:p-12 lg:grid-cols-12 lg:items-center">
+        <div data-reveal className="neu rounded-[32px] p-2 sm:p-3">
+        <div className="relative isolate grid gap-8 overflow-hidden rounded-[26px] p-8 text-snow sm:p-12 lg:grid-cols-12 lg:items-center">
+          <DuoPhoto photo="cage" fade="even" />
           <div className="lg:col-span-7">
             <h2 id="close" className="t-h2">See the proof yourself. It takes ten seconds.</h2>
-            <p className="mt-3 max-w-[48ch] text-dim">Send one sample packet through the simulator and verify its signature in your own browser.</p>
+            <p className="mt-3 max-w-[48ch] text-snow/85">Scan a packet in the simulator, watch the bin decide, and verify the signature in your own browser.</p>
           </div>
           <div className="flex flex-wrap gap-3 lg:col-span-5 lg:justify-end">
             <Cta asChild size="lg"><Link href="/simulator">Try the simulator</Link></Cta>
@@ -259,6 +333,7 @@ export default async function Home() {
               </Link>
             </Button>
           </div>
+        </div>
         </div>
       </section>
     </>
