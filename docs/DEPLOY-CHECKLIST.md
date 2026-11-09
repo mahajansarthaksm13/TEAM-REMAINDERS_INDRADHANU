@@ -55,6 +55,11 @@ Until these are set, each workflow **skips** with a notice instead of failing.
 - Logging in as each role reaches its dashboard; `/app/admin` is admin only.
 - `/verify/<report id>` shows **Match** for a generated report.
 
-## Not built yet (open issues)
-- **No production deploy workflow.** Y19 (#20) was never built: there is no `deploy-prod.yml` and no `ops/smoke_test.py`. Production is deployed by hand with the steps above, or after Y19 lands.
-- **Y18 (#19):** the tamper demo, end-to-end and load-test scripts (`ops/`) were never built. The website's Simulation Studio covers the judge-facing part of the demo.
+## Production deploys (Y19)
+Production is deployed from the **deploy-prod** workflow (Actions → deploy-prod → Run workflow), in the `production` environment.
+- On the first run, tick `first_deploy`. That replaces the manual seed push in step 1.
+- Each run ends with `ops/smoke_test.py`, which covers the database half of section 4 automatically.
+- Secrets and details: `docs/CI.md`, section 3.
+
+## Not built yet (open issue)
+- **Y18 (#19):** the tamper demo, end-to-end and load-test scripts were never built. The website's Simulation Studio covers the judge-facing part of the demo.
