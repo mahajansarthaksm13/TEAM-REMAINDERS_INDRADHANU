@@ -69,3 +69,35 @@ supabase test db
 # 4. Stop local Supabase
 supabase stop
 ```
+
+---
+
+## 3. Deploy to production (`deploy-prod`, Y19)
+
+`deploy-prod` is **manual only**: Actions → deploy-prod → Run workflow. It runs in the `production` environment. Give that environment a required reviewer, so every prod deploy is approved by a second person.
+
+Steps:
+1. Fails at once, naming each missing secret, if any production secret is not set.
+2. `supabase link` to the prod project, then `supabase db push`.
+3. `supabase functions deploy ingest heartbeat`.
+4. `ops/smoke_test.py`: one signed scan from the prod **demo** bin, plus checks that a checkpoint exists, that `verify_report` answers, and (when `PROD_WEB_URL` is set) that `/` and `/simulator` load.
+
+The smoke test refuses to send anything from a bin that is not flagged `is_demo`.
+
+**First deploy only:** tick `first_deploy`. That pushes the seed (the demo bin and demo catalogue) and skips the checkpoint check, because the first checkpoint is made at 00:05 IST. Never tick it again: the seed would try to insert the same rows twice.
+
+Secrets on the `production` environment:
+
+| Secret | Used for |
+|---|---|
+| `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROD_PROJECT_REF`, `SUPABASE_PROD_DB_PASSWORD` | link, db push, functions deploy |
+| `SUPABASE_PROD_URL`, `SUPABASE_PROD_PUBLISHABLE_KEY`, `SUPABASE_PROD_SERVICE_ROLE_KEY` | smoke test |
+| `DEMO_BIN_PRIVATE_KEY` | smoke test (the same value Vercel uses) |
+
+Optional repository variable: `PROD_WEB_URL`.
+
+Run the smoke test locally against any stack:
+```bash
+PYTHONPATH=simulator:ops SUPABASE_URL=... SUPABASE_PUBLISHABLE_KEY=... \
+  SUPABASE_SERVICE_ROLE_KEY=... DEMO_BIN_PRIVATE_KEY=... python ops/smoke_test.py
+```
